@@ -291,6 +291,7 @@ export default function App() {
                 onUpdateWallet={handleUpdateWallet}
                 onResetData={handleResetData}
                 goldPrice18k={goldPrice18k}
+                activeMetal={activeMetal}
                 onBack={() => setActiveTab('home')}
               />
             )}

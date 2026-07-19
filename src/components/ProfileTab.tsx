@@ -27,6 +27,7 @@ interface ProfileTabProps {
   onUpdateWallet: (wallet: UserWallet) => void;
   onResetData: () => void;
   goldPrice18k: number;
+  activeMetal: 'gold' | 'silver';
   onBack: () => void;
 }
 
@@ -36,7 +37,8 @@ export default function ProfileTab({
   onUpdateName, 
   onUpdateWallet, 
   onResetData, 
-  goldPrice18k, 
+  goldPrice18k,
+  activeMetal,
   onBack 
 }: ProfileTabProps) {
   const [fingerprintEnabled, setFingerprintEnabled] = useState(false);
@@ -49,6 +51,8 @@ export default function ProfileTab({
     onUpdateName(tempName);
     setEditMode(false);
   };
+
+  const isGold = activeMetal === 'gold';
 
   return (
     <div className="space-y-4 max-w-md mx-auto px-4 py-4 text-right" id="profile-view" dir="rtl">
@@ -67,7 +71,7 @@ export default function ProfileTab({
       </div>
 
       {/* 2. User Info in a theme-colored box (Standard RTL flow) */}
-      <div className="bg-gradient-to-br from-amber-600 via-amber-500 to-yellow-500 text-white p-5 rounded-3xl shadow-sm space-y-4" id="profile-user-card">
+      <div className={`bg-gradient-to-br ${isGold ? 'from-amber-600 via-amber-500 to-yellow-500' : 'from-slate-600 via-slate-500 to-slate-400'} text-white p-5 rounded-3xl shadow-sm space-y-4`} id="profile-user-card">
         {editMode ? (
           <form onSubmit={handleSaveName} className="space-y-3">
             <input
@@ -114,7 +118,7 @@ export default function ProfileTab({
         )}
 
         <div className="pt-3 border-t border-white/20 flex justify-between items-center text-[10px]">
-          <span className="font-extrabold text-amber-50">سطح احراز هویت صمت</span>
+          <span className={`font-extrabold ${isGold ? 'text-amber-50' : 'text-slate-200'}`}>سطح احراز هویت صمت</span>
           <span className="bg-emerald-500/20 backdrop-blur-md border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-emerald-100 font-black">
             تایید شده و فعال
           </span>
@@ -124,19 +128,19 @@ export default function ProfileTab({
       {/* 3. Referral Section: "Invite Friends" */}
       <div 
         onClick={() => setShowSimModal('invite')}
-        className="bg-amber-500/5 hover:bg-amber-500/10 border border-amber-200/50 p-4 rounded-3xl flex items-center justify-between cursor-pointer transition-all"
+        className={`${isGold ? 'bg-amber-500/5 hover:bg-amber-500/10 border border-amber-200/50' : 'bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200/50'} p-4 rounded-3xl flex items-center justify-between cursor-pointer transition-all`}
         id="profile-referral-card"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center shadow-xs">
+          <div className={`w-10 h-10 rounded-2xl ${isGold ? 'bg-amber-600' : 'bg-slate-600'} text-white flex items-center justify-center shadow-xs`}>
             <Plus className="w-5 h-5 text-white" />
           </div>
           <div className="flex flex-col text-right">
-            <span className="text-xs font-black text-amber-900">دعوت از دوستان و هدیه طلایی</span>
-            <span className="text-[9.5px] text-amber-700 font-extrabold mt-0.5">دریافت طلا به محض ثبت‌نام دوستان شما</span>
+            <span className={`text-xs font-black ${isGold ? 'text-amber-900' : 'text-slate-800'}`}>دعوت از دوستان و هدیه طلایی</span>
+            <span className={`text-[9.5px] ${isGold ? 'text-amber-700' : 'text-slate-600'} font-extrabold mt-0.5`}>دریافت طلا به محض ثبت‌نام دوستان شما</span>
           </div>
         </div>
-        <ChevronLeft className="w-4 h-4 text-amber-600" />
+        <ChevronLeft className={`w-4 h-4 ${isGold ? 'text-amber-600' : 'text-slate-600'}`} />
       </div>
 
       {/* 4. Finance Section: Clickable bordered group */}
@@ -204,7 +208,7 @@ export default function ProfileTab({
           {/* Custom iOS style switch */}
           <button 
             onClick={() => setFingerprintEnabled(!fingerprintEnabled)}
-            className={`w-10 h-5.5 rounded-full p-0.5 transition-colors duration-250 focus:outline-none ${fingerprintEnabled ? 'bg-amber-600' : 'bg-slate-200'}`}
+            className={`w-10 h-5.5 rounded-full p-0.5 transition-colors duration-250 focus:outline-none ${fingerprintEnabled ? (isGold ? 'bg-amber-600' : 'bg-slate-600') : 'bg-slate-200'}`}
             dir="ltr"
           >
             <div className={`w-4.5 h-4.5 rounded-full bg-white shadow-xs transition-transform duration-250 ${fingerprintEnabled ? 'translate-x-4.5' : 'translate-x-0'}`} />
@@ -302,8 +306,8 @@ export default function ProfileTab({
               className="bg-white border border-slate-100 rounded-3xl p-6 max-w-xs w-full text-right relative z-10 shadow-2xl space-y-4"
               id="profile-sim-modal"
             >
-              <div className="w-11 h-11 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto shadow-xs">
-                <ShieldCheck className="w-5 h-5 text-amber-500" />
+              <div className={`w-11 h-11 rounded-full ${isGold ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-600'} flex items-center justify-center mx-auto shadow-xs`}>
+                <ShieldCheck className={`w-5 h-5 ${isGold ? 'text-amber-500' : 'text-slate-500'}`} />
               </div>
 
               <h4 className="text-xs font-black text-slate-800 text-center">
