@@ -466,13 +466,12 @@ export default function MarketplaceTab({
                   <div key={seller.id} className="flex items-center justify-between flex-row-reverse bg-slate-50 p-2.5 rounded-2xl border border-slate-100/50">
                     <button 
                       onClick={() => setSearchQuery(seller.name)}
-                      className="bg-white hover:bg-amber-50 hover:text-amber-700 border border-slate-100 px-3 py-1.5 rounded-xl text-[9px] text-amber-600 transition-colors font-black shadow-sm focus:outline-none"
+                      className={`bg-white border border-slate-100 px-3 py-1.5 rounded-xl text-[9px] transition-colors font-black shadow-sm focus:outline-none ${activeMetal === 'gold' ? 'text-amber-600 hover:bg-amber-50 hover:text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-700'}`}
                     >
                       مشاهده غرفه
                     </button>
                     <div className="flex items-center gap-2.5 flex-row-reverse">
-                      {/* Initials badge instead of emoji */}
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-xs flex items-center justify-center font-black text-xs">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br shadow-xs flex items-center justify-center font-black text-xs text-white ${activeMetal === 'gold' ? 'from-amber-500 to-amber-600' : 'from-slate-500 to-slate-600'}`}>
                         {getInitials(seller.name)}
                       </div>
                       <div className="flex flex-col text-right">

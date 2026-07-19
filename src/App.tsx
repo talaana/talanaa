@@ -201,8 +201,9 @@ export default function App() {
     }
   };
 
-  // Determine whether the main persistent Header and Bottom Nav should render
+    // Determine whether the main persistent Header and Bottom Nav should render
   const showHeaderAndNav = ['home', 'vitrine', 'trade', 'services'].includes(activeTab) && !isProductDetailOpen;
+  const tabActiveColor = activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600';
 
   return (
     <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-amber-600 selection:text-white">
@@ -310,7 +311,7 @@ export default function App() {
             
             <button
               onClick={() => handleNavigateToTab('home')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'home' ? 'text-amber-600 scale-102 font-black' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'home' ? `${tabActiveColor} scale-102 font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-home"
             >
               <Home className="w-4.5 h-4.5" fill={activeTab === 'home' ? 'currentColor' : 'none'} />
@@ -319,7 +320,7 @@ export default function App() {
 
             <button
               onClick={() => handleNavigateToTab('vitrine')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'vitrine' ? 'text-amber-600 scale-102 font-black' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'vitrine' ? `${tabActiveColor} scale-102 font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-vitrine"
             >
               <Store className="w-4.5 h-4.5" fill={activeTab === 'vitrine' ? 'currentColor' : 'none'} />
@@ -328,7 +329,7 @@ export default function App() {
 
             <button
               onClick={() => handleNavigateToTab('trade')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'trade' ? 'text-amber-600 scale-102 font-black' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'trade' ? `${tabActiveColor} scale-102 font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-trade"
             >
               <ArrowLeftRight className="w-4.5 h-4.5" />
@@ -337,7 +338,7 @@ export default function App() {
 
             <button
               onClick={() => handleNavigateToTab('services')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'services' ? 'text-amber-600 scale-102 font-black' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'services' ? `${tabActiveColor} scale-102 font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-services"
             >
               <LayoutGrid className="w-4.5 h-4.5" fill={activeTab === 'services' ? 'currentColor' : 'none'} />
