@@ -1,0 +1,22 @@
+{
+  "name": "طلانا | سامانه هوشمند طلا و نقره",
+  "short_name": "طلانا",
+  "description": "پلتفرم سرمایه‌گذاری طلا و نقره آب‌شده و بازارچه آنلاین ویترین",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#d97706",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

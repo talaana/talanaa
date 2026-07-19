@@ -1,0 +1,6 @@
+{
+  "name": "Talana Gold and Silver Marketplace",
+  "description": "طلانا | پلتفرم هوشمند سرمایه‌گذاری طلا و نقره آب‌شده و ویترین زیورآلات",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

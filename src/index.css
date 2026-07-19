@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Vazirmatn", system-ui, -apple-system, sans-serif;
+  --font-mono: "Vazirmatn", monospace;
+  
+  --color-primary: #ca8a04; /* amber-600 */
+  --color-primary-light: #fef08a; /* yellow-200 */
+  --color-primary-dark: #854d0e; /* amber-800 */
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d97706; /* Amber 600 */
+}
+
+/* Custom CSS Scrollbar Utility */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d97706 #f1f5f9;
+}
+
+/* RTL refinements and global light theme base styling */
+html, body {
+  font-family: "Vazirmatn", system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc; /* very light premium slate background */
+  color: #0f172a; /* slate 900 slate text */
+  scroll-behavior: smooth;
+}
+
+/* Safe area inset helper for iOS PWA */
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
+
