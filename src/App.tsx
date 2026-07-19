@@ -4,7 +4,6 @@ import Header from './components/Header';
 import HomeDashboard from './components/HomeDashboard';
 import { Home, Store, ArrowLeftRight, LayoutGrid } from 'lucide-react';
 import { BASE_GOLD_PRICE_18K, BASE_SILVER_PRICE_999 } from './data';
-import { productPlaceholder } from './utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 const MarketplaceTab = lazy(() => import('./components/MarketplaceTab'));
@@ -45,7 +44,7 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     weightGrams: 4.25,
     status: 'completed',
     details: 'خرید فیزیکی انگشتر طرح اسلیمی از غرفه «گالری زرین». ارسال شده از تهران با پست پیشتاز و بیمه رسمی اتحادیه طلا و نقره.',
-    image: productPlaceholder('ring'),
+    image: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="#1c1917"/><text x="200" y="210" text-anchor="middle" fill="#f59e0b" font-size="36" font-weight="900">انگشتر</text></svg>'),
   }
 ];
 

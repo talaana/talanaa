@@ -1,7 +1,7 @@
 import React, { useState, memo, useMemo } from 'react';
 import { UserWallet, Transaction } from '../types';
-import { CATEGORIES, PRODUCTS } from '../data';
-import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits } from '../utils';
+import { CATEGORIES } from '../data';
+import { formatToman, formatGram, toPersianDigits } from '../utils';
 import { 
   ChevronLeft, 
   ChevronDown, 
@@ -184,9 +184,6 @@ const HomeDashboard = memo(function HomeDashboard({
       setActiveServiceSim(id);
     }
   };
-
-  // Compact Vitrine featured products
-  const compactProducts = useMemo(() => PRODUCTS.slice(0, 3), []);
 
   return (
     <div className="space-y-3.5 max-w-md mx-auto px-4 py-2 text-slate-800 pb-2 text-right" id="home-dashboard">
