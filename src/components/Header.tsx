@@ -35,6 +35,8 @@ export default function Header({
   }, []);
 
   const activePrice = activeMetal === 'gold' ? goldPrice18k : silverPrice999;
+  const iconColor = activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600';
+  const iconHover = activeMetal === 'gold' ? 'hover:text-amber-700' : 'hover:text-slate-700';
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 py-2 text-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015),0_4px_6px_-2px_rgba(0,0,0,0.005)]" id="app-header">
@@ -43,17 +45,17 @@ export default function Header({
         {/* Visual Right in RTL: Profile icon (User profile is high-importance) */}
         <button 
           onClick={() => onNavigateToTab('profile')} 
-          className="text-amber-600 hover:text-amber-700 transition-colors duration-200 focus:outline-none p-1"
+          className={`${iconColor} ${iconHover} transition-colors duration-200 focus:outline-none p-1`}
           title="حساب کاربری"
           id="btn-header-profile"
         >
-          <User className="w-5 h-5 text-amber-600" />
+          <User className={`w-5 h-5 ${iconColor}`} />
         </button>
 
         {/* Visual Center: Brand Logo and Title */}
         <div className="flex items-center gap-1.5">
           {!isOnline && (
-            <WifiOff className="w-3.5 h-3.5 text-amber-500 animate-pulse" title="آفلاین - حالت محلی" />
+            <WifiOff className={`w-3.5 h-3.5 ${iconColor} animate-pulse`} title="آفلاین - حالت محلی" />
           )}
           <img 
             src="/logo.png" 

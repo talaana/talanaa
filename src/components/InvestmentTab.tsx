@@ -34,6 +34,14 @@ export default function InvestmentTab({
   const activeMetalLabel = activeMetal === 'gold' ? 'طلای ۱۸ عیار' : 'نقره ۹۹۹';
   const activeMetalUnit = 'گرم';
 
+  const inputFocus = activeMetal === 'gold'
+    ? 'focus:border-amber-600 focus:ring-amber-600'
+    : 'focus:border-slate-600 focus:ring-slate-600';
+  const accentColor = activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600';
+  const presetHover = activeMetal === 'gold'
+    ? '${presetHover}'
+    : 'hover:border-slate-200 hover:bg-slate-50/20';
+
   // Specific user wallet holdings in metals
   const silverWalletHolding = 42.500;
   const activeMetalHolding = activeMetal === 'gold' ? wallet.goldGrams : silverWalletHolding;
@@ -203,11 +211,11 @@ export default function InvestmentTab({
                 value={gramsInput ? toPersianDigits(gramsInput) : ''}
                 onChange={(e) => handleGramsChange(e.target.value)}
                 placeholder={toPersianDigits("مثلاً ۰.۵")}
-                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-right font-black text-slate-800 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all text-sm"
+                className={`w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-right font-black text-slate-800 focus:outline-none ${inputFocus} transition-all text-sm`}
                 dir="rtl"
                 id="input-trade-grams"
               />
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-amber-600">گرم</span>
+              <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black ${accentColor}`}>گرم</span>
             </div>
           </div>
 
@@ -220,7 +228,7 @@ export default function InvestmentTab({
                 value={tomanInput ? toPersianDigits(tomanInput) : ''}
                 onChange={(e) => handleTomanChange(e.target.value)}
                 placeholder={toPersianDigits("مثلاً ۵,۰۰۰,۰۰۰")}
-                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-right font-black text-slate-800 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all text-sm"
+                className={`w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-right font-black text-slate-800 focus:outline-none ${inputFocus} transition-all text-sm`}
                 dir="rtl"
                 id="input-trade-toman"
               />
@@ -234,21 +242,21 @@ export default function InvestmentTab({
             <div className="grid grid-cols-4 gap-1.5 text-[10px] font-black">
               {tradeType === 'buy' ? (
                 <>
-                  <button type="button" onClick={() => setPresetToman(1000000)} className="bg-slate-50 border border-slate-100 text-slate-600 hover:border-amber-200 hover:bg-amber-50/20 py-2.5 rounded-xl transition-all focus:outline-none">۱ میلیون</button>
-                  <button type="button" onClick={() => setPresetToman(5000000)} className="bg-slate-50 border border-slate-100 text-slate-600 hover:border-amber-200 hover:bg-amber-50/20 py-2.5 rounded-xl transition-all focus:outline-none">۵ میلیون</button>
-                  <button type="button" onClick={() => setPresetGrams(activeMetal === 'gold' ? 0.5 : 5)} className="bg-slate-50 border border-slate-100 text-slate-600 hover:border-amber-200 hover:bg-amber-50/20 py-2.5 rounded-xl transition-all focus:outline-none">
+                  <button type="button" onClick={() => setPresetToman(1000000)} className={`bg-slate-50 border border-slate-100 text-slate-600 ${presetHover} py-2.5 rounded-xl transition-all focus:outline-none`}>۱ میلیون</button>
+                  <button type="button" onClick={() => setPresetToman(5000000)} className={`bg-slate-50 border border-slate-100 text-slate-600 ${presetHover} py-2.5 rounded-xl transition-all focus:outline-none`}>۵ میلیون</button>
+                  <button type="button" onClick={() => setPresetGrams(activeMetal === 'gold' ? 0.5 : 5)} className={`bg-slate-50 border border-slate-100 text-slate-600 ${presetHover} py-2.5 rounded-xl transition-all focus:outline-none`}>
                     {activeMetal === 'gold' ? '۰.۵ گرم' : '۵ گرم'}
                   </button>
-                  <button type="button" onClick={() => setPresetGrams(activeMetal === 'gold' ? 1 : 10)} className="bg-slate-50 border border-slate-100 text-slate-600 hover:border-amber-200 hover:bg-amber-50/20 py-2.5 rounded-xl transition-all focus:outline-none">
+                  <button type="button" onClick={() => setPresetGrams(activeMetal === 'gold' ? 1 : 10)} className={`bg-slate-50 border border-slate-100 text-slate-600 ${presetHover} py-2.5 rounded-xl transition-all focus:outline-none`}>
                     {activeMetal === 'gold' ? '۱ گرم' : '۱۰ گرم'}
                   </button>
                 </>
               ) : (
                 <>
-                  <button type="button" onClick={() => setPresetGrams(activeMetalHolding * 0.25)} className="bg-slate-50 border border-slate-100 text-slate-600 hover:border-amber-200 hover:bg-amber-50/20 py-2.5 rounded-xl transition-all focus:outline-none">۲۵٪ موجودی</button>
-                  <button type="button" onClick={() => setPresetGrams(activeMetalHolding * 0.50)} className="bg-slate-50 border border-slate-100 text-slate-600 hover:border-amber-200 hover:bg-amber-50/20 py-2.5 rounded-xl transition-all focus:outline-none">۵۰٪ موجودی</button>
-                  <button type="button" onClick={() => setPresetGrams(activeMetalHolding)} className="bg-slate-50 border border-slate-100 text-slate-600 hover:border-amber-200 hover:bg-amber-50/20 py-2.5 rounded-xl transition-all focus:outline-none">کل موجودی</button>
-                  <button type="button" onClick={() => setPresetGrams(activeMetal === 'gold' ? 0.1 : 1)} className="bg-slate-50 border border-slate-100 text-slate-600 hover:border-amber-200 hover:bg-amber-50/20 py-2.5 rounded-xl transition-all focus:outline-none">
+                  <button type="button" onClick={() => setPresetGrams(activeMetalHolding * 0.25)} className={`bg-slate-50 border border-slate-100 text-slate-600 ${presetHover} py-2.5 rounded-xl transition-all focus:outline-none`}>۲۵٪ موجودی</button>
+                  <button type="button" onClick={() => setPresetGrams(activeMetalHolding * 0.50)} className={`bg-slate-50 border border-slate-100 text-slate-600 ${presetHover} py-2.5 rounded-xl transition-all focus:outline-none`}>۵۰٪ موجودی</button>
+                  <button type="button" onClick={() => setPresetGrams(activeMetalHolding)} className={`bg-slate-50 border border-slate-100 text-slate-600 ${presetHover} py-2.5 rounded-xl transition-all focus:outline-none`}>کل موجودی</button>
+                  <button type="button" onClick={() => setPresetGrams(activeMetal === 'gold' ? 0.1 : 1)} className={`bg-slate-50 border border-slate-100 text-slate-600 ${presetHover} py-2.5 rounded-xl transition-all focus:outline-none`}>
                     {activeMetal === 'gold' ? '۰.۱ گرم' : '۱ گرم'}
                   </button>
                 </>
@@ -273,7 +281,7 @@ export default function InvestmentTab({
 
       {/* FAQ Info Box */}
       <div className="bg-white border border-slate-100 rounded-3xl p-4 text-xs text-slate-500 flex gap-3 text-right shadow-sm">
-        <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <Info className={`w-5 h-5 ${accentColor} flex-shrink-0 mt-0.5`} />
         <div className="space-y-1">
           <p className="font-extrabold text-slate-800">مکانیزم معاملات امن طلانا چگونه است؟</p>
           <p className="leading-relaxed text-[11px] text-slate-500 font-medium">

@@ -264,7 +264,7 @@ export default function MarketplaceTab({
 
                   <div className="flex justify-between items-center border-t border-slate-100 pt-3 text-sm flex-row-reverse">
                     <span className="font-black text-slate-800 text-xs">قیمت نهایی فاکتور رسمی:</span>
-                    <span className="font-black text-amber-600 text-sm">
+                    <span className={`font-black text-sm ${activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600'}`}>
                       {formatToman(breakdown.finalPrice)} تومان
                     </span>
                   </div>
@@ -507,7 +507,7 @@ export default function MarketplaceTab({
                   <X className="w-4 h-4" />
                 </button>
                 <h4 className="text-xs font-black text-slate-800 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-spin" /> سفارش طراحی اختصاصی پلاک
+                  <Sparkles className={`w-3.5 h-3.5 ${activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600'} animate-spin`} /> سفارش طراحی اختصاصی پلاک
                 </h4>
               </div>
 
@@ -520,7 +520,7 @@ export default function MarketplaceTab({
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
                     placeholder="مثلاً: علی، مهسا، Love..."
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-right text-xs text-slate-800 focus:outline-none focus:border-amber-600"
+                    className={`w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-right text-xs text-slate-800 focus:outline-none ${activeMetal === 'gold' ? 'focus:border-amber-600' : 'focus:border-slate-600'}`}
                   />
                 </div>
 
@@ -532,7 +532,7 @@ export default function MarketplaceTab({
                     value={customWeight ? toPersianDigits(customWeight) : ''}
                     onChange={(e) => setCustomWeight(e.target.value)}
                     placeholder="مثلاً: ۳.۵"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-left text-xs text-slate-800 focus:outline-none focus:border-amber-600 font-mono"
+                    className={`w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-left text-xs text-slate-800 focus:outline-none ${activeMetal === 'gold' ? 'focus:border-amber-600' : 'focus:border-slate-600'} font-mono`}
                   />
                 </div>
 
@@ -543,7 +543,7 @@ export default function MarketplaceTab({
                     onChange={(e) => setCustomDescription(e.target.value)}
                     placeholder="مثلاً: طرح نستعلیق دارای قاب گل..."
                     rows={2}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-right text-xs text-slate-800 focus:outline-none focus:border-amber-600"
+                    className={`w-full bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-right text-xs text-slate-800 focus:outline-none ${activeMetal === 'gold' ? 'focus:border-amber-600' : 'focus:border-slate-600'}`}
                   />
                 </div>
 
@@ -556,7 +556,7 @@ export default function MarketplaceTab({
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3.5 rounded-2xl font-black text-xs shadow-md focus:outline-none"
+                  className={`w-full bg-gradient-to-r ${activeMetal === 'gold' ? 'from-amber-600 to-amber-500' : 'from-slate-600 to-slate-500'} text-white py-3.5 rounded-2xl font-black text-xs shadow-md focus:outline-none`}
                 >
                   ثبت طرح اختصاصی و پیش‌فاکتور
                 </button>
