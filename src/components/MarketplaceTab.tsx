@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Product, UserWallet, Transaction } from '../types';
 import { CATEGORIES, PRODUCTS, SELLERS } from '../data';
 import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits, productPlaceholder } from '../utils';
@@ -17,7 +17,7 @@ interface MarketplaceTabProps {
   onSelectCategory: (category: string | null) => void;
 }
 
-export default function MarketplaceTab({ 
+const MarketplaceTab = memo(function MarketplaceTab({ 
   wallet, 
   goldPrice18k, 
   silverPrice999,
@@ -609,4 +609,6 @@ export default function MarketplaceTab({
 
     </div>
   );
-}
+});
+
+export default MarketplaceTab;

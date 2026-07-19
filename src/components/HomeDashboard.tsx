@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { UserWallet, Transaction } from '../types';
 import { CATEGORIES, PRODUCTS } from '../data';
 import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits } from '../utils';
@@ -39,7 +39,7 @@ interface HomeDashboardProps {
   onTransaction: (tx: Transaction) => void;
 }
 
-export default function HomeDashboard({
+const HomeDashboard = memo(function HomeDashboard({
   wallet,
   goldPrice18k,
   silverPrice999,
@@ -589,4 +589,6 @@ export default function HomeDashboard({
 
     </div>
   );
-}
+});
+
+export default HomeDashboard;

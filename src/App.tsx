@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { UserWallet, Transaction } from './types';
 import Header from './components/Header';
 import HomeDashboard from './components/HomeDashboard';
-import MarketplaceTab from './components/MarketplaceTab';
-import InvestmentTab from './components/InvestmentTab';
-import ServicesTab from './components/ServicesTab';
-import OrdersTab from './components/OrdersTab';
-import ProfileTab from './components/ProfileTab';
-import NotificationsTab from './components/NotificationsTab';
 import { Home, Store, ArrowLeftRight, LayoutGrid } from 'lucide-react';
 import { BASE_GOLD_PRICE_18K, BASE_SILVER_PRICE_999 } from './data';
 import { productPlaceholder } from './utils';
 import { motion, AnimatePresence } from 'motion/react';
+
+const MarketplaceTab = lazy(() => import('./components/MarketplaceTab'));
+const InvestmentTab = lazy(() => import('./components/InvestmentTab'));
+const ServicesTab = lazy(() => import('./components/ServicesTab'));
+const OrdersTab = lazy(() => import('./components/OrdersTab'));
+const ProfileTab = lazy(() => import('./components/ProfileTab'));
+const NotificationsTab = lazy(() => import('./components/NotificationsTab'));
+
+const TabFallback = () => (
+  <div className="max-w-md mx-auto px-4 py-12 text-center">
+    <div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto" />
+  </div>
+);
 
 const INITIAL_WALLET: UserWallet = {
   goldGrams: 2.458,
@@ -127,14 +134,12 @@ export default function App() {
   }, [silverPrice999]);
 
   // Handle transaction processing
-  const handleNewTransaction = (tx: Transaction) => {
+  const handleNewTransaction = useCallback((tx: Transaction) => {
     setTransactions((prev) => [tx, ...prev]);
 
-    // Update wallet accordingly
     if (tx.type === 'buy_gold') {
       const isSilver = tx.title.includes('نقره');
       if (isSilver) {
-        // Silver is demo simulated, but we can reflect a mock update or keep cash updated
         setWallet((prev) => ({
           ...prev,
           cashToman: prev.cashToman - tx.amountToman,
@@ -159,11 +164,10 @@ export default function App() {
         }));
       }
     } else if (tx.type === 'buy_product') {
-      // Check if it was bought with direct cash or exchanged with gold
       if (tx.details?.includes('مبادله')) {
         setWallet((prev) => ({
           goldGrams: prev.goldGrams - (tx.weightGrams || 0),
-          cashToman: prev.cashToman - tx.amountToman, // wages and profit paid in cash
+          cashToman: prev.cashToman - tx.amountToman,
         }));
       } else {
         setWallet((prev) => ({
@@ -172,7 +176,7 @@ export default function App() {
         }));
       }
     }
-  };
+  }, []);
 
   // Reset demo simulation data
   const handleResetData = () => {
@@ -193,13 +197,16 @@ export default function App() {
     setUserName(newName);
   };
 
-  const handleNavigateToTab = (tabId: string, categoryFilter: string | null = null) => {
+  const handleNavigateToTab = useCallback((tabId: string, categoryFilter: string | null = null) => {
     setIsProductDetailOpen(false);
     setActiveTab(tabId);
     if (tabId === 'vitrine') {
       setSelectedCategory(categoryFilter);
     }
-  };
+  }, []);
+
+  // Toggle Visibility for cash/metal amounts - stable reference
+  const toggleBalances = useCallback(() => setShowBalances((prev) => !prev), []);
 
     // Determine whether the main persistent Header and Bottom Nav should render
   const showHeaderAndNav = ['home', 'vitrine', 'trade', 'services'].includes(activeTab) && !isProductDetailOpen;
@@ -231,6 +238,7 @@ export default function App() {
             transition={{ duration: 0.15 }}
             className="w-full h-full"
           >
+            <Suspense fallback={<TabFallback />}>
             {activeTab === 'home' && (
               <HomeDashboard
                 wallet={wallet}
@@ -239,7 +247,7 @@ export default function App() {
                 priceTrend={priceTrend}
                 activeMetal={activeMetal}
                 showBalances={showBalances}
-                onToggleBalances={() => setShowBalances(!showBalances)}
+                onToggleBalances={toggleBalances}
                 onNavigateToTab={handleNavigateToTab}
                 onTransaction={handleNewTransaction}
               />
@@ -301,6 +309,7 @@ export default function App() {
                 onBack={() => setActiveTab('home')}
               />
             )}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>
