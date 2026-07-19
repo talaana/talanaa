@@ -327,7 +327,7 @@ export default function MarketplaceTab({
               </p>
             </div>
             <div>
-              <Sparkles className={`w-9 h-9 ${activeMetal === 'gold' ? 'text-amber-500' : 'text-slate-500'} animate-pulse`} />
+              <img src="/talana_logo.png" alt="طلانا" className="w-9 h-9 rounded-lg object-contain opacity-90" />
             </div>
           </div>
 
