@@ -1,4 +1,4 @@
-const SHELL = 'talana-shell-v1';
+const SHELL = 'talana-shell-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

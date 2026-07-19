@@ -1,11 +1,11 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { UserWallet, Transaction } from './types';
 import Header from './components/Header';
-import HomeDashboard from './components/HomeDashboard';
 import { Home, Store, ArrowLeftRight, LayoutGrid } from 'lucide-react';
 import { BASE_GOLD_PRICE_18K, BASE_SILVER_PRICE_999 } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 
+const HomeDashboard = lazy(() => import('./components/HomeDashboard'));
 const MarketplaceTab = lazy(() => import('./components/MarketplaceTab'));
 const InvestmentTab = lazy(() => import('./components/InvestmentTab'));
 const ServicesTab = lazy(() => import('./components/ServicesTab'));
