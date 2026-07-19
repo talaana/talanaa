@@ -1,73 +1,56 @@
-const CACHE_NAME = 'talana-cache-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/src/main.tsx',
-  '/src/index.css',
-  '/src/App.tsx',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap'
-];
+const CACHE_NAME = 'talana-v2';
 
-// Install Event
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Pre-caching offline assets...');
-      return cache.addAll(ASSETS_TO_CACHE).catch(err => {
-        console.warn('Pre-caching some assets failed:', err);
-      });
-    })
-  );
   self.skipWaiting();
 });
 
-// Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('[Service Worker] Clearing old cache...', cache);
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
   );
   self.clients.claim();
 });
 
-// Fetch Event (Network-First falling back to Cache)
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
 
-  // Exclude third-party dynamic files if necessary, but cache fonts, icons, assets
-  event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        // Cache the newest response if it is successful
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        // Fallback to cache if network fails (offline mode)
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+  // Cache-first for static assets (immutable hashed filenames)
+  if (url.pathname.match(/\.(js|css|png|jpg|svg|woff2)$/) || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        const fetched = fetch(event.request).then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
-          // If totally offline and not cached, return index.html for SPA routes
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
-          }
+          return res;
         });
+        return cached || fetched;
       })
+    );
+    return;
+  }
+
+  // Network-first for navigations, falling back to cache
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request).then((r) => r || caches.match('/')))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for everything else
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      const fetched = fetch(event.request).then((res) => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return res;
+      }).catch(() => cached);
+      return cached || fetched;
+    })
   );
 });

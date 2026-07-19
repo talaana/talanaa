@@ -39,7 +39,7 @@ export default function Header({
   const iconHover = activeMetal === 'gold' ? 'hover:text-amber-700' : 'hover:text-slate-700';
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 py-3 text-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015),0_4px_6px_-2px_rgba(0,0,0,0.005)]" id="app-header">
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 py-3 text-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015),0_4px_6px_-2px_rgba(0,0,0,0.005)]" id="app-header" role="banner">
       <div className="max-w-md mx-auto flex items-center justify-between flex-row">
         
         {/* Visual Right in RTL: Profile icon */}
@@ -47,21 +47,24 @@ export default function Header({
           onClick={() => onNavigateToTab('profile')} 
           className={`${iconColor} ${iconHover} transition-colors duration-200 focus:outline-none p-1`}
           title="حساب کاربری"
+          aria-label="پروفایل کاربری"
           id="btn-header-profile"
         >
-          <User className={`w-6 h-6 ${iconColor}`} />
+          <User className={`w-6 h-6 ${iconColor}`} aria-hidden="true" />
         </button>
 
         {/* Visual Center: Brand Logo and Title */}
         <div className="flex items-center gap-2">
           {!isOnline && (
-            <WifiOff className={`w-4 h-4 ${iconColor} animate-pulse`} title="آفلاین - حالت محلی" />
+            <WifiOff className={`w-4 h-4 ${iconColor} animate-pulse`} title="آفلاین - حالت محلی" aria-label="آفلاین" />
           )}
           <img 
             src="/talana_logo.png" 
             className="w-7 h-7 rounded-md object-contain shadow-xs" 
             alt="لوگو طلانا" 
-            referrerPolicy="no-referrer" 
+            referrerPolicy="no-referrer"
+            width="28"
+            height="28"
           />
           <span className="text-sm font-black text-slate-800 tracking-tight">طلانا</span>
         </div>
@@ -72,19 +75,21 @@ export default function Header({
           className="text-slate-500 hover:text-slate-700 transition-colors duration-200 relative focus:outline-none p-1"
           id="btn-header-bell"
           title="اطلاع‌رسانی"
+          aria-label="اعلان‌ها"
         >
-          <Bell className="w-6 h-6 text-slate-500" />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+          <Bell className="w-6 h-6 text-slate-500" aria-hidden="true" />
+          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" aria-hidden="true"></span>
         </button>
 
       </div>
 
       {/* Segmented Metal Switcher Tab (طلا و نقره) */}
       <div className="max-w-md mx-auto mt-2">
-        <div className="bg-slate-100/60 p-1 rounded-xl border border-slate-100/10 flex w-full gap-1" id="metal-switcher">
+        <div className="bg-slate-100/60 p-1 rounded-xl border border-slate-100/10 flex w-full gap-1" id="metal-switcher" role="group" aria-label="انتخاب فلز">
           {/* Gold Button: first (right in RTL) */}
           <button
             onClick={() => onMetalChange('gold')}
+            aria-pressed={activeMetal === 'gold'}
             className={`flex-1 py-2.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 focus:outline-none ${
               activeMetal === 'gold'
                 ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-xs'
@@ -98,6 +103,7 @@ export default function Header({
           {/* Silver Button: second (left in RTL) */}
           <button
             onClick={() => onMetalChange('silver')}
+            aria-pressed={activeMetal === 'silver'}
             className={`flex-1 py-2.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 focus:outline-none ${
               activeMetal === 'silver'
                 ? 'bg-slate-700 text-white shadow-xs'

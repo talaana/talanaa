@@ -227,7 +227,7 @@ export default function App() {
       )}
 
       {/* Main Tab Render Container */}
-      <main className={`flex-1 w-full max-w-md mx-auto relative ${showHeaderAndNav ? 'pb-18' : 'py-2 pb-10'}`} id="app-main">
+      <main className={`flex-1 w-full max-w-md mx-auto relative ${showHeaderAndNav ? 'pb-18' : 'py-2 pb-10'}`} id="app-main" role="main">
         <AnimatePresence>
           <motion.div
             key={activeTab}
@@ -315,16 +315,18 @@ export default function App() {
 
       {/* Persistent Bottom Nav Bar - Shown on core tabs when detail page is closed */}
       {showHeaderAndNav && (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg pb-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]" id="app-bottom-nav">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg pb-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]" id="app-bottom-nav" aria-label="ناوبری اصلی">
           <div className="max-w-md mx-auto grid grid-cols-4 h-14 text-center text-[11px] font-black">
             
             <button
               onClick={() => handleNavigateToTab('home')}
               className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 focus:outline-none ${activeTab === 'home' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-home"
+              aria-label="خانه"
+              aria-current={activeTab === 'home' ? 'page' : undefined}
             >
               {activeTab === 'home' && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
-              <Home className="w-6 h-6" />
+              <Home className="w-6 h-6" aria-hidden="true" />
               <span>خانه</span>
             </button>
 
@@ -332,9 +334,11 @@ export default function App() {
               onClick={() => handleNavigateToTab('vitrine')}
               className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 focus:outline-none ${activeTab === 'vitrine' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-vitrine"
+              aria-label="ویترین"
+              aria-current={activeTab === 'vitrine' ? 'page' : undefined}
             >
               {activeTab === 'vitrine' && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
-              <Store className="w-6 h-6" />
+              <Store className="w-6 h-6" aria-hidden="true" />
               <span>ویترین</span>
             </button>
 
@@ -342,9 +346,11 @@ export default function App() {
               onClick={() => handleNavigateToTab('trade')}
               className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 focus:outline-none ${activeTab === 'trade' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-trade"
+              aria-label="خرید و فروش"
+              aria-current={activeTab === 'trade' ? 'page' : undefined}
             >
               {activeTab === 'trade' && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
-              <ArrowLeftRight className="w-6 h-6" />
+              <ArrowLeftRight className="w-6 h-6" aria-hidden="true" />
               <span>خرید و فروش</span>
             </button>
 
@@ -352,9 +358,11 @@ export default function App() {
               onClick={() => handleNavigateToTab('services')}
               className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 focus:outline-none ${activeTab === 'services' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-services"
+              aria-label="خدمات"
+              aria-current={activeTab === 'services' ? 'page' : undefined}
             >
               {activeTab === 'services' && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
-              <LayoutGrid className="w-6 h-6" />
+              <LayoutGrid className="w-6 h-6" aria-hidden="true" />
               <span>خدمات</span>
             </button>
 

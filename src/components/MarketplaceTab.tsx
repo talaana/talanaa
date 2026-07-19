@@ -402,6 +402,10 @@ const MarketplaceTab = memo(function MarketplaceTab({
                   layout
                   onClick={() => setSelectedProduct(product)}
                   className={`bg-white border border-slate-100 rounded-2xl overflow-hidden cursor-pointer ${activeMetal === 'gold' ? 'hover:border-amber-200' : 'hover:border-slate-300'} transition-all flex flex-col group relative shadow-xs`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${product.title}، ${formatGram(product.weight)} گرم`}
+                  onKeyDown={(e) => { if (e.key === 'Enter') setSelectedProduct(product); }}
                 >
                   {/* Image Container */}
                   <div className="relative aspect-square overflow-hidden bg-slate-50">

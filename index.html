@@ -2,17 +2,41 @@
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <title>طلانا | سامانه هوشمند معاملات طلا و نقره</title>
+    <meta name="description" content="طلانا، پلتفرم سرمایه‌گذاری و خرید و فروش طلای آب‌شده ۱۸ عیار و نقره ۹۹۹. بازارچه آنلاین زیورآلات، تحویل فیزیکی بیمه‌شده، و کیف پول امن." />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#d97706" />
-    <meta name="description" content="طلانا، سامانه هوشمند و امن معاملات طلا و نقره آب‌شده ۱۸ عیار و ۹۹۹ با امکان تحویل فیزیکی، پس‌انداز آنلاین و معاوضه آسان با زیورآلات ویترین." />
-    <link rel="icon" type="image/png" href="/talana_logo.png" />
+    <meta name="color-scheme" content="light" />
+    <link rel="canonical" href="https://talana-sage.vercel.app" />
 
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="طلانا | سامانه هوشمند معاملات طلا و نقره" />
+    <meta property="og:description" content="سرمایه‌گذاری امن در طلای آب‌شده و نقره، بازارچه آنلاین ویترین، تحویل فیزیکی با بیمه رسمی." />
+    <meta property="og:image" content="https://talana-sage.vercel.app/talana_logo.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="fa_IR" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="طلانا" />
+    <meta name="twitter:description" content="سامانه هوشمند معاملات طلا و نقره" />
+    <meta name="twitter:image" content="https://talana-sage.vercel.app/talana_logo.png" />
+
+    <!-- Icons & PWA -->
+    <link rel="icon" type="image/png" href="/talana_logo.png" />
+    <link rel="apple-touch-icon" href="/talana_logo.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="طلانا" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/talana_logo.png" />
-    <title>طلانا | سامانه هوشمند طلا و نقره</title>
+
+    <!-- Preconnect to external origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Skeleton styles -->
     <style>
       #app-skeleton { max-width: 448px; margin: 0 auto; padding: 12px 16px; font-family: Vazirmatn, system-ui, sans-serif; direction: rtl; }
       .sk-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -35,9 +59,29 @@
       .sk-pulse { animation: sk-pulse 1.5s ease-in-out infinite; }
       @keyframes sk-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "طلانا",
+      "description": "سامانه هوشمند معاملات طلا و نقره",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "IRR"
+      }
+    }
+    </script>
   </head>
   <body class="bg-slate-50 antialiased overflow-x-hidden">
-    <div id="app-skeleton" class="sk-pulse">
+    <!-- Skip to content -->
+    <a href="#app-main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:right-2 focus:z-[100] focus:bg-amber-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl focus:font-bold focus:text-sm">رفتن به محتوای اصلی</a>
+
+    <div id="app-skeleton" class="sk-pulse" aria-hidden="true">
       <div class="sk-header">
         <div class="sk-icon"></div>
         <div style="display:flex;align-items:center;gap:8px"><div class="sk-logo"></div><div class="sk-title"></div></div>
@@ -62,14 +106,10 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('ServiceWorker registered successfully:', reg.scope))
-            .catch(err => console.log('ServiceWorker registration failed:', err));
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function () {});
         });
       }
     </script>
   </body>
 </html>
-
-
