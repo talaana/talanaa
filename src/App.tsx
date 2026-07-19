@@ -105,22 +105,21 @@ export default function App() {
     localStorage.setItem('talana_show_balances', String(showBalances));
   }, [showBalances]);
 
-  // Simulate dynamic real-time gold price fluctuation
+  // Simulate dynamic real-time gold price fluctuation (reduced frequency)
   useEffect(() => {
     const interval = setInterval(() => {
-      const changePercent = (Math.random() * 0.1 - 0.05) / 100; // tiny random percentage change
+      const changePercent = (Math.random() * 0.1 - 0.05) / 100;
       const changeValue = Math.round(goldPrice18k * changePercent);
       if (Math.abs(changeValue) > 100) {
-        const nextPrice = goldPrice18k + changeValue;
-        setGoldPrice18k(nextPrice);
+        setGoldPrice18k((prev) => prev + changeValue);
         setPriceTrend(changeValue > 0 ? 'up' : 'down');
       }
-    }, 8000);
+    }, 30000);
 
     return () => clearInterval(interval);
-  }, [goldPrice18k]);
+  }, []);
 
-  // Simulate dynamic real-time silver price fluctuation
+  // Simulate dynamic real-time silver price fluctuation (reduced frequency)
   useEffect(() => {
     const interval = setInterval(() => {
       const changePercent = (Math.random() * 0.1 - 0.05) / 100;
@@ -128,10 +127,10 @@ export default function App() {
       if (Math.abs(changeValue) > 5) {
         setSilverPrice999((prev) => prev + changeValue);
       }
-    }, 9000);
+    }, 35000);
 
     return () => clearInterval(interval);
-  }, [silverPrice999]);
+  }, []);
 
   // Handle transaction processing
   const handleNewTransaction = useCallback((tx: Transaction) => {

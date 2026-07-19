@@ -192,40 +192,40 @@ const HomeDashboard = memo(function HomeDashboard({
     <div className="space-y-3.5 max-w-md mx-auto px-4 py-2 text-slate-800 pb-2 text-right" id="home-dashboard">
       
       {/* 1. Unified User Authenticated Wallet Box */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm space-y-3 relative overflow-hidden" id="wealth-card">
+      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-4 relative overflow-hidden" id="wealth-card">
         {/* Section A: Metal Balance (Above Cash Balance) with down arrow */}
         <div className="flex items-center justify-between">
           {/* Label on the right (renders on right in RTL) */}
           <div>
             <button 
               onClick={() => setShowVaultModal(true)}
-              className="flex items-center gap-1 text-slate-400 font-extrabold text-[9px] bg-slate-50 border border-slate-100/60 px-2 py-1 rounded-lg hover:bg-slate-100 transition-all focus:outline-none"
+              className="flex items-center gap-1.5 text-slate-400 font-extrabold text-[11px] bg-slate-50 border border-slate-100/60 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-all focus:outline-none"
             >
               <span>{activeMetal === 'gold' ? 'طلای در دسترس' : 'نقره در دسترس'}</span>
-              <ChevronDown className="w-2.5 h-2.5" />
+              <ChevronDown className="w-3 h-3" />
             </button>
           </div>
 
           {/* Value and eye icon on the left (renders on left in RTL) */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <div className="flex flex-col items-end text-right">
-              <div className="text-xs font-black text-slate-800 flex items-baseline gap-0.5">
+              <div className="text-lg font-black text-slate-800 flex items-baseline gap-1">
                 {showBalances ? (
                   <>
-                    <span className="text-xs">{formatGram(activeMetalHolding)}</span>
-                    <span className="text-[9px] font-bold text-slate-400">{activeMetalUnit}</span>
+                    <span>{formatGram(activeMetalHolding)}</span>
+                    <span className="text-xs font-bold text-slate-400">{activeMetalUnit}</span>
                   </>
                 ) : (
-                  <span className="text-[10px] leading-none tracking-widest font-black">****</span>
+                  <span className="text-sm leading-none tracking-widest font-black">****</span>
                 )}
               </div>
               {/* Show price equivalent under grams */}
               {showBalances ? (
-                <div className={`text-[8.5px] font-extrabold ${activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-500'} mt-0.5`} dir="rtl">
+                <div className={`text-xs font-extrabold ${activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-500'} mt-0.5`} dir="rtl">
                   {formatToman(Math.round(activeMetalHolding * activePrice))} تومان
                 </div>
               ) : (
-                <div className="text-[8px] font-bold text-slate-300 mt-0.5">****</div>
+                <div className="text-[10px] font-bold text-slate-300 mt-0.5">****</div>
               )}
             </div>
 
@@ -235,22 +235,22 @@ const HomeDashboard = memo(function HomeDashboard({
               className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50 transition-all focus:outline-none"
               title={showBalances ? "مخفی کردن مبالغ" : "نمایش مبالغ"}
             >
-              {showBalances ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+              {showBalances ? <Eye className="w-4.5 h-4.5" /> : <EyeOff className="w-4.5 h-4.5" />}
             </button>
           </div>
         </div>
 
         {/* Section B: Cash Balance (Below Metal Balance) */}
-        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
-          <span className="text-slate-400 font-extrabold text-[9px]">موجودی کیف پول</span>
-          <div className="text-xs font-extrabold text-slate-700 flex items-baseline gap-0.5">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+          <span className="text-slate-400 font-extrabold text-[11px]">موجودی کیف پول</span>
+          <div className="text-sm font-extrabold text-slate-700 flex items-baseline gap-1">
             {showBalances ? (
               <>
-                <span className="text-xs">{formatToman(wallet.cashToman)}</span>
-                <span className="text-[9px] font-bold text-slate-400">تومان</span>
+                <span>{formatToman(wallet.cashToman)}</span>
+                <span className="text-xs font-bold text-slate-400">تومان</span>
               </>
             ) : (
-              <span className="text-[9px] leading-none tracking-widest font-black">****</span>
+              <span className="text-xs leading-none tracking-widest font-black">****</span>
             )}
           </div>
         </div>
