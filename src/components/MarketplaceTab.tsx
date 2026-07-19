@@ -400,7 +400,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                 <div
                   key={product.id}
                   onClick={() => setSelectedProduct(product)}
-                  className={`bg-white border border-slate-100 rounded-2xl overflow-hidden cursor-pointer ${activeMetal === 'gold' ? 'hover:border-amber-200' : 'hover:border-slate-300'} flex flex-col group relative shadow-xs`}
+                  className={`bg-white border border-slate-100 rounded-2xl overflow-hidden cursor-pointer ${activeMetal === 'gold' ? 'hover:border-amber-200' : 'hover:border-slate-300'} flex flex-col relative shadow-xs`}
                   role="button"
                   tabIndex={0}
                   aria-label={`${product.title}، ${formatGram(product.weight)} گرم`}
@@ -412,7 +412,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                       src={product.image}
                       alt={product.title}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
+                      className="w-full h-full object-cover"
                     />
                     
                     {/* Badges */}
