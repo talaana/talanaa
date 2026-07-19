@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product, UserWallet, Transaction } from '../types';
 import { CATEGORIES, PRODUCTS, SELLERS } from '../data';
-import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits } from '../utils';
+import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits, getProductPlaceholder } from '../utils';
 import { Search, MapPin, Sparkles, ShoppingBag, Check, X, ShieldAlert, ArrowLeftRight, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import CategoryIcon from './CategoryIcon';
@@ -157,7 +157,7 @@ export default function MarketplaceTab({
       sellerName: 'گالری زرین',
       sellerRating: 4.9,
       city: 'تهران',
-      image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&q=80&w=400',
+      image: getProductPlaceholder('custom'),
       description: customDescription || 'پلاک سفارشی طراحی شده توسط بخش سفارش‌سازی طلانا.'
     };
 
@@ -463,7 +463,7 @@ export default function MarketplaceTab({
               </h4>
               <div className="space-y-2.5">
                 {SELLERS.map((seller) => (
-                  <div key={seller.id} className="flex items-center justify-between bg-slate-50 p-2.5 rounded-2xl border border-slate-100/50">
+                  <div key={seller.id} className="flex items-center justify-between flex-row-reverse bg-slate-50 p-2.5 rounded-2xl border border-slate-100/50">
                     <button 
                       onClick={() => setSearchQuery(seller.name)}
                       className="bg-white hover:bg-amber-50 hover:text-amber-700 border border-slate-100 px-3 py-1.5 rounded-xl text-[9px] text-amber-600 transition-colors font-black shadow-sm focus:outline-none"

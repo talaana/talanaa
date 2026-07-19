@@ -63,3 +63,40 @@ export function formatPercent(percentage: number | string | undefined | null): s
   return toPersianDigits(percentage);
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  ring: 'انگشتر',
+  necklace: 'گردنبند',
+  bracelet: 'دستبند',
+  earring: 'گوشواره',
+  service: 'سرویس',
+  bar: 'شمش',
+  coin: 'سکه',
+  secondhand: 'طلای دست\u200Cدوم',
+  custom: 'سفارشی\u200Cسازی',
+};
+
+export function getProductPlaceholder(category: string, metal?: 'gold' | 'silver'): string {
+  const isGold = metal !== 'silver';
+  const [c1, c2] = isGold ? ['#f59e0b', '#b45309'] : ['#94a3b8', '#475569'];
+  const name = CATEGORY_LABELS[category] || 'طلانا';
+  const w = 400, h = 400;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient></defs>
+  <rect width="${w}" height="${h}" fill="url(#g)"/>
+  <text x="${w/2}" y="${h/2}" text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-family="Vazirmatn, system-ui, sans-serif" font-size="32" font-weight="900">${name}</text>
+</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+export function getSellerPlaceholder(name: string): string {
+  const w = 800, h = 300;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs>
+  <rect width="${w}" height="${h}" fill="url(#g)"/>
+  <rect x="${w/2-120}" y="${h/2-50}" width="240" height="100" rx="20" fill="none" stroke="#ca8a04" stroke-width="2"/>
+  <text x="${w/2}" y="${h/2-8}" text-anchor="middle" dominant-baseline="central" fill="#ca8a04" font-family="Vazirmatn, system-ui, sans-serif" font-size="36" font-weight="900">${name}</text>
+  <text x="${w/2}" y="${h/2+32}" text-anchor="middle" dominant-baseline="central" fill="#64748b" font-family="Vazirmatn, system-ui, sans-serif" font-size="18" font-weight="700">همکار رسمی طلانا</text>
+</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+

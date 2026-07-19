@@ -1,4 +1,5 @@
 import { Product, Category, Seller, GoldPricePoint } from './types';
+import { getProductPlaceholder, getSellerPlaceholder } from './utils';
 
 // Default 18k gold price per gram in Tomans
 export const BASE_GOLD_PRICE_18K = 8650000;
@@ -25,7 +26,7 @@ export const SELLERS: Seller[] = [
     rating: 4.9,
     city: 'تهران',
     logo: '🏆',
-    banner: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=800',
+    banner: getSellerPlaceholder('گالری زرین'),
     productsCount: 42,
   },
   {
@@ -34,7 +35,7 @@ export const SELLERS: Seller[] = [
     rating: 4.7,
     city: 'اصفهان',
     logo: '💎',
-    banner: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=800',
+    banner: getSellerPlaceholder('جواهری محمد'),
     productsCount: 35,
   },
   {
@@ -43,7 +44,7 @@ export const SELLERS: Seller[] = [
     rating: 4.8,
     city: 'یزد',
     logo: '👑',
-    banner: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=800',
+    banner: getSellerPlaceholder('طلای ناب'),
     productsCount: 29,
   },
   {
@@ -52,7 +53,7 @@ export const SELLERS: Seller[] = [
     rating: 4.6,
     city: 'شیراز',
     logo: '🌸',
-    banner: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&q=80&w=800',
+    banner: getSellerPlaceholder('طلا و جواهر مهر'),
     productsCount: 21,
   }
 ];
@@ -68,8 +69,8 @@ export const PRODUCTS: Product[] = [
     sellerName: 'گالری زرین',
     sellerRating: 4.9,
     city: 'تهران',
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&q=80&w=400',
-    description: 'یک اثر هنری زیبا با الهام از طرح‌های سنتی اسلیمی ایرانی، بسیار خوش‌دست و مناسب برای استفاده روزمره یا مجالس خاص.',
+    image: getProductPlaceholder('ring'),
+    description: 'یک اثر هنری زیبا با الهام از طرح\u200Cهای سنتی اسلیمی ایرانی، بسیار خوش\u200Cدست و مناسب برای استفاده روزمره یا مجالس خاص.',
     isFeatured: true,
   },
   {
@@ -82,8 +83,8 @@ export const PRODUCTS: Product[] = [
     sellerName: 'جواهری محمد',
     sellerRating: 4.7,
     city: 'اصفهان',
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=400',
-    description: 'گردنبند زنانه کارتیه کلاسیک با درخشندگی خیره‌کننده و بافت بسیار منظم. انتخابی همیشگی برای شیک‌پوشان.',
+    image: getProductPlaceholder('necklace'),
+    description: 'گردنبند زنانه کارتیه کلاسیک با درخشندگی خیره\u200Cکننده و بافت بسیار منظم. انتخابی همیشگی برای شیک\u200Cپوشان.',
     isFeatured: true,
   },
   {
@@ -96,13 +97,13 @@ export const PRODUCTS: Product[] = [
     sellerName: 'طلای ناب',
     sellerRating: 4.8,
     city: 'یزد',
-    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=400',
-    description: 'دستبند شکیل زنجیری البرز به همراه آویز قلب توخالی تراش‌خورده. هدیه‌ای بسیار احساسی و ماندگار.',
+    image: getProductPlaceholder('bracelet'),
+    description: 'دستبند شکیل زنجیری البرز به همراه آویز قلب توخالی تراش\u200Cخورده. هدیه\u200Cای بسیار احساسی و ماندگار.',
     isFeatured: true,
   },
   {
     id: 'p4',
-    title: 'گوشواره میخی طرح گل هشت‌پر',
+    title: 'گوشواره میخی طرح گل هشت\u200Cپر',
     category: 'earring',
     weight: 2.15,
     wagePercentage: 18,
@@ -110,8 +111,8 @@ export const PRODUCTS: Product[] = [
     sellerName: 'طلا و جواهر مهر',
     sellerRating: 4.6,
     city: 'شیراز',
-    image: 'https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&q=80&w=400',
-    description: 'گوشواره‌های ظریف و سبک گل هشت‌پر با قفل بسیار ایمن مگنتی. مناسب برای استفاده طولانی‌مدت بدون ایجاد حساسیت.',
+    image: getProductPlaceholder('earring'),
+    description: 'گوشواره\u200Cهای ظریف و سبک گل هشت\u200Cپر با قفل بسیار ایمن مگنتی. مناسب برای استفاده طولانی\u200Cمدت بدون ایجاد حساسیت.',
   },
   {
     id: 'p5',
@@ -123,8 +124,8 @@ export const PRODUCTS: Product[] = [
     sellerName: 'گالری زرین',
     sellerRating: 4.9,
     city: 'تهران',
-    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=400',
-    description: 'سرویس مجلل شامل گردنبند، دستبند و دو گوشواره با تراش‌های فوق‌العاده ظریف که ظاهری شبیه به نگین‌های برلیان دارد.',
+    image: getProductPlaceholder('service'),
+    description: 'سرویس مجلل شامل گردنبند، دستبند و دو گوشواره با تراش\u200Cهای فوق\u200Cالعاده ظریف که ظاهری شبیه به نگین\u200Cهای برلیان دارد.',
     isFeatured: true,
   },
   {
@@ -132,13 +133,13 @@ export const PRODUCTS: Product[] = [
     title: 'شمش طلای ۲۴ عیار ۵ گرمی ونکبی',
     category: 'bar',
     weight: 5.00,
-    wagePercentage: 4, // low wage for bars
-    taxPercentage: 0, // usually bars might have lower taxes/wages
+    wagePercentage: 4,
+    taxPercentage: 0,
     sellerName: 'طلای ناب',
     sellerRating: 4.8,
     city: 'یزد',
-    image: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=400',
-    description: 'شمش طلای خالص با عیار ۹۹۹.۹ (۲۴ عیار) دارای گواهی اصالت استاندارد ایران و بسته‌بندی امنیتی هولوگرام‌دار. بهترین گزینه برای حفظ ارزش سرمایه.',
+    image: getProductPlaceholder('bar'),
+    description: 'شمش طلای خالص با عیار ۹۹۹.۹ (۲۴ عیار) دارای گواهی اصالت استاندارد ایران و بسته\u200Cبندی امنیتی هولوگرام\u200Cدار. بهترین گزینه برای حفظ ارزش سرمایه.',
   },
   {
     id: 'p7',
@@ -150,21 +151,21 @@ export const PRODUCTS: Product[] = [
     sellerName: 'جواهری محمد',
     sellerRating: 4.7,
     city: 'اصفهان',
-    image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=400',
-    description: 'سکه بهار آزادی طرح جدید ضرب بانک مرکزی جمهوری اسلامی ایران، ضرب سال ۱۳۸۶ در بسته‌بندی پلمپ شده صرافی معتبر.',
+    image: getProductPlaceholder('coin'),
+    description: 'سکه بهار آزادی طرح جدید ضرب بانک مرکزی جمهوری اسلامی ایران، ضرب سال ۱۳۸۶ در بسته\u200Cبندی پلمپ شده صرافی معتبر.',
   },
   {
     id: 'p8',
     title: 'دستبند پهن کارکرده بدون اجرت',
     category: 'secondhand',
     weight: 9.30,
-    wagePercentage: 0, // No wage for second-hand gold
+    wagePercentage: 0,
     taxPercentage: 9,
     sellerName: 'طلا و جواهر مهر',
     sellerRating: 4.6,
     city: 'شیراز',
-    image: 'https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=400',
-    description: 'دستبند طلای ۱۸ عیار طرح پروانه، شسته و تمیز شده بدون هیچ‌گونه ضربه یا خط و خش. مناسب برای خرید سرمایه‌گذاری با سود عالی.',
+    image: getProductPlaceholder('secondhand'),
+    description: 'دستبند طلای ۱۸ عیار طرح پروانه، شسته و تمیز شده بدون هیچ\u200Cگونه ضربه یا خط و خش. مناسب برای خرید سرمایه\u200Cگذاری با سود عالی.',
     isSecondHand: true,
   },
   {
@@ -172,13 +173,13 @@ export const PRODUCTS: Product[] = [
     title: 'طراحی سفارشی پلاک طلا با نام دلخواه',
     category: 'custom',
     weight: 3.50,
-    wagePercentage: 25, // custom craft has higher wage
+    wagePercentage: 25,
     taxPercentage: 9,
     sellerName: 'گالری زرین',
     sellerRating: 4.9,
     city: 'تهران',
-    image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&q=80&w=400',
-    description: 'طراحی سه‌بعدی و ساخت سفارشی پلاک اسم یا طرح دلخواه شما با تایپوگرافی‌های نستعلیق، نسخ یا لاتین. زمان ساخت: ۴ روز کاری.',
+    image: getProductPlaceholder('custom'),
+    description: 'طراحی سه\u200Cبعدی و ساخت سفارشی پلاک اسم یا طرح دلخواه شما با تایپوگرافی\u200Cهای نستعلیق، نسخ یا لاتین. زمان ساخت: ۴ روز کاری.',
     isCustom: true,
   },
   {
@@ -191,8 +192,8 @@ export const PRODUCTS: Product[] = [
     sellerName: 'گالری زرین',
     sellerRating: 4.9,
     city: 'تهران',
-    image: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&q=80&w=400',
-    description: 'انگشتر زنانه نقره عیار ۹۲۵ اصل تزیین شده با نگین فیروزه طبیعی نیشابور فوق‌العاده چشم‌نواز و آرامش‌بخش.',
+    image: getProductPlaceholder('ring', 'silver'),
+    description: 'انگشتر زنانه نقره عیار ۹۲۵ اصل تزیین شده با نگین فیروزه طبیعی نیشابور فوق\u200Cالعاده چشم\u200Cنواز و آرامش\u200Cبخش.',
     isFeatured: true,
     metal: 'silver',
   },
@@ -206,8 +207,8 @@ export const PRODUCTS: Product[] = [
     sellerName: 'جواهری محمد',
     sellerRating: 4.7,
     city: 'اصفهان',
-    image: 'https://images.unsplash.com/photo-1611085583191-a3b1a308c011?auto=format&fit=crop&q=80&w=400',
-    description: 'گردنبند نقره استرلینگ طرح هلال ماه و تک‌ستاره با نگین‌های میکرو اتریشی با درخشندگی فوق‌العاده بالا.',
+    image: getProductPlaceholder('necklace', 'silver'),
+    description: 'گردنبند نقره استرلینگ طرح هلال ماه و تک\u200Cستاره با نگین\u200Cهای میکرو اتریشی با درخشندگی فوق\u200Cالعاده بالا.',
     isFeatured: true,
     metal: 'silver',
   },
@@ -221,14 +222,14 @@ export const PRODUCTS: Product[] = [
     sellerName: 'طلای ناب',
     sellerRating: 4.8,
     city: 'یزد',
-    image: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&q=80&w=400',
+    image: getProductPlaceholder('bracelet', 'silver'),
     description: 'دستبند مردانه نقره ضخیم طرح زنجیری کارتیر با قفل بسیار محکم و آبکاری رادیوم ضد سیاه شدن.',
     isFeatured: true,
     metal: 'silver',
   },
   {
     id: 's4',
-    title: 'گوشواره نقره بخیه‌ای طرح پروانه',
+    title: 'گوشواره نقره بخیه\u200Cای طرح پروانه',
     category: 'earring',
     weight: 2.30,
     wagePercentage: 20,
@@ -236,8 +237,8 @@ export const PRODUCTS: Product[] = [
     sellerName: 'طلا و جواهر مهر',
     sellerRating: 4.6,
     city: 'شیراز',
-    image: 'https://images.unsplash.com/photo-1596944229400-2e57af1028f8?auto=format&fit=crop&q=80&w=400',
-    description: 'گوشواره نقره بخیه‌ای بسیار ظریف با آویزهای پروانه تراش‌خورده و درخشان. بسیار سبک و شیک.',
+    image: getProductPlaceholder('earring', 'silver'),
+    description: 'گوشواره نقره بخیه\u200Cای بسیار ظریف با آویزهای پروانه تراش\u200Cخورده و درخشان. بسیار سبک و شیک.',
     metal: 'silver',
   },
   {
@@ -250,8 +251,8 @@ export const PRODUCTS: Product[] = [
     sellerName: 'طلای ناب',
     sellerRating: 4.8,
     city: 'یزد',
-    image: 'https://images.unsplash.com/photo-1605787020600-b9ebd5df1d07?auto=format&fit=crop&q=80&w=400',
-    description: 'شمش نقره سرمایه‌گذاری خالص با عیار ۹۹۹ و بسته‌بندی امنیتی هولوگرام‌دار صادر شده از ذوب‌رسان معتبر کشوری.',
+    image: getProductPlaceholder('bar', 'silver'),
+    description: 'شمش نقره سرمایه\u200Cگذاری خالص با عیار ۹۹۹ و بسته\u200Cبندی امنیتی هولوگرام\u200Cدار صادر شده از ذوب\u200Cرسان معتبر کشوری.',
     metal: 'silver',
   }
 ];
