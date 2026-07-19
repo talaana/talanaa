@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product, UserWallet, Transaction } from '../types';
 import { CATEGORIES, PRODUCTS, SELLERS } from '../data';
-import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits } from '../utils';
+import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits, productPlaceholder } from '../utils';
 import { Search, MapPin, Sparkles, ShoppingBag, Check, X, ShieldAlert, ArrowLeftRight, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import CategoryIcon from './CategoryIcon';
@@ -157,7 +157,7 @@ export default function MarketplaceTab({
       sellerName: 'گالری زرین',
       sellerRating: 4.9,
       city: 'تهران',
-      image: 'https://source.unsplash.com/400x400/?gold,pendant,name',
+      image: productPlaceholder('custom'),
       description: customDescription || 'پلاک سفارشی طراحی شده توسط بخش سفارش‌سازی طلانا.'
     };
 
