@@ -293,7 +293,7 @@ export default function InvestmentTab({
       {/* Transaction Result Modal */}
       <AnimatePresence>
         {statusMessage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

@@ -296,7 +296,7 @@ export default function ProfileTab({
       {/* Interactive Simulation Drawer / Popups */}
       <AnimatePresence>
         {showSimModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs" dir="rtl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" dir="rtl">
             <div className="fixed inset-0 animate-fade-in" onClick={() => setShowSimModal(null)}></div>
             
             <motion.div

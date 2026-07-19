@@ -386,7 +386,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                 onClick={() => setShowCustomModal(true)}
                 className={`${activeMetal === 'gold' ? 'bg-amber-50 border-amber-100 text-amber-700 hover:border-amber-300' : 'bg-slate-50 border-slate-100 text-slate-700 hover:border-slate-300'} px-3 py-2 rounded-xl text-[10px] font-black flex items-center gap-1.5 transition-all shadow-sm focus:outline-none`}
               >
-                <Sparkles className={`w-3.5 h-3.5 ${activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600'} animate-pulse`} />
+                <Sparkles className={`w-3.5 h-3.5 ${activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600'}`} />
                 <span>سفارش پلاک با اسم دلخواه ({activeMetal === 'gold' ? 'طلا' : 'نقره'})</span>
               </button>
             </div>
@@ -498,7 +498,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
       {/* Custom design Modal */}
       <AnimatePresence>
         {showCustomModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
             <div className="fixed inset-0" onClick={() => setShowCustomModal(false)}></div>
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -512,7 +512,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                   <X className="w-4 h-4" />
                 </button>
                 <h4 className="text-xs font-black text-slate-800 flex items-center gap-1">
-                  <Sparkles className={`w-3.5 h-3.5 ${activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600'} animate-spin`} /> سفارش طراحی اختصاصی پلاک
+                  <Sparkles className={`w-3.5 h-3.5 ${activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600'}`} /> سفارش طراحی اختصاصی پلاک
                 </h4>
               </div>
 
@@ -574,7 +574,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
       {/* Simple Status Message Alert (Shared) */}
       <AnimatePresence>
         {statusMessage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
             <div className="fixed inset-0" onClick={() => setStatusMessage(null)}></div>
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}

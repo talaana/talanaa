@@ -315,7 +315,7 @@ export default function App() {
 
       {/* Persistent Bottom Nav Bar - Shown on core tabs when detail page is closed */}
       {showHeaderAndNav && (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg pb-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]" id="app-bottom-nav" aria-label="ناوبری اصلی">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 pb-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]" id="app-bottom-nav" aria-label="ناوبری اصلی">
           <div className="max-w-md mx-auto grid grid-cols-4 h-14 text-center text-[11px] font-black">
             
             <button

@@ -39,7 +39,7 @@ export default function Header({
   const iconHover = activeMetal === 'gold' ? 'hover:text-amber-700' : 'hover:text-slate-700';
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 py-3 text-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015),0_4px_6px_-2px_rgba(0,0,0,0.005)]" id="app-header" role="banner">
+    <header className="sticky top-0 z-50 bg-white/95 px-4 py-3 text-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015),0_4px_6px_-2px_rgba(0,0,0,0.005)]" id="app-header" role="banner">
       <div className="max-w-md mx-auto flex items-center justify-between flex-row">
         
         {/* Visual Right in RTL: Profile icon */}
@@ -78,7 +78,7 @@ export default function Header({
           aria-label="اعلان‌ها"
         >
           <Bell className="w-6 h-6 text-slate-500" aria-hidden="true" />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" aria-hidden="true"></span>
+          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true"></span>
         </button>
 
       </div>
@@ -96,7 +96,7 @@ export default function Header({
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <img src="/assets/gold.png" alt="طلا" className={`w-5 h-5 rounded-full object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
+            <img src="/assets/gold.png" alt="طلا" className={`w-6 h-6 rounded-full object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
             <span>طلا</span>
           </button>
 
@@ -110,7 +110,7 @@ export default function Header({
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <img src="/assets/silver.png" alt="نقره" className="w-5 h-5 rounded-full object-contain" />
+            <img src="/assets/silver.png" alt="نقره" className="w-6 h-6 rounded-full object-contain" />
             <span>نقره</span>
           </button>
         </div>
@@ -124,7 +124,6 @@ export default function Header({
       }`} id="header-live-price">
         <div className="flex items-center gap-2 flex-row">
           <span className="relative flex h-2 w-2">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${activeMetal === 'gold' ? 'bg-amber-400' : 'bg-slate-400'}`}></span>
             <span className={`relative inline-flex rounded-full h-2 w-2 ${activeMetal === 'gold' ? 'bg-amber-500' : 'bg-slate-500'}`}></span>
           </span>
           <span className="font-black">نرخ لحظه‌ای {activeMetal === 'gold' ? 'طلا' : 'نقره'}:</span>

@@ -483,7 +483,7 @@ const HomeDashboard = memo(function HomeDashboard({
       {/* 7. Vault Modal Bottom Sheet */}
       <AnimatePresence>
         {showVaultModal && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 bg-black/60 ">
             {/* Backdrop Closer */}
             <div className="fixed inset-0" onClick={() => setShowVaultModal(false)} />
 
@@ -557,7 +557,7 @@ const HomeDashboard = memo(function HomeDashboard({
       {/* 8. Quick Services Simulation Modal */}
       <AnimatePresence>
         {activeServiceSim && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 ">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
