@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo, useMemo } from 'react';
 import { Product, UserWallet, Transaction } from '../types';
 import { CATEGORIES, PRODUCTS, SELLERS } from '../data';
 import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits, productPlaceholder } from '../utils';
@@ -46,16 +46,16 @@ const MarketplaceTab = memo(function MarketplaceTab({
     onProductDetailToggle(selectedProduct !== null);
   }, [selectedProduct, onProductDetailToggle]);
 
-  // Filter products
-  const filteredProducts = PRODUCTS.filter((product) => {
+  // Filter products (memoized)
+  const filteredProducts = useMemo(() => PRODUCTS.filter((product) => {
     const isProductSilver = product.metal === 'silver';
     const matchesMetal = activeMetal === 'silver' ? isProductSilver : !isProductSilver;
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
-    const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          product.sellerName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = searchQuery ? (product.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          product.sellerName.toLowerCase().includes(searchQuery.toLowerCase())) : true;
     const matchesSecondHand = (activeMetal === 'gold' && showFilterSecondHand) ? product.isSecondHand === true : true;
     return matchesMetal && matchesCategory && matchesSearch && matchesSecondHand;
-  });
+  }), [activeMetal, selectedCategory, searchQuery, showFilterSecondHand]);
 
   // Handle Buy Product with Toman
   const handleBuyWithToman = (product: Product, priceDetails: any) => {

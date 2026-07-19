@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { UserWallet, Transaction } from '../types';
 import { CATEGORIES, PRODUCTS } from '../data';
 import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits } from '../utils';
@@ -130,41 +130,41 @@ const HomeDashboard = memo(function HomeDashboard({
 
   const activeHistory = activeMetal === 'gold' ? goldHistory[selectedInterval] : silverHistory[selectedInterval];
 
-  // SVG Chart Calculations
+  // SVG Chart Calculations (memoized)
   const chartWidth = 380;
   const chartHeight = 140;
   const paddingX = 40;
   const paddingY = 15;
 
-  const prices = activeHistory.map(h => h.price);
-  const minPrice = Math.min(...prices) * 0.997;
-  const maxPrice = Math.max(...prices) * 1.003;
-  const priceRange = maxPrice - minPrice;
+  const { points, pathD, areaD, percentChange, percentSign, percentColor, intervalLabel } = useMemo(() => {
+    const prices = activeHistory.map((h: any) => h.price);
+    const minPrice = Math.min(...prices) * 0.997;
+    const maxPrice = Math.max(...prices) * 1.003;
+    const priceRange = maxPrice - minPrice;
 
-  const points = pointsForChart(activeHistory, minPrice, priceRange, chartWidth, chartHeight, paddingX, paddingY);
-
-  function pointsForChart(history: any[], minPrice: number, priceRange: number, width: number, height: number, px: number, py: number) {
-    return history.map((pt, index) => {
-      const x = px + ((history.length - 1 - index) / (history.length - 1)) * (width - px * 2);
-      const y = height - py - ((pt.price - minPrice) / priceRange) * (height - py * 2);
+    const pts = activeHistory.map((pt: any, index: number) => {
+      const x = paddingX + ((activeHistory.length - 1 - index) / (activeHistory.length - 1)) * (chartWidth - paddingX * 2);
+      const y = chartHeight - paddingY - ((pt.price - minPrice) / priceRange) * (chartHeight - paddingY * 2);
       return { x, y, data: pt };
     });
-  }
 
-  const pathD = points.reduce((acc, p, i) => i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`, '');
-  const areaD = points.length > 0 ? `${pathD} L ${points[points.length - 1].x} ${chartHeight - paddingY} L ${points[0].x} ${chartHeight - paddingY} Z` : '';
+    const d = pts.reduce((acc: string, p: any, i: number) => i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`, '');
+    const a = pts.length > 0 ? `${d} L ${pts[pts.length - 1].x} ${chartHeight - paddingY} L ${pts[0].x} ${chartHeight - paddingY} Z` : '';
 
-  const firstPrice = activeHistory[0].price;
-  const lastPrice = activeHistory[activeHistory.length - 1].price;
-  const percentChange = ((lastPrice - firstPrice) / firstPrice) * 100;
-  const percentSign = percentChange >= 0 ? '+' : '';
-  const percentColor = percentChange >= 0 ? 'text-emerald-500' : 'text-rose-500';
-  const intervalLabel = selectedInterval === 'daily' ? 'روزانه' : selectedInterval === 'weekly' ? 'هفتگی' : 'ماهانه';
+    const fPrice = activeHistory[0].price;
+    const lPrice = activeHistory[activeHistory.length - 1].price;
+    const change = ((lPrice - fPrice) / fPrice) * 100;
+    const sign = change >= 0 ? '+' : '';
+    const color = change >= 0 ? 'text-emerald-500' : 'text-rose-500';
+    const label = selectedInterval === 'daily' ? 'روزانه' : selectedInterval === 'weekly' ? 'هفتگی' : 'ماهانه';
 
-  const activeDisplayPoint = hoveredIndex !== null ? points[hoveredIndex].data : activeHistory[activeHistory.length - 1];
+    return { points: pts, pathD: d, areaD: a, percentChange: change, percentSign: sign, percentColor: color, intervalLabel: label };
+  }, [activeHistory, selectedInterval]);
 
-  // Services Grid Mapping
-  const servicesList = [
+  const activeDisplayPoint = hoveredIndex !== null ? points[hoveredIndex]?.data : activeHistory[activeHistory.length - 1];
+
+  // Services Grid Mapping (static, no deps needed)
+  const servicesList = useMemo(() => [
     { id: 'loan', label: 'وام آنی', sub: 'بدون ضامن', icon: <CircleDollarSign className="w-5 h-5" />, color: 'bg-amber-50 text-amber-600 border-amber-100' },
     { id: 'installment', label: 'خرید قسطی', sub: 'بیمه صنف طلا', icon: <CalendarDays className="w-5 h-5" />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
     { id: 'auto', label: 'سفارش خودکار', sub: 'خرید پس‌انداز', icon: <Repeat className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600 border-blue-100' },
@@ -173,7 +173,7 @@ const HomeDashboard = memo(function HomeDashboard({
     { id: 'history', label: 'تاریخچه', sub: 'تراکنش‌ها', icon: <History className="w-5 h-5" />, color: 'bg-slate-50 text-slate-600 border-slate-100' },
     { id: 'gift', label: 'کارت هدیه', sub: 'طرح شکیل سفارشی', icon: <Gift className="w-5 h-5" />, color: 'bg-rose-50 text-rose-600 border-rose-100' },
     { id: 'invite', label: 'دعوت از دوستان', sub: 'کد هدیه طلایی', icon: <Users className="w-5 h-5" />, color: 'bg-indigo-50 text-indigo-600 border-indigo-100' },
-  ];
+  ], []);
 
   const handleServiceClick = (id: string) => {
     if (id === 'history') {
@@ -186,7 +186,7 @@ const HomeDashboard = memo(function HomeDashboard({
   };
 
   // Compact Vitrine featured products
-  const compactProducts = PRODUCTS.slice(0, 3);
+  const compactProducts = useMemo(() => PRODUCTS.slice(0, 3), []);
 
   return (
     <div className="space-y-3.5 max-w-md mx-auto px-4 py-2 text-slate-800 pb-2 text-right" id="home-dashboard">
