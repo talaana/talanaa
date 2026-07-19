@@ -90,7 +90,7 @@ export default function Header({
           <button
             onClick={() => onMetalChange('gold')}
             aria-pressed={activeMetal === 'gold'}
-            className={`flex-1 py-2.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 focus:outline-none ${
+            className={`flex-1 py-1.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 focus:outline-none ${
               activeMetal === 'gold'
                 ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-xs'
                 : 'text-slate-500 hover:text-slate-700'
@@ -104,7 +104,7 @@ export default function Header({
           <button
             onClick={() => onMetalChange('silver')}
             aria-pressed={activeMetal === 'silver'}
-            className={`flex-1 py-2.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 focus:outline-none ${
+            className={`flex-1 py-1.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 focus:outline-none ${
               activeMetal === 'silver'
                 ? 'bg-slate-700 text-white shadow-xs'
                 : 'text-slate-500 hover:text-slate-700'
