@@ -1,7 +1,7 @@
 import React, { useState, useEffect, memo, useMemo } from 'react';
 import { Product, UserWallet, Transaction } from '../types';
 import { CATEGORIES, PRODUCTS, SELLERS } from '../data';
-import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits, productPlaceholder } from '../utils';
+import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits } from '../utils';
 import { Search, MapPin, Sparkles, ShoppingBag, Check, X, ShieldAlert, ArrowLeftRight, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import CategoryIcon from './CategoryIcon';
@@ -157,7 +157,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
       sellerName: 'گالری زرین',
       sellerRating: 4.9,
       city: 'تهران',
-      image: productPlaceholder('custom'),
+      image: '/assets/images.jpg',
       description: customDescription || 'پلاک سفارشی طراحی شده توسط بخش سفارش‌سازی طلانا.'
     };
 

@@ -44,7 +44,7 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     weightGrams: 4.25,
     status: 'completed',
     details: 'خرید فیزیکی انگشتر طرح اسلیمی از غرفه «گالری زرین». ارسال شده از تهران با پست پیشتاز و بیمه رسمی اتحادیه طلا و نقره.',
-    image: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="#1c1917"/><text x="200" y="210" text-anchor="middle" fill="#f59e0b" font-size="36" font-weight="900">انگشتر</text></svg>'),
+    image: '/assets/images.jpg',
   }
 ];
 
@@ -314,7 +314,7 @@ export default function App() {
 
       {/* Persistent Bottom Nav Bar - Shown on core tabs when detail page is closed */}
       {showHeaderAndNav && (
-        <nav className="z-50 bg-white pb-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]" id="app-bottom-nav" aria-label="ناوبری اصلی">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white pb-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]" id="app-bottom-nav" aria-label="ناوبری اصلی">
           <div className="max-w-md mx-auto grid grid-cols-4 h-14 text-center text-[11px] font-black">
             
             <button
