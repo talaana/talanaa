@@ -227,7 +227,7 @@ export default function App() {
       )}
 
       {/* Main Tab Render Container */}
-      <main className={`flex-1 w-full max-w-md mx-auto relative ${showHeaderAndNav ? 'pb-14' : 'py-2 pb-10'}`} id="app-main">
+      <main className={`flex-1 w-full max-w-md mx-auto relative ${showHeaderAndNav ? 'pb-18' : 'py-2 pb-10'}`} id="app-main">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -315,46 +315,46 @@ export default function App() {
 
       {/* Persistent Bottom Nav Bar - Shown on core tabs when detail page is closed */}
       {showHeaderAndNav && (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg pb-1 pt-1 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]" id="app-bottom-nav">
-          <div className="max-w-md mx-auto grid grid-cols-4 h-12 text-center text-[10px] font-black">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg pb-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]" id="app-bottom-nav">
+          <div className="max-w-md mx-auto grid grid-cols-4 h-14 text-center text-[11px] font-black">
             
             <button
               onClick={() => handleNavigateToTab('home')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'home' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 focus:outline-none ${activeTab === 'home' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-home"
             >
-              {activeTab === 'home' && <span className={`absolute top-0 w-5 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
-              <Home className="w-5 h-5" />
+              {activeTab === 'home' && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+              <Home className="w-6 h-6" />
               <span>خانه</span>
             </button>
 
             <button
               onClick={() => handleNavigateToTab('vitrine')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'vitrine' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 focus:outline-none ${activeTab === 'vitrine' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-vitrine"
             >
-              {activeTab === 'vitrine' && <span className={`absolute top-0 w-5 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
-              <Store className="w-5 h-5" />
+              {activeTab === 'vitrine' && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+              <Store className="w-6 h-6" />
               <span>ویترین</span>
             </button>
 
             <button
               onClick={() => handleNavigateToTab('trade')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'trade' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 focus:outline-none ${activeTab === 'trade' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-trade"
             >
-              {activeTab === 'trade' && <span className={`absolute top-0 w-5 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
-              <ArrowLeftRight className="w-5 h-5" />
+              {activeTab === 'trade' && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+              <ArrowLeftRight className="w-6 h-6" />
               <span>خرید و فروش</span>
             </button>
 
             <button
               onClick={() => handleNavigateToTab('services')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'services' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 focus:outline-none ${activeTab === 'services' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-services"
             >
-              {activeTab === 'services' && <span className={`absolute top-0 w-5 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
-              <LayoutGrid className="w-5 h-5" />
+              {activeTab === 'services' && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+              <LayoutGrid className="w-6 h-6" />
               <span>خدمات</span>
             </button>
 
