@@ -58,7 +58,7 @@ export default function Header({
             <WifiOff className={`w-3.5 h-3.5 ${iconColor} animate-pulse`} title="آفلاین - حالت محلی" />
           )}
           <img 
-            src="/logo.png" 
+            src="/talana_logo.png" 
             className="w-5.5 h-5.5 rounded-md object-contain shadow-xs" 
             alt="لوگو طلانا" 
             referrerPolicy="no-referrer" 
