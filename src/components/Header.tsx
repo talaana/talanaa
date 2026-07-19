@@ -96,7 +96,7 @@ export default function Header({
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <img src="/assets/gold.png" alt="طلا" className={`w-6 h-6 rounded-full object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
+            <img src="/assets/gold.png" alt="طلا" className={`w-8 h-8 object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
             <span>طلا</span>
           </button>
 
@@ -110,7 +110,7 @@ export default function Header({
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <img src="/assets/silver.png" alt="نقره" className="w-6 h-6 rounded-full object-contain" />
+            <img src="/assets/silver.png" alt="نقره" className="w-8 h-8 object-contain" />
             <span>نقره</span>
           </button>
         </div>
