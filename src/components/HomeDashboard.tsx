@@ -271,7 +271,7 @@ const HomeDashboard = memo(function HomeDashboard({
                   {srv.icon}
                 </div>
                 <span className="text-[9.5px] font-black text-slate-700 leading-tight block mt-0.5">{srv.label}</span>
-                <span className="text-[7px] font-bold text-slate-400 tracking-tight leading-none block mt-0.5">{srv.sub}</span>
+                <span className="text-[7px] font-bold text-slate-500 tracking-tight leading-none block mt-0.5">{srv.sub}</span>
               </button>
             ))}
           </div>

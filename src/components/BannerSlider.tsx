@@ -87,13 +87,16 @@ export default function BannerSlider() {
       </AnimatePresence>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-3 left-4 flex gap-1 z-10 flex-row-reverse">
+      <div className="absolute bottom-2 left-2 flex items-center gap-0.5 z-10 flex-row-reverse">
         {banners.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`w-1.5 h-1.5 rounded-full transition-all duration-350 ${current === i ? 'bg-white w-4' : 'bg-white/40'}`}
-          />
+            aria-label={`اسلاید ${i + 1} از ${banners.length}`}
+            className="p-2 flex items-center justify-center"
+          >
+            <span className={`block rounded-full transition-all duration-350 ${current === i ? 'bg-white w-4 h-1.5' : 'bg-white/40 w-1.5 h-1.5'}`} />
+          </button>
         ))}
       </div>
     </div>
