@@ -397,11 +397,10 @@ const MarketplaceTab = memo(function MarketplaceTab({
             {filteredProducts.map((product) => {
               const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.taxPercentage);
               return (
-                <motion.div
+                <div
                   key={product.id}
-                  layout
                   onClick={() => setSelectedProduct(product)}
-                  className={`bg-white border border-slate-100 rounded-2xl overflow-hidden cursor-pointer ${activeMetal === 'gold' ? 'hover:border-amber-200' : 'hover:border-slate-300'} transition-all flex flex-col group relative shadow-xs`}
+                  className={`bg-white border border-slate-100 rounded-2xl overflow-hidden cursor-pointer ${activeMetal === 'gold' ? 'hover:border-amber-200' : 'hover:border-slate-300'} flex flex-col group relative shadow-xs`}
                   role="button"
                   tabIndex={0}
                   aria-label={`${product.title}، ${formatGram(product.weight)} گرم`}
@@ -449,7 +448,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                       </span>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
 
