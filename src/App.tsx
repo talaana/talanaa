@@ -312,37 +312,41 @@ export default function App() {
             
             <button
               onClick={() => handleNavigateToTab('home')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'home' ? `${tabActiveColor} scale-102 font-black` : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'home' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-home"
             >
-              <Home className="w-4.5 h-4.5" fill={activeTab === 'home' ? 'currentColor' : 'none'} />
+              {activeTab === 'home' && <span className={`absolute top-0 w-5 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+              <Home className="w-5 h-5" />
               <span>خانه</span>
             </button>
 
             <button
               onClick={() => handleNavigateToTab('vitrine')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'vitrine' ? `${tabActiveColor} scale-102 font-black` : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'vitrine' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-vitrine"
             >
-              <Store className="w-4.5 h-4.5" fill={activeTab === 'vitrine' ? 'currentColor' : 'none'} />
+              {activeTab === 'vitrine' && <span className={`absolute top-0 w-5 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+              <Store className="w-5 h-5" />
               <span>ویترین</span>
             </button>
 
             <button
               onClick={() => handleNavigateToTab('trade')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'trade' ? `${tabActiveColor} scale-102 font-black` : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'trade' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-trade"
             >
-              <ArrowLeftRight className="w-4.5 h-4.5" />
+              {activeTab === 'trade' && <span className={`absolute top-0 w-5 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+              <ArrowLeftRight className="w-5 h-5" />
               <span>خرید و فروش</span>
             </button>
 
             <button
               onClick={() => handleNavigateToTab('services')}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'services' ? `${tabActiveColor} scale-102 font-black` : 'text-slate-400 hover:text-slate-600'}`}
+              className={`relative flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus:outline-none ${activeTab === 'services' ? `${tabActiveColor} font-black` : 'text-slate-400 hover:text-slate-600'}`}
               id="nav-btn-services"
             >
-              <LayoutGrid className="w-4.5 h-4.5" fill={activeTab === 'services' ? 'currentColor' : 'none'} />
+              {activeTab === 'services' && <span className={`absolute top-0 w-5 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+              <LayoutGrid className="w-5 h-5" />
               <span>خدمات</span>
             </button>
 
