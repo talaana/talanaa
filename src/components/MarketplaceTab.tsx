@@ -400,7 +400,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                 <div
                   key={product.id}
                   onClick={() => setSelectedProduct(product)}
-                  className={`bg-white border border-slate-100 rounded-2xl overflow-hidden cursor-pointer ${activeMetal === 'gold' ? 'hover:border-amber-200' : 'hover:border-slate-300'} flex flex-col relative shadow-xs`}
+                  className={`bg-white rounded-2xl overflow-hidden cursor-pointer ${activeMetal === 'gold' ? 'hover:bg-amber-50/30' : 'hover:bg-slate-50/50'} flex flex-col relative`}
                   role="button"
                   tabIndex={0}
                   aria-label={`${product.title}، ${formatGram(product.weight)} گرم`}

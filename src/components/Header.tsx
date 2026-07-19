@@ -39,7 +39,7 @@ export default function Header({
   const iconHover = activeMetal === 'gold' ? 'hover:text-amber-700' : 'hover:text-slate-700';
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 px-4 py-3 text-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015),0_4px_6px_-2px_rgba(0,0,0,0.005)]" id="app-header" role="banner">
+    <header className="sticky top-0 z-50 bg-white px-4 py-3 text-slate-800 transform-gpu shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015)]" id="app-header" role="banner">
       <div className="max-w-md mx-auto flex items-center justify-between flex-row">
         
         {/* Visual Right in RTL: Profile icon */}

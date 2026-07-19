@@ -39,9 +39,10 @@
 /* RTL refinements and global light theme base styling */
 html, body {
   font-family: "Vazirmatn", system-ui, -apple-system, sans-serif;
-  background-color: #f8fafc; /* very light premium slate background */
-  color: #0f172a; /* slate 900 slate text */
-  scroll-behavior: smooth;
+  background-color: #f8fafc;
+  color: #0f172a;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
 }
 
 /* Safe area inset helper for iOS PWA */
