@@ -185,6 +185,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.12, ease: 'easeOut' }}
           className="space-y-5"
           id="product-detail-page"
         >

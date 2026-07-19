@@ -228,13 +228,13 @@ export default function App() {
 
       {/* Main Tab Render Container */}
       <main className={`flex-1 w-full max-w-md mx-auto relative ${showHeaderAndNav ? 'pb-18' : 'py-2 pb-10'}`} id="app-main">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.08 }}
             className="w-full h-full"
           >
             <Suspense fallback={<TabFallback />}>
