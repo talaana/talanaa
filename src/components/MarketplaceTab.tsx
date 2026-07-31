@@ -1,7 +1,7 @@
 import React, { useState, useEffect, memo, useMemo, lazy, Suspense } from 'react';
 import { Product, UserWallet, Transaction } from '../types';
-import { CATEGORIES, PRODUCTS, SELLERS } from '../data';
 import { calculateGoldProductPrice, formatToman, formatGram, toPersianDigits } from '../utils';
+import { products as productsApi, categories as categoriesApi, sellers as sellersApi } from '../api';
 import { Search, MapPin, Sparkles, Check, X, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import CategoryIcon from './CategoryIcon';
@@ -17,6 +17,7 @@ interface MarketplaceTabProps {
   onProductDetailToggle: (isOpen: boolean) => void;
   selectedCategory: string | null;
   onSelectCategory: (category: string | null) => void;
+  isStandaloneStore?: boolean;
 }
 
 const MarketplaceTab = memo(function MarketplaceTab({ 
@@ -27,7 +28,8 @@ const MarketplaceTab = memo(function MarketplaceTab({
   onTransaction, 
   onProductDetailToggle,
   selectedCategory,
-  onSelectCategory
+  onSelectCategory,
+  isStandaloneStore = false,
 }: MarketplaceTabProps) {
   const basePrice = activeMetal === 'silver' ? silverPrice999 : goldPrice18k;
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,21 +45,88 @@ const MarketplaceTab = memo(function MarketplaceTab({
   // Status message
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // API-loaded data
+  const [apiProducts, setApiProducts] = useState<Product[]>([]);
+  const [apiCategories, setApiCategories] = useState<{id: string; name: string; icon: string}[]>([]);
+  const [apiSellers, setApiSellers] = useState<any[]>([]);
+
+  // Load products from API
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const params: Record<string, string> = { metal: activeMetal };
+        if (selectedCategory) params.category = selectedCategory;
+        if (searchQuery) params.search = searchQuery;
+        const data = await productsApi.list(params);
+        setApiProducts(data.data.map((p: any) => ({
+          id: String(p.id),
+          title: p.title,
+          category: p.category?.slug || '',
+          weight: parseFloat(p.weight),
+          wagePercentage: p.wage_percentage,
+          taxPercentage: p.tax_percentage,
+          sellerName: p.seller?.name || '',
+          sellerRating: parseFloat(p.seller?.rating || '0'),
+          city: p.seller?.city || '',
+          image: p.image || '/assets/images.jpg',
+          description: p.description || '',
+          isSecondHand: p.is_second_hand,
+          isFeatured: p.is_featured,
+          isCustom: p.is_custom,
+          metal: p.metal,
+        })));
+      } catch { /* use empty */ }
+    };
+    load();
+  }, [activeMetal, selectedCategory, searchQuery]);
+
+  // Load categories
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await categoriesApi.list();
+        setApiCategories(data.map((c: any) => ({
+          id: c.slug,
+          name: c.name,
+          icon: c.icon,
+        })));
+      } catch { /* ignore */ }
+    };
+    load();
+  }, []);
+
+  // Load sellers
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await sellersApi.list();
+        setApiSellers(data.map((s: any) => ({
+          id: s.slug,
+          name: s.name,
+          rating: parseFloat(s.rating),
+          city: s.city,
+          logo: s.logo || '',
+          banner: s.banner || '',
+          productsCount: s.products_count || 0,
+        })));
+      } catch { /* ignore */ }
+    };
+    load();
+  }, []);
+
   // Notify parent on product select change so it can hide the dashboard header
   useEffect(() => {
     onProductDetailToggle(selectedProduct !== null);
   }, [selectedProduct, onProductDetailToggle]);
 
-  // Filter products (memoized)
-  const filteredProducts = useMemo(() => PRODUCTS.filter((product) => {
-    const isProductSilver = product.metal === 'silver';
-    const matchesMetal = activeMetal === 'silver' ? isProductSilver : !isProductSilver;
-    const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
-    const matchesSearch = searchQuery ? (product.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          product.sellerName.toLowerCase().includes(searchQuery.toLowerCase())) : true;
-    const matchesSecondHand = (activeMetal === 'gold' && showFilterSecondHand) ? product.isSecondHand === true : true;
-    return matchesMetal && matchesCategory && matchesSearch && matchesSecondHand;
-  }), [activeMetal, selectedCategory, searchQuery, showFilterSecondHand]);
+  // Filter products (client-side second-hand filter; API handles metal/category/search)
+  const filteredProducts = useMemo(() => {
+    let list = apiProducts;
+    if (activeMetal === 'gold' && showFilterSecondHand) {
+      list = list.filter(p => p.isSecondHand);
+    }
+    return list;
+  }, [apiProducts, activeMetal, showFilterSecondHand]);
 
   // Handle Buy Product with Toman
   const handleBuyWithToman = (product: Product, priceDetails: any) => {
@@ -134,7 +203,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
   };
 
   return (
-    <div className="space-y-4 max-w-md mx-auto px-4 py-4 text-right" id="marketplace-view">
+    <div className="space-y-4 px-4 py-4 text-right max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6" id="marketplace-view">
       
       {/* Dynamic Render: Full Page Detail View if a product is selected */}
       {selectedProduct && (
@@ -197,7 +266,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                 >
                   همه دسته‌ها
                 </button>
-                {CATEGORIES.filter(cat => activeMetal === 'gold' || cat.id !== 'secondhand').map((cat) => (
+                {apiCategories.filter(cat => activeMetal === 'gold' || cat.id !== 'secondhand').map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => onSelectCategory(cat.id)}
@@ -235,7 +304,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-2 gap-3" id="products-grid">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" id="products-grid">
             {filteredProducts.map((product) => {
               const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.taxPercentage);
               return (
@@ -308,7 +377,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                 <span>طلافروشی‌ها و همکاران رسمی طلانا</span>
               </h4>
               <div className="space-y-2.5">
-                {SELLERS.map((seller) => (
+                {apiSellers.map((seller) => (
                   <div key={seller.id} className="flex items-center justify-between flex-row-reverse bg-slate-50 p-2.5 rounded-2xl border border-slate-100/50">
                     <button 
                       onClick={() => setSearchQuery(seller.name)}

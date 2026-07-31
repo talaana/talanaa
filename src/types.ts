@@ -51,5 +51,16 @@ export interface Transaction {
 
 export interface UserWallet {
   goldGrams: number;
+  silverGrams: number;
   cashToman: number;
+}
+
+export interface TenantConfig {
+  id: number;
+  name: string;
+  slug: string;
+  type: 'marketplace' | 'store';
+  domain: string | null;
+  logo: string | null;
+  settings: Record<string, any> | null;
 }

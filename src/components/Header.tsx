@@ -9,6 +9,9 @@ interface HeaderProps {
   onMetalChange: (metal: 'gold' | 'silver') => void;
   goldPrice18k: number;
   silverPrice999: number;
+  platformName?: string;
+  platformLogo?: string;
+  isMarketplace?: boolean;
 }
 
 export default function Header({ 
@@ -17,7 +20,10 @@ export default function Header({
   activeMetal, 
   onMetalChange,
   goldPrice18k,
-  silverPrice999
+  silverPrice999,
+  platformName = 'طلانا',
+  platformLogo = '/talana_logo.png',
+  isMarketplace = true,
 }: HeaderProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -40,7 +46,7 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-50 bg-white px-4 py-3 text-slate-800 transform-gpu shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015)]" id="app-header" role="banner">
-      <div className="max-w-md mx-auto flex items-center justify-between flex-row">
+      <div className="max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6 flex items-center justify-between flex-row">
         
         {/* Visual Right in RTL: Profile icon */}
         <button 
@@ -59,14 +65,14 @@ export default function Header({
             <WifiOff className={`w-4 h-4 ${iconColor} animate-pulse`} title="آفلاین - حالت محلی" aria-label="آفلاین" />
           )}
           <img 
-            src="/talana_logo.png" 
-            className="w-7 h-7 rounded-md object-contain shadow-xs" 
-            alt="لوگو طلانا" 
+            src={platformLogo} 
+            className="w-7 h-7 rounded-md object-cover shadow-xs" 
+            alt={`لوگو ${platformName}`} 
             referrerPolicy="no-referrer"
             width="28"
             height="28"
           />
-          <span className="text-sm font-black text-slate-800 tracking-tight">طلانا</span>
+          <span className="text-sm font-black text-slate-800 tracking-tight">{platformName}</span>
         </div>
 
         {/* Visual Left in RTL: Notifications icon */}
@@ -84,7 +90,7 @@ export default function Header({
       </div>
 
       {/* Segmented Metal Switcher Tab (طلا و نقره) */}
-      <div className="max-w-md mx-auto mt-2">
+      <div className="max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6 mt-2">
         <div className="bg-slate-100/60 p-1 rounded-xl border border-slate-100/10 flex w-full gap-1" id="metal-switcher" role="group" aria-label="انتخاب فلز">
           {/* Gold Button: first (right in RTL) */}
           <button
@@ -117,7 +123,7 @@ export default function Header({
       </div>
 
       {/* Real-time price display under the switcher */}
-      <div className={`max-w-md mx-auto flex items-center justify-between mt-2 px-4 py-2.5 rounded-xl border text-xs font-bold ${
+      <div className={`max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6 flex items-center justify-between mt-2 px-4 py-2.5 rounded-xl border text-xs font-bold ${
         activeMetal === 'gold'
           ? 'bg-amber-500/10 border-amber-500/20 text-amber-900'
           : 'bg-slate-500/10 border-slate-500/20 text-slate-900'

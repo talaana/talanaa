@@ -1,6 +1,6 @@
-import React, { useState, memo, useMemo } from 'react';
+import React, { useState, memo, useMemo, useEffect } from 'react';
 import { UserWallet, Transaction } from '../types';
-import { CATEGORIES } from '../data';
+import { categories as categoriesApi } from '../api';
 import { formatToman, formatGram, toPersianDigits } from '../utils';
 import { 
   ChevronLeft, 
@@ -26,6 +26,12 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import BannerSlider from './BannerSlider';
 import CategoryIcon from './CategoryIcon';
+import ServiceLoan from './ServiceLoan';
+import ServiceInstallment from './ServiceInstallment';
+import ServiceAutoOrder from './ServiceAutoOrder';
+import ServiceDelivery from './ServiceDelivery';
+import ServiceGiftCard from './ServiceGiftCard';
+import ServiceZargar from './ServiceZargar';
 
 interface HomeDashboardProps {
   wallet: UserWallet;
@@ -37,6 +43,8 @@ interface HomeDashboardProps {
   onToggleBalances: () => void;
   onNavigateToTab: (tabId: string, categoryFilter?: string | null) => void;
   onTransaction: (tx: Transaction) => void;
+  onServicePageToggle: (open: boolean) => void;
+  isMarketplace?: boolean;
 }
 
 const HomeDashboard = memo(function HomeDashboard({
@@ -49,21 +57,30 @@ const HomeDashboard = memo(function HomeDashboard({
   onToggleBalances,
   onNavigateToTab,
   onTransaction,
+  onServicePageToggle,
+  isMarketplace = true,
 }: HomeDashboardProps) {
   const [selectedInterval, setSelectedInterval] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [showVaultModal, setShowVaultModal] = useState(false);
-  const [activeServiceSim, setActiveServiceSim] = useState<string | null>(null);
+  const [servicePage, setServicePage] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  // API-loaded categories
+  const [apiCategories, setApiCategories] = useState<{id: string; name: string; icon: string}[]>([]);
+  useEffect(() => {
+    categoriesApi.list().then(data => setApiCategories(data.map((c: any) => ({
+      id: c.slug, name: c.name, icon: c.icon
+    })))).catch(() => {});
+  }, []);
 
   // Live metal price and label based on active tab
   const activePrice = activeMetal === 'gold' ? goldPrice18k : silverPrice999;
   const activeMetalLabel = activeMetal === 'gold' ? 'طلای ۱۸ عیار' : 'نقره ۹۹۹';
   const activeMetalUnit = 'گرم';
 
-  // Specific user wallet holdings in metals
-  // Let's assume user has 2.4580 grams of Gold and 42.5000 grams of Silver
-  const silverWalletHolding = 42.500;
-  const activeMetalHolding = activeMetal === 'gold' ? wallet.goldGrams : silverWalletHolding;
+  // Use real wallet silver grams instead of hardcoded value
+  const activeMetalHolding = activeMetal === 'gold' ? wallet.goldGrams : (wallet.silverGrams || 0);
 
   // Gold vault has total balance vs withdrawable balance
   const activeTotalMetal = activeMetal === 'gold' ? 2.858 : 48.500;
@@ -176,17 +193,26 @@ const HomeDashboard = memo(function HomeDashboard({
   ], []);
 
   const handleServiceClick = (id: string) => {
-    if (id === 'history') {
-      onNavigateToTab('orders');
-    } else if (id === 'invite') {
-      onNavigateToTab('profile');
-    } else {
-      setActiveServiceSim(id);
-    }
+    if (id === 'history') { onNavigateToTab('orders'); return; }
+    if (id === 'invite') { onNavigateToTab('profile'); return; }
+    if (id === 'zargar') { onServicePageToggle(true); setServicePage('zargar'); return; }
+    onServicePageToggle(true);
+    setServicePage(id);
   };
 
   return (
-    <div className="space-y-3.5 max-w-md mx-auto px-4 py-2 text-slate-800 pb-2 text-right" id="home-dashboard">
+    <div className="space-y-3.5 px-4 py-2 text-slate-800 pb-2 text-right max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6" id="home-dashboard">
+      {/* Service Pages */}
+      {servicePage === 'zargar' && <ServiceZargar wallet={wallet} activeMetal={activeMetal} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} onBack={() => { onServicePageToggle(false); setServicePage(null); }} onToast={setToast} />}
+      {servicePage === 'loan' && <ServiceLoan wallet={wallet} activeMetal={activeMetal} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} onBack={() => { onServicePageToggle(false); setServicePage(null); }} onToast={setToast} />}
+      {servicePage === 'installment' && <ServiceInstallment wallet={wallet} activeMetal={activeMetal} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} onBack={() => { onServicePageToggle(false); setServicePage(null); }} onToast={setToast} />}
+      {servicePage === 'auto' && <ServiceAutoOrder wallet={wallet} activeMetal={activeMetal} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} onBack={() => { onServicePageToggle(false); setServicePage(null); }} onToast={setToast} />}
+      {servicePage === 'delivery' && <ServiceDelivery wallet={wallet} activeMetal={activeMetal} onBack={() => { onServicePageToggle(false); setServicePage(null); }} onToast={setToast} />}
+      {servicePage === 'gift' && <ServiceGiftCard wallet={wallet} activeMetal={activeMetal} onBack={() => { onServicePageToggle(false); setServicePage(null); }} onToast={setToast} />}
+
+      {servicePage && <div />}
+
+      {!servicePage && (<>
       
       {/* 1. Unified User Authenticated Wallet Box */}
       <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-4 relative overflow-hidden" id="wealth-card">
@@ -257,7 +283,7 @@ const HomeDashboard = memo(function HomeDashboard({
       {activeMetal === 'gold' ? (
         <div className="bg-white border border-slate-100 rounded-3xl p-3.5 shadow-sm" id="services-grid-section">
           <h3 className="text-xs font-black text-slate-700 mb-2.5 text-right">دسترسی سریع و خدمات طلانا</h3>
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-4 lg:grid-cols-8 gap-1.5">
             {servicesList.map((srv) => (
               <button
                 key={srv.id}
@@ -276,7 +302,7 @@ const HomeDashboard = memo(function HomeDashboard({
       ) : (
         <div className="bg-white border border-slate-100 rounded-3xl p-3.5 shadow-sm" id="silver-services-grid-section">
           <h3 className="text-xs font-black text-slate-700 mb-2.5 text-right">خدمات نقره طلانا</h3>
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-4 lg:grid-cols-8 gap-1.5">
             <button
               onClick={() => handleServiceClick('deposit')}
               className="bg-slate-50 border border-slate-100/60 hover:border-slate-200 hover:bg-slate-100/40 p-2 rounded-2xl flex flex-col items-center justify-center text-center gap-1 transition-all focus:outline-none group"
@@ -462,7 +488,7 @@ const HomeDashboard = memo(function HomeDashboard({
         </div>
 
         <div className="grid grid-cols-4 gap-2">
-          {CATEGORIES.filter(cat => activeMetal === 'gold' || cat.id !== 'secondhand').slice(0, 8).map((cat) => (
+          {apiCategories.filter(cat => activeMetal === 'gold' || cat.id !== 'secondhand').slice(0, 8).map((cat) => (
             <button
               key={cat.id}
               onClick={() => onNavigateToTab('vitrine', cat.id)}
@@ -551,39 +577,16 @@ const HomeDashboard = memo(function HomeDashboard({
         )}
       </AnimatePresence>
 
-      {/* 8. Quick Services Simulation Modal */}
+      {/* Toast */}
       <AnimatePresence>
-        {activeServiceSim && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 ">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-slate-100 rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl space-y-4"
-            >
-              <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto shadow-xs">
-                <Sparkles className="w-6 h-6 text-amber-500" />
-              </div>
-
-              <h4 className="text-sm font-black text-slate-800">
-                {servicesList.find(s => s.id === activeServiceSim)?.label} طلانا
-              </h4>
-
-              <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                این خدمت هوشمند شامل شرایط استثنایی و سرعت پردازش لحظه‌ای در سامانه‌ی طلانا است. در بروزرسانی‌های بعدی، فرم‌های درخواست و جزئیات مالی در دسترس شما قرار می‌گیرند.
-              </p>
-
-              <button
-                onClick={() => setActiveServiceSim(null)}
-                className="w-full bg-slate-100 text-slate-700 hover:bg-slate-200 py-3 rounded-2xl text-xs font-black transition-colors focus:outline-none"
-              >
-                متوجه شدم
-              </button>
-            </motion.div>
-          </div>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-lg"
+            onAnimationComplete={() => setTimeout(() => setToast(null), 2000)}>{toast}</motion.div>
         )}
       </AnimatePresence>
 
+      </>)}
     </div>
   );
 });
