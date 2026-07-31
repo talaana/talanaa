@@ -62,6 +62,10 @@ export default function App() {
   const [isServicePageOpen, setIsServicePageOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAdmin, setShowAdmin] = useState(() => window.location.hash === '#/admin');
+  const [userPerms, setUserPerms] = useState<string[]>([]);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+
+  const can = (perm: string) => isSuperadmin || userPerms.includes(perm);
 
   // Sync tenant ID with API client
   useEffect(() => {
@@ -102,6 +106,12 @@ export default function App() {
       setUserName(u.name);
       if (u.wallet) setWalletData({ goldGrams: u.wallet.gold_grams, silverGrams: u.wallet.silver_grams || 0, cashToman: u.wallet.cash_toman });
       setIsLoggedIn(true);
+      // Load permissions for ACL
+      try {
+        const perms = await auth.permissions();
+        setUserPerms(perms.permissions || []);
+        setIsSuperadmin(perms.is_superadmin || false);
+      } catch { /* non-admin users get empty perms */ }
     } catch { setToken(null); setIsLoggedIn(false); }
     finally { setIsLoading(false); }
   };
@@ -115,6 +125,14 @@ export default function App() {
         amountToman: t.amount_toman, weightGrams: t.weight_grams, status: t.status, details: t.details, image: t.image,
       })));
     } catch {}
+  };
+
+  const loadPermissions = async () => {
+    try {
+      const perms = await auth.permissions();
+      setUserPerms(perms.permissions || []);
+      setIsSuperadmin(perms.is_superadmin || false);
+    } catch { setUserPerms([]); setIsSuperadmin(false); }
   };
 
   useEffect(() => {
@@ -142,6 +160,7 @@ export default function App() {
       if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
       loadTransactions();
+      loadPermissions();
     } catch (err: any) { setLoginError(err.message || 'خطا در ورود'); }
   };
 
@@ -163,12 +182,13 @@ export default function App() {
       if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
       loadTransactions();
+      loadPermissions();
     } catch (err: any) { setLoginError(err.message || 'خطا در تأیید کد'); }
   };
 
   const handleLogout = async () => {
     try { await auth.logout(); } catch {}
-    setToken(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName('');
+    setToken(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName(''); setUserPerms([]); setIsSuperadmin(false);
   };
 
   const handleUpdateName = async (newName: string) => { try { await auth.updateProfile(newName); setUserName(newName); } catch {} };
@@ -324,10 +344,12 @@ export default function App() {
               </button>
             ))}
             <div className="border-t border-slate-50 my-2" />
+            {can('admin.access') && (
             <button onClick={goToAdmin}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black transition-all text-right text-slate-500 hover:bg-slate-50 hover:text-slate-700">
               <Shield className="w-5 h-5" /><span>پنل مدیریت</span>
             </button>
+            )}
             <button onClick={() => handleNavigateToTab('notifications')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black transition-all text-right ${activeTab === 'notifications' ? 'bg-amber-50 text-amber-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}>
               <Bell className="w-5 h-5" /><span>اعلان‌ها</span>

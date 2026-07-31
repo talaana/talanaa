@@ -92,6 +92,7 @@ export const auth = {
     method: 'PUT',
     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
   }),
+  permissions: () => apiFetch('/auth/permissions'),
 };
 
 // Wallet
