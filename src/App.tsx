@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { UserWallet, Transaction } from './types';
 import Header from './components/Header';
+import LandingPage from './components/LandingPage';
 import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, wallet, prices, transactions, setToken, getToken, setTenantId } from './api';
@@ -177,6 +178,13 @@ export default function App() {
 
   // ===== LOADING STATE =====
   if (isLoading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-10 h-10 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" /></div>;
+
+  // ===== LANDING PAGE (no tenant) =====
+  if (!tenant && !tenantLoading) {
+    const enterMarketplace = () => { window.location.href = '/?tenant=talana'; };
+    const enterStore = (slug: string) => { window.location.href = `/?tenant=${slug}`; };
+    return <LandingPage onEnterMarketplace={enterMarketplace} onEnterStore={enterStore} />;
+  }
 
   // ===== LOGIN SCREEN =====
   if (!isLoggedIn) return (
