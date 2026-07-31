@@ -86,11 +86,18 @@ export default function AdminPanel({ onBack, token }: Props) {
   ];
 
   // Tenant/store admin nav
-  const tenantNav = [
+  const isMarketplaceAdmin = !isSuperadmin && tenant?.type === 'marketplace';
+  const tenantNav = isMarketplaceAdmin ? [
+    { id: 'dashboard', label: 'داشبورد بازارچه', icon: BarChart3 },
+    { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
+    { id: 'products', label: 'محصولات', icon: Package },
+    { id: 'sellers', label: 'فروشندگان', icon: Users },
+    { id: 'users', label: 'کاربران', icon: Shield },
+  ] : [
     { id: 'dashboard', label: 'داشبورد فروشگاه', icon: BarChart3 },
     { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
     { id: 'products', label: 'محصولات', icon: Package },
-    { id: 'users', label: 'کاربران فروشگاه', icon: Users },
+    { id: 'branches', label: 'شعب', icon: Store },
   ];
 
   const nav = isSuperadmin ? superNav : tenantNav;
@@ -223,10 +230,12 @@ export default function AdminPanel({ onBack, token }: Props) {
             </button>
           </div>
         )}
-        {page === 'dashboard' && <TenantDashboard />}
+        {page === 'dashboard' && <TenantDashboard isMarketplace={isMarketplaceAdmin} />}
         {page === 'users' && <AdminUsers can={can} isSuperadmin={false} />}
         {page === 'products' && <TenantProducts />}
         {page === 'orders' && <TenantOrders />}
+        {page === 'sellers' && <TenantSellers />}
+        {page === 'branches' && <TenantBranches />}
       </main>
     </div>
   );
@@ -234,12 +243,12 @@ export default function AdminPanel({ onBack, token }: Props) {
 
 // ============ TENANT SUB-PAGES ============
 
-function TenantDashboard() {
+function TenantDashboard({ isMarketplace }: { isMarketplace?: boolean }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-black text-slate-800">داشبورد فروشگاه</h2>
-        <p className="text-xs text-slate-400 mt-1">خلاصه وضعیت فروشگاه شما</p>
+        <h2 className="text-xl font-black text-slate-800">{isMarketplace ? 'داشبورد بازارچه' : 'داشبورد فروشگاه'}</h2>
+        <p className="text-xs text-slate-400 mt-1">{isMarketplace ? 'خلاصه وضعیت بازارچه شما' : 'خلاصه وضعیت فروشگاه شما'}</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
@@ -256,8 +265,8 @@ function TenantDashboard() {
       </div>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
         <Package className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-        <h3 className="text-sm font-black text-slate-600">فروشگاه شما آماده است</h3>
-        <p className="text-xs text-slate-400 mt-2">از طریق پنل مدیریت می‌توانید محصولات جدید اضافه کرده، سفارشات را مدیریت و کاربران فروشگاه را کنترل کنید.</p>
+        <h3 className="text-sm font-black text-slate-600">{isMarketplace ? 'بازارچه شما آماده است' : 'فروشگاه شما آماده است'}</h3>
+        <p className="text-xs text-slate-400 mt-2">{isMarketplace ? 'از طریق پنل مدیریت می‌توانید فروشندگان را مدیریت کرده، محصولات را کنترل و سفارشات را پیگیری کنید.' : 'از طریق پنل مدیریت می‌توانید محصولات جدید اضافه کرده، سفارشات را مدیریت و شعب فروشگاه را کنترل کنید.'}</p>
       </div>
     </div>
   );
@@ -293,6 +302,44 @@ function TenantOrders() {
         <ShoppingBag className="w-12 h-12 text-slate-200 mx-auto mb-3" />
         <h3 className="text-sm font-black text-slate-600">سفارشی ثبت نشده</h3>
         <p className="text-xs text-slate-400 mt-2">سفارشات جدید مشتریان در این بخش نمایش داده می‌شود.</p>
+      </div>
+    </div>
+  );
+}
+
+function TenantSellers() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black text-slate-800">فروشندگان بازارچه</h2>
+          <p className="text-xs text-slate-400 mt-1">مدیریت فروشندگان فعال در بازارچه</p>
+        </div>
+        <button className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-black">+ فروشنده جدید</button>
+      </div>
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
+        <Users className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+        <h3 className="text-sm font-black text-slate-600">مدیریت فروشندگان</h3>
+        <p className="text-xs text-slate-400 mt-2">فروشندگان فعال در بازارچه را مدیریت کنید.</p>
+      </div>
+    </div>
+  );
+}
+
+function TenantBranches() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black text-slate-800">شعب فروشگاه</h2>
+          <p className="text-xs text-slate-400 mt-1">مدیریت شعب و آدرس‌های فیزیکی</p>
+        </div>
+        <button className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-black">+ شعبه جدید</button>
+      </div>
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
+        <Store className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+        <h3 className="text-sm font-black text-slate-600">شعب فروشگاه</h3>
+        <p className="text-xs text-slate-400 mt-2">شعب فیزیکی فروشگاه خود را ثبت کنید.</p>
       </div>
     </div>
   );

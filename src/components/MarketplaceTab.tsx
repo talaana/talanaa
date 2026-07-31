@@ -348,7 +348,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                   {/* Product Info */}
                   <div className="p-2.5 flex-1 flex flex-col justify-between text-right">
                     <div className="space-y-0.5">
-                      <span className="text-[8px] text-slate-400 font-extrabold">{toPersianDigits(product.sellerName)}</span>
+                      {!isStandaloneStore && <span className="text-[8px] text-slate-400 font-extrabold">{toPersianDigits(product.sellerName)}</span>}
                       <h4 className="text-[10.5px] font-black text-slate-700 line-clamp-1">{toPersianDigits(product.title)}</h4>
                     </div>
 
@@ -370,8 +370,8 @@ const MarketplaceTab = memo(function MarketplaceTab({
             )}
           </div>
 
-          {/* Top Goldsmiths Showcase without Emojis */}
-          {!selectedCategory && (
+          {/* Top Goldsmiths Showcase — marketplace only */}
+          {!selectedCategory && !isStandaloneStore && (
             <div className="bg-white border border-slate-100 rounded-3xl p-4 text-right shadow-sm space-y-3">
               <h4 className="text-xs font-black text-slate-700 flex items-center gap-1.5 justify-end flex-row-reverse border-b border-slate-50 pb-2">
                 <span>طلافروشی‌ها و همکاران رسمی طلانا</span>

@@ -279,7 +279,8 @@ const HomeDashboard = memo(function HomeDashboard({
         </div>
       </div>
 
-      {/* 3. Quick Services 2x4 Grid (Gold) or 1x4 Grid (Silver) */}
+      {/* 3. Quick Services Grid — marketplace only */}
+      {isMarketplace && (<>
       {activeMetal === 'gold' ? (
         <div className="bg-white border border-slate-100 rounded-3xl p-3.5 shadow-sm" id="services-grid-section">
           <h3 className="text-xs font-black text-slate-700 mb-2.5 text-right">دسترسی سریع و خدمات طلانا</h3>
@@ -345,6 +346,7 @@ const HomeDashboard = memo(function HomeDashboard({
           </div>
         </div>
       )}
+      </>)}
 
       {/* 4. Banner Slider Section */}
       <BannerSlider />
