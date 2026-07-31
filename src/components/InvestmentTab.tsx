@@ -42,9 +42,8 @@ export default function InvestmentTab({
     ? '${presetHover}'
     : 'hover:border-slate-200 hover:bg-slate-50/20';
 
-  // Specific user wallet holdings in metals
-  const silverWalletHolding = 42.500;
-  const activeMetalHolding = activeMetal === 'gold' ? wallet.goldGrams : silverWalletHolding;
+  // Use real wallet silver grams
+  const activeMetalHolding = activeMetal === 'gold' ? wallet.goldGrams : (wallet.silverGrams || 0);
 
   // Sync inputs
   const handleGramsChange = (val: string) => {
@@ -151,10 +150,11 @@ export default function InvestmentTab({
   };
 
   return (
-    <div className="space-y-4 max-w-md mx-auto px-4 py-4 text-slate-800 pb-2 text-right" dir="rtl" id="investment-view">
+    <div className="space-y-4 px-4 py-4 text-slate-800 pb-2 text-right max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6" dir="rtl" id="investment-view">
       
-      {/* Trading Form Cards (Gold and Silver) */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm" id="gold-trade-card">
+      {/* Trading Form Cards (Gold and Silver) — 2-col on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm lg:order-1" id="gold-trade-card">
         {/* Toggle buy/sell without emojis */}
         <div className="flex bg-slate-50 p-1 rounded-xl mb-5 relative" dir="rtl">
           <button
@@ -288,6 +288,7 @@ export default function InvestmentTab({
             تمام خریدهای طلا و نقره به صورت سرمایه‌گذاری بدون کارمزد شمش آب‌شده ۱۸ عیار و ۹۹۹ در صندوق امانات طلانا ثبت می‌گردند. شما هر لحظه می‌توانید دارایی آنلاین خود را به صورت فیزیکی تحویل بگیرید یا در بخش «ویترین» با زیورآلات طلا معاوضه نمایید.
           </p>
         </div>
+      </div>
       </div>
 
       {/* Transaction Result Modal */}

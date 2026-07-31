@@ -48,7 +48,7 @@ export default function NotificationsTab({ onBack }: NotificationsTabProps) {
   ];
 
   return (
-    <div className="space-y-4 max-w-md mx-auto px-4 py-4 text-right" id="notifications-view">
+    <div className="space-y-4 max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6 px-4 py-4 text-right" id="notifications-view">
       
       {/* Dedicated Header with Left aligned back button */}
       <div className="flex items-center justify-between pb-3 mb-2">
@@ -63,7 +63,7 @@ export default function NotificationsTab({ onBack }: NotificationsTabProps) {
         <div className="w-6 h-6"></div> {/* Spacer for symmetry */}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         {notifications.map((n, i) => (
           <motion.div
             key={n.id}

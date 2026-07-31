@@ -1,4 +1,4 @@
-const SHELL = 'talana-shell-v2';
+const SHELL = 'talana-shell-v3';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -24,13 +24,17 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  // Only cache same-origin static assets, skip chrome-extension:// and API calls
+  if (!url.protocol.startsWith('http')) return;
+  if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
     fetch(event.request)
       .then((res) => {
-        if (res.ok && new URL(event.request.url).pathname.match(/\.(js|css|woff2|png|svg|ico)$/)) {
+        if (res.ok && url.pathname.match(/\.(js|css|woff2|png|svg|ico)$/)) {
           const clone = res.clone();
-          caches.open(SHELL).then((cache) => cache.put(event.request, clone));
+          caches.open(SHELL).then((cache) => cache.put(event.request, clone)).catch(() => {});
         }
         return res;
       })

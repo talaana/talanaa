@@ -29,7 +29,7 @@ export default function OrdersTab({ transactions, onBack }: OrdersTabProps) {
   });
 
   return (
-    <div className="space-y-4 max-w-md mx-auto px-4 py-4 text-right" id="orders-view">
+    <div className="space-y-4 max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6 px-4 py-4 text-right" id="orders-view">
       
       {/* Subpage Header */}
       <div className="flex items-center justify-between pb-3 mb-2">
