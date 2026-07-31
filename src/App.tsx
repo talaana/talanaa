@@ -43,6 +43,10 @@ export default function App() {
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
 
   const [walletData, setWalletData] = useState<UserWallet>({ goldGrams: 0, silverGrams: 0, cashToman: 0 });
   const [userName, setUserName] = useState<string>('');
@@ -141,6 +145,27 @@ export default function App() {
     } catch (err: any) { setLoginError(err.message || 'خطا در ورود'); }
   };
 
+  const handleRequestOtp = async () => {
+    if (loginPhone.length !== 11) { setLoginError('شماره موبایل باید ۱۱ رقم باشد'); return; }
+    setLoginError(''); setOtpLoading(true);
+    try {
+      await auth.requestOtp(loginPhone);
+      setOtpSent(true);
+    } catch (err: any) { setLoginError(err.message || 'خطا در ارسال کد'); }
+    finally { setOtpLoading(false); }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoginError('');
+    try {
+      const data = await auth.verifyOtp(loginPhone, otpCode);
+      setUserName(data.user.name);
+      if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
+      setIsLoggedIn(true);
+      loadTransactions();
+    } catch (err: any) { setLoginError(err.message || 'خطا در تأیید کد'); }
+  };
+
   const handleLogout = async () => {
     try { await auth.logout(); } catch {}
     setToken(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName('');
@@ -199,13 +224,56 @@ export default function App() {
           <h1 className="text-lg font-black text-slate-800">{platformName}</h1>
           <p className="text-xs text-slate-400 font-bold mt-1">{platformSubtitle}</p>
         </div>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div><label className="text-xs font-black text-slate-600 block mb-1.5">شماره موبایل</label><input type="text" value={loginPhone} onChange={e => setLoginPhone(e.target.value)} placeholder="۰۹۱۲۳۴۵۶۷۸۹" className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-left focus:outline-none focus:border-amber-600 font-mono" dir="ltr" /></div>
-          <div><label className="text-xs font-black text-slate-600 block mb-1.5">رمز عبور</label><input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••" className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-left focus:outline-none focus:border-amber-600" dir="ltr" /></div>
-          {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
-          <button type="submit" className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all">ورود به {platformName}</button>
-        </form>
-        <p className="text-center text-[10px] text-slate-400 mt-4 font-bold">demo: 09123456789 / password</p>
+
+        {/* Login mode tabs */}
+        <div className="flex bg-slate-100 rounded-xl p-1 mb-5">
+          <button onClick={() => { setLoginMode('password'); setLoginError(''); setOtpSent(false); }}
+            className={`flex-1 py-2 rounded-lg text-xs font-black transition-all ${loginMode === 'password' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
+            رمز عبور
+          </button>
+          <button onClick={() => { setLoginMode('otp'); setLoginError(''); setOtpSent(false); }}
+            className={`flex-1 py-2 rounded-lg text-xs font-black transition-all ${loginMode === 'otp' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
+            کد یکبار مصرف
+          </button>
+        </div>
+
+        {/* Phone input (shared) */}
+        <div className="mb-4">
+          <label className="text-xs font-black text-slate-600 block mb-1.5">شماره موبایل</label>
+          <input type="text" value={loginPhone} onChange={e => { setLoginPhone(e.target.value); setOtpSent(false); }}
+            placeholder="۰۹۱۲۳۴۵۶۷۸۹" className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-left focus:outline-none focus:border-amber-600 font-mono" dir="ltr" />
+        </div>
+
+        {loginMode === 'password' ? (
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div><label className="text-xs font-black text-slate-600 block mb-1.5">رمز عبور</label><input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••" className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-left focus:outline-none focus:border-amber-600" dir="ltr" /></div>
+            {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
+            <button type="submit" className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all">ورود به {platformName}</button>
+            <p className="text-center text-[10px] text-slate-400 font-bold">demo: 09123456789 / password</p>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            {!otpSent ? (
+              <>
+                {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
+                <button type="button" onClick={handleRequestOtp} disabled={otpLoading}
+                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50">
+                  {otpLoading ? 'در حال ارسال...' : 'دریافت کد تأیید'}
+                </button>
+                <p className="text-center text-[10px] text-slate-400 font-bold">کد به شماره شما ارسال می‌شود</p>
+              </>
+            ) : (
+              <>
+                <div><label className="text-xs font-black text-slate-600 block mb-1.5">کد تأیید ۶ رقمی</label><input type="text" value={otpCode} onChange={e => setOtpCode(e.target.value)} placeholder="111111" maxLength={6} className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-center focus:outline-none focus:border-amber-600 font-mono tracking-widest" dir="ltr" /></div>
+                {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
+                <button type="submit" className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all">تأیید و ورود</button>
+                <button type="button" onClick={() => { setOtpSent(false); setOtpCode(''); setLoginError(''); }}
+                  className="w-full text-center text-[11px] text-slate-400 font-bold hover:text-slate-600">ارسال مجدد کد</button>
+                <p className="text-center text-[10px] text-slate-400 font-bold">کد تست: 111111</p>
+              </>
+            )}
+          </form>
+        )}
       </div>
     </div>
   );

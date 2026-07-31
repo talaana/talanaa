@@ -67,6 +67,18 @@ export const auth = {
     setToken(data.token);
     return data;
   },
+  requestOtp: (phone: string) => apiFetch('/auth/otp/request', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  }),
+  verifyOtp: async (phone: string, code: string) => {
+    const data = await apiFetch('/auth/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify({ phone, code }),
+    });
+    setToken(data.token);
+    return data;
+  },
   logout: async () => {
     await apiFetch('/auth/logout', { method: 'POST' });
     setToken(null);
