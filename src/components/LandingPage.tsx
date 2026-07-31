@@ -8,11 +8,11 @@ interface LandingPageProps {
 }
 
 const stores = [
-  { slug: 'talana', name: 'طلانا', desc: 'بازارچه اصلی طلا و نقره', type: 'marketplace', icon: '🛒' },
-  { slug: 'zarrin', name: 'گالری زرین', desc: 'فروشگاه طلا و جواهر', type: 'store', icon: '💎' },
-  { slug: 'mohammad', name: 'جواهری محمد', desc: 'فروشگاه تخصصی جواهرات', type: 'store', icon: '👑' },
-  { slug: 'nab', name: 'طلای ناب', desc: 'شمش و سکه سرمایه‌ای', type: 'store', icon: '🧱' },
-  { slug: 'mehr', name: 'طلا و جواهر مهر', desc: 'زیورآلات دست‌ساز', type: 'store', icon: '🌸' },
+  { slug: 'talana', name: 'طلانا', desc: 'بازارچه طلا و نقره — ۴ فروشنده فعال', type: 'marketplace', icon: '🛒' },
+  { slug: 'silver-bazaar', name: 'بازار نقره', desc: 'بازارچه تخصصی نقره — ۲ فروشنده', type: 'marketplace', icon: '🥈' },
+  { slug: 'diamond-gallery', name: 'گالری الماس', desc: 'فروشگاه تخصصی الماس و جواهرات', type: 'store', icon: '💎' },
+  { slug: 'pars-gold', name: 'طلافروشی پارس', desc: 'فروشگاه طلای ۱۸ و ۲۴ عیار', type: 'store', icon: '👑' },
+  { slug: 'tehran-jewelry', name: 'جواهری تهران', desc: 'زیورآلات دست‌ساز و سفارشی', type: 'store', icon: '🌸' },
 ];
 
 const features = [
@@ -91,7 +91,7 @@ export default function LandingPage({ onEnterMarketplace, onEnterStore }: Landin
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
             {[
-              { value: '۴+', label: 'فروشگاه فعال' },
+              { value: '۵+', label: 'فروشگاه فعال' },
               { value: '۱۴+', label: 'محصول طلا و نقره' },
               { value: '۲۴/۷', label: 'پشتیبانی' },
               { value: '۹۹.۹٪', label: 'آپتایم' },
@@ -167,7 +167,7 @@ export default function LandingPage({ onEnterMarketplace, onEnterStore }: Landin
                   <li key={i} className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />{item}</li>
                 ))}
               </ul>
-              <button onClick={() => onEnterStore('zarrin')}
+              <button onClick={() => onEnterStore('pars-gold')}
                 className="w-full mt-6 bg-emerald-600 text-white py-3 rounded-xl text-sm font-black hover:bg-emerald-500 transition-all">
                 مشاهده فروشگاه نمونه
               </button>
