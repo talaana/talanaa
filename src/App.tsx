@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { UserWallet, Transaction } from './types';
 import Header from './components/Header';
 import LandingPage from './components/LandingPage';
+import InstallerPage from './components/InstallerPage';
 import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, wallet, prices, transactions, setToken, getToken, setTenantId } from './api';
@@ -62,6 +63,8 @@ export default function App() {
   const [isServicePageOpen, setIsServicePageOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAdmin, setShowAdmin] = useState(() => window.location.hash === '#/admin');
+  const [showInstaller, setShowInstaller] = useState(false);
+  const [installerPreselectedType, setInstallerPreselectedType] = useState<'marketplace' | 'store' | undefined>();
   const [userPerms, setUserPerms] = useState<string[]>([]);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
 
@@ -224,11 +227,23 @@ export default function App() {
   // ===== LOADING STATE =====
   if (isLoading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-10 h-10 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" /></div>;
 
+  // ===== INSTALLER PAGE =====
+  if (showInstaller) {
+    return <InstallerPage
+      onBack={() => setShowInstaller(false)}
+      preselectedType={installerPreselectedType}
+    />;
+  }
+
   // ===== LANDING PAGE (no tenant) =====
   if (!tenant && !tenantLoading) {
     const enterMarketplace = () => { window.location.href = '/?tenant=talana'; };
     const enterStore = (slug: string) => { window.location.href = `/?tenant=${slug}`; };
-    return <LandingPage onEnterMarketplace={enterMarketplace} onEnterStore={enterStore} />;
+    const startBuilding = (type?: 'marketplace' | 'store') => {
+      setInstallerPreselectedType(type);
+      setShowInstaller(true);
+    };
+    return <LandingPage onEnterMarketplace={enterMarketplace} onEnterStore={enterStore} onStartBuilding={startBuilding} />;
   }
 
   // ===== LOGIN SCREEN =====

@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 interface LandingPageProps {
   onEnterMarketplace: () => void;
   onEnterStore: (slug: string) => void;
+  onStartBuilding: (type?: 'marketplace' | 'store') => void;
 }
 
 const stores = [
@@ -30,7 +31,7 @@ const plans = [
   { name: 'سازمانی', price: 'تماس بگیرید', period: 'سفارشی', features: ['محصولات نامحدود', 'فروشندگان نامحدود', 'API اختصاصی', 'استقرار اختصاصی', 'مدیریت چند شعبه', 'SLA تضمینی'], cta: 'تماس با ما', highlight: false },
 ];
 
-export default function LandingPage({ onEnterMarketplace, onEnterStore }: LandingPageProps) {
+export default function LandingPage({ onEnterMarketplace, onEnterStore, onStartBuilding }: LandingPageProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -227,7 +228,8 @@ export default function LandingPage({ onEnterMarketplace, onEnterStore }: Landin
                     </li>
                   ))}
                 </ul>
-                <button className={`w-full py-3 rounded-xl text-sm font-black transition-all ${p.highlight ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md hover:shadow-lg' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                <button onClick={() => onStartBuilding()}
+                  className={`w-full py-3 rounded-xl text-sm font-black transition-all ${p.highlight ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md hover:shadow-lg' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
                   {p.cta}
                 </button>
               </motion.div>
@@ -246,7 +248,8 @@ export default function LandingPage({ onEnterMarketplace, onEnterStore }: Landin
               className="w-full sm:w-auto bg-white text-amber-700 px-8 py-3.5 rounded-2xl font-black text-sm shadow-lg hover:shadow-xl transition-all">
               ورود به بازارچه طلانا
             </button>
-            <button className="w-full sm:w-auto bg-amber-700 text-white px-8 py-3.5 rounded-2xl font-black text-sm hover:bg-amber-800 transition-all">
+            <button onClick={() => onStartBuilding()}
+              className="w-full sm:w-auto bg-amber-700 text-white px-8 py-3.5 rounded-2xl font-black text-sm hover:bg-amber-800 transition-all">
               ساخت فروشگاه جدید
             </button>
           </div>
