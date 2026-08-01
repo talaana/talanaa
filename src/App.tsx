@@ -34,6 +34,8 @@ const marketplaceNavItems = [
 const storeNavItems = [
   { id: 'home', label: 'خانه', icon: Home },
   { id: 'vitrine', label: 'محصولات', icon: Store },
+  { id: 'trade', label: 'خرید و فروش', icon: ArrowLeftRight },
+  { id: 'services', label: 'خدمات', icon: LayoutGrid },
 ];
 
 export default function App() {
@@ -406,8 +408,8 @@ export default function App() {
               <Suspense fallback={<TabFallback />}>
                 {activeTab === 'home' && <HomeDashboard wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} priceTrend={priceTrend} activeMetal={activeMetal} showBalances={showBalances} onToggleBalances={toggleBalances} onNavigateToTab={handleNavigateToTab} onTransaction={handleNewTransaction} onServicePageToggle={setIsServicePageOpen} isMarketplace={isMarketplace} />}
                 {activeTab === 'vitrine' && <MarketplaceTab wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} activeMetal={activeMetal} onTransaction={handleNewTransaction} onProductDetailToggle={setIsProductDetailOpen} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} isStandaloneStore={isStore} />}
-                {isMarketplace && activeTab === 'trade' && <InvestmentTab wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} priceTrend={priceTrend} activeMetal={activeMetal} onTransaction={handleNewTransaction} />}
-                {isMarketplace && activeTab === 'services' && <ServicesTab onNavigateToTab={handleNavigateToTab} activeMetal={activeMetal} wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} onServicePageToggle={setIsServicePageOpen} onToast={() => {}} />}
+                {activeTab === 'trade' && <InvestmentTab wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} priceTrend={priceTrend} activeMetal={activeMetal} onTransaction={handleNewTransaction} />}
+                {activeTab === 'services' && <ServicesTab onNavigateToTab={handleNavigateToTab} activeMetal={activeMetal} wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} onServicePageToggle={setIsServicePageOpen} onToast={() => {}} />}
                 {activeTab === 'orders' && <OrdersTab transactions={txList} onBack={() => setActiveTab('home')} />}
                 {activeTab === 'profile' && <ProfileTab wallet={walletData} userName={userName} onUpdateName={handleUpdateName} onUpdateWallet={setWalletData} onResetData={handleLogout} goldPrice18k={goldPrice18k} activeMetal={activeMetal} onBack={() => setActiveTab('home')} />}
                 {activeTab === 'notifications' && <NotificationsTab onBack={() => setActiveTab('home')} />}
@@ -420,7 +422,7 @@ export default function App() {
       {/* Mobile Bottom Nav — hidden on desktop */}
       {showMobileNav && (
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white pb-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.015)]">
-          <div className={`max-w-md mx-auto grid h-14 text-center text-[11px] font-black ${navItems.length === 2 ? 'grid-cols-2' : 'grid-cols-4'}`}>
+          <div className="max-w-md mx-auto grid grid-cols-4 h-14 text-center text-[11px] font-black">
             {navItems.map(item => (
               <button key={item.id} onClick={() => handleNavigateToTab(item.id)}
                 className={`relative flex flex-col items-center justify-center gap-1 transition-all focus:outline-none ${activeTab === item.id ? (activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600') : 'text-slate-400 hover:text-slate-600'}`}>
