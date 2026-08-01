@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Store, Users, ArrowRight, ArrowLeft, Check, Sparkles, Coins } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { setToken } from '../api';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -67,6 +68,8 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
 
       const data = await res.json();
       setResult(data);
+      // Auto-login: save token so user doesn't need to re-enter credentials
+      if (data.token) setToken(data.token);
       setDone(true);
     } catch (err: any) {
       setError(err.message);
