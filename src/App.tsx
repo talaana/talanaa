@@ -5,7 +5,7 @@ import LandingPage from './components/LandingPage';
 import InstallerPage from './components/InstallerPage';
 import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth, wallet, prices, transactions, setToken, getToken, setTenantId } from './api';
+import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext } from './api';
 import { formatToman, formatGram, toPersianDigits } from './utils';
 import { useTenant } from './tenant';
 import AdminPanel from './admin/AdminPanel';
@@ -75,9 +75,9 @@ export default function App() {
   // Sync tenant ID with API client
   useEffect(() => {
     if (tenant) {
-      setTenantId(tenant.id);
+      setTenantContext(tenant.id, tenant.slug);
     } else {
-      setTenantId(null);
+      setTenantContext(null, '');
     }
   }, [tenant]);
 

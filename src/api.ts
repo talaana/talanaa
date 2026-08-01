@@ -1,14 +1,41 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-let authToken: string | null = localStorage.getItem('talana_token');
+// ========== COOKIE HELPERS ==========
+
+function setCookie(name: string, value: string, days: number = 30) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/+^])/g, '\\$1') + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function removeCookie(name: string) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
+}
+
+// ========== TOKEN STORAGE (cookie-based, keyed by tenant slug) ==========
+
+let authToken: string | null = null;
 let tenantId: number | null = null;
+let tenantSlug: string = '';
+
+function tokenCookieName(): string {
+  return tenantSlug ? `talana_token_${tenantSlug}` : 'talana_token';
+}
+
+// Init from cookie on module load (try fallback key first, tenant context set later)
+authToken = getCookie('talana_token');
 
 export function setToken(token: string | null) {
   authToken = token;
   if (token) {
-    localStorage.setItem('talana_token', token);
+    setCookie(tokenCookieName(), token, 30);
   } else {
-    localStorage.removeItem('talana_token');
+    removeCookie(tokenCookieName());
+    removeCookie('talana_token');
   }
 }
 
@@ -16,12 +43,22 @@ export function getToken(): string | null {
   return authToken;
 }
 
-export function setTenantId(id: number | null) {
+export function setTenantContext(id: number | null, slug: string = '') {
   tenantId = id;
+  tenantSlug = slug;
+  // Reload token from cookie for this tenant
+  if (slug) {
+    const tk = getCookie(tokenCookieName());
+    if (tk) authToken = tk;
+  }
 }
 
 export function getTenantId(): number | null {
   return tenantId;
+}
+
+export function getTenantSlug(): string {
+  return tenantSlug;
 }
 
 async function apiFetch(path: string, options: RequestInit = {}): Promise<any> {
