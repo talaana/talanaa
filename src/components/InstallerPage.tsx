@@ -39,8 +39,9 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
       .replace(/\s+/g, '-')
       .substring(0, 40);
 
-  const canNextStep1 = type && tenantName.trim() && tenantSlug.trim();
-  const canNextStep2 = adminName.trim() && adminPhone.trim().length === 11 && adminPassword.trim().length >= 6;
+  const canNextStep1 = !!type;
+  const canNextStep2 = tenantName.trim() && tenantSlug.trim();
+  const canNextStep3 = adminName.trim() && adminPhone.trim().length === 11 && adminPassword.trim().length >= 6;
 
   const handleSubmit = async () => {
     setLoading(true); setError('');
@@ -155,7 +156,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
-                    <button onClick={() => setType('marketplace')}
+                    <button onClick={() => { setType('marketplace'); setStep(2); }}
                       className={`text-right p-5 rounded-2xl border-2 transition-all ${type === 'marketplace' ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-100' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
@@ -173,7 +174,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                       </div>
                     </button>
 
-                    <button onClick={() => setType('store')}
+                    <button onClick={() => { setType('store'); setStep(2); }}
                       className={`text-right p-5 rounded-2xl border-2 transition-all ${type === 'store' ? 'border-emerald-400 bg-emerald-50 ring-2 ring-emerald-100' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -276,7 +277,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                     بعدی <ArrowLeft className="w-4 h-4" />
                   </button>
                 ) : (
-                  <button onClick={handleSubmit} disabled={loading}
+                  <button onClick={handleSubmit} disabled={loading || !canNextStep3}
                     className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3 rounded-xl text-sm font-black shadow-md hover:shadow-lg transition-all disabled:opacity-50">
                     {loading ? 'در حال ساخت...' : `ساخت ${type === 'marketplace' ? 'بازارچه' : 'فروشگاه'}`}
                     <Sparkles className="w-4 h-4" />
