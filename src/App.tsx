@@ -352,6 +352,39 @@ export default function App() {
               <span className="text-xs font-black text-slate-700">{showBalances ? `${formatToman(walletData.cashToman)} تومان` : '****'}</span>
             </div>
           </div>
+          {/* Metal toggle — desktop sidebar */}
+          <div className="px-4 py-3 border-b border-slate-50">
+            <div className="bg-slate-100 rounded-lg p-0.5 flex gap-0.5">
+              <button
+                onClick={() => setActiveMetal('gold')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-black transition-all ${
+                  activeMetal === 'gold'
+                    ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <img src="/assets/gold.png" alt="" className={`w-5 h-5 object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
+                طلا
+              </button>
+              <button
+                onClick={() => setActiveMetal('silver')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-black transition-all ${
+                  activeMetal === 'silver'
+                    ? 'bg-slate-700 text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <img src="/assets/silver.png" alt="" className="w-5 h-5 object-contain" />
+                نقره
+              </button>
+            </div>
+            {/* Live price */}
+            <div className={`mt-2 text-center text-[9px] font-black rounded-lg py-1 ${
+              activeMetal === 'gold' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'
+            }`}>
+              {formatToman(activeMetal === 'gold' ? goldPrice18k : silverPrice999)} تومان / گرم
+            </div>
+          </div>
           {/* Nav */}
           <nav className="flex-1 p-3 space-y-1">
             {navItems.map(item => (
