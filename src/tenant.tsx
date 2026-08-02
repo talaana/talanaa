@@ -29,8 +29,8 @@ export function useTenant() {
  * Detect tenant from the current URL.
  * Priority:
  * 1. Query param: ?tenant=slug (dev mode)
- * 2. Subdomain: store-name.localhost / store-name.talana.app
- * 3. Path prefix: /s/store-slug
+ * 2. Subdomain: slug.talaana.ir, slug.localhost, slug.talana.app
+ * 3. Path prefix: /s/store-slug (legacy)
  * Returns { slug?, domain? } or null if no tenant detected.
  */
 export function detectTenantFromURL(): { slug?: string; domain?: string } | null {
@@ -38,7 +38,7 @@ export function detectTenantFromURL(): { slug?: string; domain?: string } | null
 
   const url = new URL(window.location.href);
 
-  // 1. Query param (dev mode)
+  // 1. Query param (dev mode — localhost or arbitrary)
   const tenantParam = url.searchParams.get('tenant');
   if (tenantParam) {
     return { slug: tenantParam };
@@ -46,9 +46,12 @@ export function detectTenantFromURL(): { slug?: string; domain?: string } | null
 
   // 2. Subdomain detection
   const hostname = url.hostname;
-  // Check for subdomain pattern: <slug>.localhost or <slug>.talana.app
-  const subdomainMatch = hostname.match(/^([^.]+)\.(localhost|talana\.app|talana-sage\.vercel\.app)$/);
-  if (subdomainMatch && subdomainMatch[1] !== 'www') {
+  const prodDomain = 'talaana.ir';
+  const devDomains = 'localhost|talana\\.app|talana-sage\\.vercel\\.app';
+  const subdomainPattern = new RegExp(`^([^.]+)\\.(${devDomains}|${prodDomain.replace('.', '\\.')})$`);
+
+  const subdomainMatch = hostname.match(subdomainPattern);
+  if (subdomainMatch && subdomainMatch[1] !== 'www' && subdomainMatch[1] !== 'app') {
     return { domain: hostname };
   }
 
