@@ -250,8 +250,8 @@ export default function AdminPanel({ onBack, token }: Props) {
       )}
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 w-full min-w-0 overflow-y-auto pt-14 lg:pt-0">
-        <div className="p-4 lg:p-6">
+      <main className="flex-1 w-full min-w-0 overflow-y-auto pt-[52px] lg:pt-0">
+        <div className="p-3 lg:p-6">
           {/* Impersonation banner (desktop only — mobile shows in drawer) */}
           {impersonatedTenant && (
             <div className="hidden lg:flex mb-6 bg-purple-50 border border-purple-200 rounded-2xl p-4 items-center justify-between">
@@ -291,9 +291,9 @@ export default function AdminPanel({ onBack, token }: Props) {
 
 function TenantDashboard({ isMarketplace }: { isMarketplace?: boolean }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div>
-        <h2 className="text-xl font-black text-slate-800">{isMarketplace ? 'داشبورد بازارچه' : 'داشبورد فروشگاه'}</h2>
+        <h2 className="text-lg lg:text-xl font-black text-slate-800">{isMarketplace ? 'داشبورد بازارچه' : 'داشبورد فروشگاه'}</h2>
         <p className="text-xs text-slate-400 mt-1">{isMarketplace ? 'خلاصه وضعیت بازارچه شما' : 'خلاصه وضعیت فروشگاه شما'}</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -320,10 +320,10 @@ function TenantDashboard({ isMarketplace }: { isMarketplace?: boolean }) {
 
 function TenantProducts() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-slate-800">محصولات فروشگاه</h2>
+          <h2 className="text-lg lg:text-xl font-black text-slate-800">محصولات فروشگاه</h2>
           <p className="text-xs text-slate-400 mt-1">مدیریت محصولات و موجودی</p>
         </div>
         <button className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ محصول جدید</button>
@@ -339,9 +339,9 @@ function TenantProducts() {
 
 function TenantOrders() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div>
-        <h2 className="text-xl font-black text-slate-800">سفارشات</h2>
+        <h2 className="text-lg lg:text-xl font-black text-slate-800">سفارشات</h2>
         <p className="text-xs text-slate-400 mt-1">مدیریت سفارشات مشتریان</p>
       </div>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
@@ -355,10 +355,10 @@ function TenantOrders() {
 
 function TenantSellers() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-slate-800">فروشندگان بازارچه</h2>
+          <h2 className="text-lg lg:text-xl font-black text-slate-800">فروشندگان بازارچه</h2>
           <p className="text-xs text-slate-400 mt-1">مدیریت فروشندگان فعال در بازارچه</p>
         </div>
         <button className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ فروشنده جدید</button>
@@ -374,10 +374,10 @@ function TenantSellers() {
 
 function TenantBranches() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-slate-800">شعب فروشگاه</h2>
+          <h2 className="text-lg lg:text-xl font-black text-slate-800">شعب فروشگاه</h2>
           <p className="text-xs text-slate-400 mt-1">مدیریت شعب و آدرس‌های فیزیکی</p>
         </div>
         <button className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ شعبه جدید</button>
