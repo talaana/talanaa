@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, User, WifiOff } from 'lucide-react';
+import { Bell, User, WifiOff, Shield } from 'lucide-react';
 import { toPersianDigits, formatToman } from '../utils';
 
 interface HeaderProps {
@@ -12,6 +12,8 @@ interface HeaderProps {
   platformName?: string;
   platformLogo?: string;
   isMarketplace?: boolean;
+  showAdminButton?: boolean;
+  onGoToAdmin?: () => void;
 }
 
 export default function Header({ 
@@ -24,6 +26,8 @@ export default function Header({
   platformName = 'طلانا',
   platformLogo = '/talana_logo.png',
   isMarketplace = true,
+  showAdminButton = false,
+  onGoToAdmin,
 }: HeaderProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -75,17 +79,29 @@ export default function Header({
           <span className="text-sm font-black text-slate-800 tracking-tight">{platformName}</span>
         </div>
 
-        {/* Visual Left in RTL: Notifications icon */}
-        <button 
-          onClick={() => onNavigateToTab('notifications')} 
-          className="text-slate-500 hover:text-slate-700 transition-colors duration-200 relative focus:outline-none p-1"
-          id="btn-header-bell"
-          title="اطلاع‌رسانی"
-          aria-label="اعلان‌ها"
-        >
-          <Bell className="w-6 h-6 text-slate-500" aria-hidden="true" />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true"></span>
-        </button>
+        {/* Visual Left in RTL: Admin + Notifications */}
+        <div className="flex items-center gap-1">
+          {showAdminButton && onGoToAdmin && (
+            <button
+              onClick={onGoToAdmin}
+              className="text-slate-500 hover:text-amber-600 transition-colors duration-200 focus:outline-none p-1"
+              title="پنل مدیریت"
+              aria-label="پنل مدیریت"
+            >
+              <Shield className="w-5 h-5" aria-hidden="true" />
+            </button>
+          )}
+          <button 
+            onClick={() => onNavigateToTab('notifications')} 
+            className="text-slate-500 hover:text-slate-700 transition-colors duration-200 relative focus:outline-none p-1"
+            id="btn-header-bell"
+            title="اطلاع‌رسانی"
+            aria-label="اعلان‌ها"
+          >
+            <Bell className="w-6 h-6 text-slate-500" aria-hidden="true" />
+            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true"></span>
+          </button>
+        </div>
 
       </div>
 

@@ -398,6 +398,8 @@ export default function App() {
               goldPrice18k={goldPrice18k}
               silverPrice999={silverPrice999}
               isMarketplace={isMarketplace}
+              showAdminButton={can('admin.access')}
+              onGoToAdmin={goToAdmin}
             />
           </div>
         )}
