@@ -379,12 +379,14 @@ const HomeDashboard = memo(function HomeDashboard({
             className="w-full h-full cursor-crosshair"
             onMouseMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
-              const clientX = e.clientX - rect.left;
+              // Scale mouse pixel position to SVG viewBox coordinates
+              const scaleX = chartWidth / rect.width;
+              const svgX = (e.clientX - rect.left) * scaleX;
               const chartContentWidth = chartWidth - paddingX * 2;
               const step = chartContentWidth / (activeHistory.length - 1);
               const rawIdx = Math.min(
                 activeHistory.length - 1,
-                Math.max(0, Math.round((clientX - paddingX) / step))
+                Math.max(0, Math.round((svgX - paddingX) / step))
               );
               const idx = activeHistory.length - 1 - rawIdx;
               setHoveredIndex(idx);
