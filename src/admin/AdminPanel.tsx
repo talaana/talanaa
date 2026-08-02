@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, BarChart3, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, BarChart3, CreditCard, Menu, X } from 'lucide-react';
 import { admin, setAdminToken } from './api';
 import AdminDashboard from './pages/Dashboard';
 import AdminRoles from './pages/Roles';
@@ -8,6 +8,8 @@ import AdminTenants from './pages/Tenants';
 
 interface Props { onBack: () => void; token: string; }
 
+const sidebarWidth = 'w-64';
+
 export default function AdminPanel({ onBack, token }: Props) {
   const [page, setPage] = useState('dashboard');
   const [perms, setPerms] = useState<string[]>([]);
@@ -15,6 +17,7 @@ export default function AdminPanel({ onBack, token }: Props) {
   const [tenant, setTenant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Impersonation state
   const [impersonatedTenant, setImpersonatedTenant] = useState<any>(null);
@@ -55,6 +58,7 @@ export default function AdminPanel({ onBack, token }: Props) {
         setPage('dashboard');
         setLoading(false);
         setImpersonating(false);
+        setMobileMenuOpen(false);
       }).catch((e) => {
         setError(e.message || 'خطا در ورود به فروشگاه');
         setLoading(false);
@@ -67,17 +71,21 @@ export default function AdminPanel({ onBack, token }: Props) {
   };
 
   const exitImpersonation = () => {
-    // Restore original token
     setAdminToken(token);
     setImpersonatedTenant(null);
     setImpersonatedToken('');
     setPage('dashboard');
     loadPermissions();
+    setMobileMenuOpen(false);
+  };
+
+  const navigateTo = (id: string) => {
+    setPage(id);
+    setMobileMenuOpen(false);
   };
 
   const can = (slug: string) => isSuperadmin || perms.includes(slug);
 
-  // Superadmin nav
   const superNav = [
     { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
     { id: 'tenants', label: 'فروشگاه‌ها', icon: Store },
@@ -85,7 +93,6 @@ export default function AdminPanel({ onBack, token }: Props) {
     { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
   ];
 
-  // Tenant/store admin nav
   const isMarketplaceAdmin = !isSuperadmin && tenant?.type === 'marketplace';
   const tenantNav = isMarketplaceAdmin ? [
     { id: 'dashboard', label: 'داشبورد بازارچه', icon: BarChart3 },
@@ -102,7 +109,7 @@ export default function AdminPanel({ onBack, token }: Props) {
 
   const nav = isSuperadmin ? superNav : tenantNav;
 
-  // Loading / Error states
+  // ============ LOADING / ERROR ============
   if (loading) return (
     <div dir="rtl" className="min-h-screen bg-slate-100 flex items-center justify-center font-sans">
       <div className="text-center">
@@ -113,8 +120,8 @@ export default function AdminPanel({ onBack, token }: Props) {
   );
 
   if (error) return (
-    <div dir="rtl" className="min-h-screen bg-slate-100 flex items-center justify-center font-sans">
-      <div className="text-center bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-w-sm">
+    <div dir="rtl" className="min-h-screen bg-slate-100 flex items-center justify-center font-sans p-4">
+      <div className="text-center bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-w-sm w-full">
         <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 text-2xl">!</div>
         <p className="text-sm font-black text-slate-800 mb-2">خطا در بارگذاری</p>
         <p className="text-xs text-slate-500 mb-5">{error}</p>
@@ -123,68 +130,50 @@ export default function AdminPanel({ onBack, token }: Props) {
     </div>
   );
 
-  // ============ SUPERADMIN PANEL ============
-  if (isSuperadmin) return (
-    <div dir="rtl" className="flex min-h-screen bg-slate-100 font-sans">
-      <aside className="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0">
-        <div className="p-5 border-b border-slate-700">
-          <h1 className="text-lg font-black">طلانا سوپر ادمین</h1>
-          <p className="text-[10px] text-slate-400 mt-1">مدیریت کل پلتفرم</p>
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {nav.map(item => (
-            <button key={item.id} onClick={() => setPage(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-right transition-all ${page === item.id ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-              <item.icon className="w-4.5 h-4.5" /><span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-slate-700">
-          <button onClick={onBack} className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-800 hover:text-white">
-            <ArrowRight className="w-4 h-4" /><span>بازگشت به سایت</span>
-          </button>
-        </div>
-      </aside>
-      <main className="flex-1 p-6 overflow-y-auto">
-        {page === 'dashboard' && <AdminDashboard />}
-        {page === 'roles' && <AdminRoles />}
-        {page === 'users' && <AdminUsers can={can} isSuperadmin={isSuperadmin} />}
-        {page === 'tenants' && <AdminTenants onImpersonate={handleImpersonate} />}
-      </main>
-    </div>
-  );
+  const sidebarBg = isSuperadmin ? 'bg-slate-900 text-white' : 'bg-white border-l border-amber-100 shadow-sm';
+  const sidebarBorder = isSuperadmin ? 'border-slate-700' : 'border-amber-100';
+  const navActive = isSuperadmin ? 'bg-slate-700 text-white' : 'bg-amber-100 text-amber-800';
+  const navInactive = isSuperadmin ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-500 hover:bg-amber-50 hover:text-amber-700';
+  const backBtnHover = isSuperadmin ? 'hover:bg-slate-800 hover:text-white' : 'hover:bg-amber-50 hover:text-amber-600';
 
-  // ============ TENANT PANEL ============
-  return (
-    <div dir="rtl" className="flex min-h-screen bg-amber-50/30 font-sans">
-      {/* Tenant sidebar — lighter, brand-colored */}
-      <aside className="w-64 bg-white border-l border-amber-100 flex flex-col flex-shrink-0 shadow-sm">
-        <div className="p-5 border-b border-amber-100">
+  // ============ SIDEBAR CONTENT (shared between desktop + mobile) ============
+  const sidebarContent = (
+    <>
+      {/* Header */}
+      <div className={`p-5 border-b ${sidebarBorder}`}>
+        {isSuperadmin ? (
+          <>
+            <h1 className="text-lg font-black">طلانا سوپر ادمین</h1>
+            <p className="text-[10px] text-slate-400 mt-1">مدیریت کل پلتفرم</p>
+          </>
+        ) : (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-black text-sm">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
               {tenant?.name?.[0] || 'ط'}
             </div>
-            <div>
-              <h1 className="text-sm font-black text-slate-800">{tenant?.name || 'فروشگاه'}</h1>
-              <p className="text-[9px] text-amber-600 font-extrabold mt-0.5">پنل مدیریت فروشگاه</p>
+            <div className="min-w-0">
+              <h1 className="text-sm font-black text-slate-800 truncate">{tenant?.name || 'فروشگاه'}</h1>
+              <p className="text-[9px] text-amber-600 font-extrabold mt-0.5">پنل مدیریت {isMarketplaceAdmin ? 'بازارچه' : 'فروشگاه'}</p>
             </div>
           </div>
-        </div>
-
-        {/* Impersonation banner in sidebar */}
-        {impersonatedTenant && (
-          <div className="p-3 mx-3 mt-3 bg-purple-50 border border-purple-200 rounded-xl">
-            <p className="text-[9px] font-black text-purple-700 mb-1">حالت سوپر ادمین</p>
-            <p className="text-[8px] text-purple-500">در حال مشاهده فروشگاه: {impersonatedTenant.name}</p>
-            <button onClick={exitImpersonation}
-              className="w-full mt-2 flex items-center justify-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg text-[10px] font-black transition-all">
-              <ArrowRight className="w-3 h-3" /> خروج و بازگشت
-            </button>
-          </div>
         )}
+      </div>
 
-        {/* Quick stats */}
-        <div className={`${impersonatedTenant ? 'pt-2' : 'pt-0'} p-4 grid grid-cols-2 gap-2 border-b border-amber-50`}>
+      {/* Impersonation banner */}
+      {impersonatedTenant && (
+        <div className="p-3 mx-3 mt-3 bg-purple-50 border border-purple-200 rounded-xl">
+          <p className="text-[9px] font-black text-purple-700 mb-1">حالت سوپر ادمین</p>
+          <p className="text-[8px] text-purple-500 truncate">در حال مشاهده: {impersonatedTenant.name}</p>
+          <button onClick={exitImpersonation}
+            className="w-full mt-2 flex items-center justify-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg text-[10px] font-black transition-all">
+            <ArrowRight className="w-3 h-3" /> خروج و بازگشت
+          </button>
+        </div>
+      )}
+
+      {/* Quick stats (tenant only) */}
+      {!isSuperadmin && (
+        <div className={`${impersonatedTenant ? 'pt-2' : 'pt-0'} p-4 grid grid-cols-2 gap-2 border-b ${sidebarBorder}`}>
           <div className="bg-amber-50 rounded-xl p-2.5 text-center">
             <div className="text-lg font-black text-amber-600">۰</div>
             <div className="text-[8px] text-amber-500 font-bold">سفارش امروز</div>
@@ -194,48 +183,105 @@ export default function AdminPanel({ onBack, token }: Props) {
             <div className="text-[8px] text-emerald-500 font-bold">درآمد امروز</div>
           </div>
         </div>
+      )}
 
-        <nav className="flex-1 p-3 space-y-1">
-          {nav.map(item => (
-            <button key={item.id} onClick={() => setPage(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-right transition-all ${page === item.id ? 'bg-amber-100 text-amber-800' : 'text-slate-500 hover:bg-amber-50 hover:text-amber-700'}`}>
-              <item.icon className="w-4.5 h-4.5" /><span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-amber-100">
-          <button onClick={onBack} className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:bg-amber-50 hover:text-amber-600">
-            <ArrowRight className="w-4 h-4" /><span>بازگشت به ویترین</span>
+      {/* Nav */}
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {nav.map(item => (
+          <button key={item.id} onClick={() => navigateTo(item.id)}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-right transition-all ${page === item.id ? navActive : navInactive}`}>
+            <item.icon className="w-4.5 h-4.5" /><span>{item.label}</span>
           </button>
-        </div>
+        ))}
+      </nav>
+
+      {/* Back button */}
+      <div className={`p-3 border-t ${sidebarBorder}`}>
+        <button onClick={onBack}
+          className={`w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 transition-all ${backBtnHover}`}>
+          <ArrowRight className="w-4 h-4" /><span>{isSuperadmin ? 'بازگشت به سایت' : 'بازگشت به ویترین'}</span>
+        </button>
+      </div>
+    </>
+  );
+
+  // ============ RENDER ============
+  return (
+    <div dir="rtl" className={`flex min-h-screen font-sans ${isSuperadmin ? 'bg-slate-100' : 'bg-amber-50/30'}`}>
+
+      {/* DESKTOP SIDEBAR */}
+      <aside className={`hidden lg:flex lg:flex-col ${sidebarWidth} lg:min-h-screen lg:flex-shrink-0 lg:sticky lg:top-0 ${sidebarBg}`}>
+        {sidebarContent}
       </aside>
 
-      {/* Tenant content */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        {/* Impersonation banner in content area */}
-        {impersonatedTenant && (
-          <div className="mb-6 bg-purple-50 border border-purple-200 rounded-2xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-200 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-black text-purple-800">حالت مدیریت سوپر ادمین</p>
-                <p className="text-xs text-purple-500">شما در حال مشاهده و مدیریت فروشگاه «{impersonatedTenant.name}» با دسترسی کامل هستید.</p>
-              </div>
+      {/* MOBILE HEADER + DRAWER */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-100 shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3">
+          <button onClick={() => setMobileMenuOpen(true)} className="text-slate-600 p-1">
+            <Menu className="w-6 h-6" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-black text-[10px]">
+              {tenant?.name?.[0] || 'ط'}
             </div>
-            <button onClick={exitImpersonation}
-              className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-xs font-black transition-all">
-              <ArrowRight className="w-3.5 h-3.5" /> خروج و بازگشت به سوپر ادمین
-            </button>
+            <span className="text-sm font-black text-slate-800 truncate max-w-[140px]">{isSuperadmin ? 'سوپر ادمین' : tenant?.name || 'فروشگاه'}</span>
           </div>
-        )}
-        {page === 'dashboard' && <TenantDashboard isMarketplace={isMarketplaceAdmin} />}
-        {page === 'users' && <AdminUsers can={can} isSuperadmin={false} />}
-        {page === 'products' && <TenantProducts />}
-        {page === 'orders' && <TenantOrders />}
-        {page === 'sellers' && <TenantSellers />}
-        {page === 'branches' && <TenantBranches />}
+          <button onClick={onBack} className="text-slate-400 hover:text-slate-600 p-1">
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* MOBILE DRAWER OVERLAY */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileMenuOpen(false)} />
+          <div className={`absolute top-0 right-0 bottom-0 ${sidebarWidth} max-w-[85vw] ${sidebarBg} flex flex-col shadow-2xl`}>
+            {/* Close button */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200/20">
+              <span className="text-sm font-black">{isSuperadmin ? 'منو مدیریت' : 'پنل مدیریت'}</span>
+              <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+
+      {/* MAIN CONTENT */}
+      <main className="flex-1 w-full min-w-0 overflow-y-auto pt-14 lg:pt-0">
+        <div className="p-4 lg:p-6">
+          {/* Impersonation banner (desktop only — mobile shows in drawer) */}
+          {impersonatedTenant && (
+            <div className="hidden lg:flex mb-6 bg-purple-50 border border-purple-200 rounded-2xl p-4 items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-200 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-purple-800">حالت مدیریت سوپر ادمین</p>
+                  <p className="text-xs text-purple-500">شما در حال مشاهده و مدیریت فروشگاه «{impersonatedTenant.name}» با دسترسی کامل هستید.</p>
+                </div>
+              </div>
+              <button onClick={exitImpersonation}
+                className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-xs font-black transition-all">
+                <ArrowRight className="w-3.5 h-3.5" /> خروج و بازگشت به سوپر ادمین
+              </button>
+            </div>
+          )}
+
+          {/* Page content */}
+          {page === 'dashboard' && <AdminDashboard />}
+          {page === 'roles' && <AdminRoles />}
+          {page === 'users' && <AdminUsers can={can} isSuperadmin={isSuperadmin} />}
+          {page === 'tenants' && <AdminTenants onImpersonate={handleImpersonate} />}
+          {!isSuperadmin && page === 'dashboard' && <TenantDashboard isMarketplace={isMarketplaceAdmin} />}
+          {!isSuperadmin && page === 'products' && <TenantProducts />}
+          {!isSuperadmin && page === 'orders' && <TenantOrders />}
+          {!isSuperadmin && page === 'sellers' && <TenantSellers />}
+          {!isSuperadmin && page === 'branches' && <TenantBranches />}
+        </div>
       </main>
     </div>
   );
@@ -250,7 +296,7 @@ function TenantDashboard({ isMarketplace }: { isMarketplace?: boolean }) {
         <h2 className="text-xl font-black text-slate-800">{isMarketplace ? 'داشبورد بازارچه' : 'داشبورد فروشگاه'}</h2>
         <p className="text-xs text-slate-400 mt-1">{isMarketplace ? 'خلاصه وضعیت بازارچه شما' : 'خلاصه وضعیت فروشگاه شما'}</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'سفارشات فعال', value: '۰', icon: <ShoppingBag className="w-8 h-8" />, color: 'bg-amber-100 text-amber-600' },
           { label: 'محصولات', value: '۰', icon: <Package className="w-8 h-8" />, color: 'bg-purple-100 text-purple-600' },
@@ -275,12 +321,12 @@ function TenantDashboard({ isMarketplace }: { isMarketplace?: boolean }) {
 function TenantProducts() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-black text-slate-800">محصولات فروشگاه</h2>
           <p className="text-xs text-slate-400 mt-1">مدیریت محصولات و موجودی</p>
         </div>
-        <button className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-black">+ محصول جدید</button>
+        <button className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ محصول جدید</button>
       </div>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
         <Package className="w-12 h-12 text-slate-200 mx-auto mb-3" />
@@ -310,12 +356,12 @@ function TenantOrders() {
 function TenantSellers() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-black text-slate-800">فروشندگان بازارچه</h2>
           <p className="text-xs text-slate-400 mt-1">مدیریت فروشندگان فعال در بازارچه</p>
         </div>
-        <button className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-black">+ فروشنده جدید</button>
+        <button className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ فروشنده جدید</button>
       </div>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
         <Users className="w-12 h-12 text-slate-200 mx-auto mb-3" />
@@ -329,12 +375,12 @@ function TenantSellers() {
 function TenantBranches() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-black text-slate-800">شعب فروشگاه</h2>
           <p className="text-xs text-slate-400 mt-1">مدیریت شعب و آدرس‌های فیزیکی</p>
         </div>
-        <button className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-black">+ شعبه جدید</button>
+        <button className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ شعبه جدید</button>
       </div>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
         <Store className="w-12 h-12 text-slate-200 mx-auto mb-3" />
