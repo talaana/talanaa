@@ -46,10 +46,12 @@ export function getToken(): string | null {
 export function setTenantContext(id: number | null, slug: string = '') {
   tenantId = id;
   tenantSlug = slug;
-  // Reload token from cookie for this tenant
+  // Reload token from cookie for this tenant (clear if no cookie = user never logged in here)
   if (slug) {
     const tk = getCookie(tokenCookieName());
-    if (tk) authToken = tk;
+    authToken = tk || null;
+  } else {
+    authToken = null;
   }
 }
 
