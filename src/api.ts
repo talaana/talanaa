@@ -88,18 +88,18 @@ async function apiFetch(path: string, options: RequestInit = {}): Promise<any> {
 
 // Auth
 export const auth = {
-  login: async (phone: string, password: string) => {
+  login: async (phone: string, password: string, tenantSlug?: string) => {
     const data = await apiFetch('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ phone, password }),
+      body: JSON.stringify({ phone, password, tenant_slug: tenantSlug || undefined }),
     });
     setToken(data.token);
     return data;
   },
-  register: async (name: string, phone: string, password: string, referralCode?: string) => {
+  register: async (name: string, phone: string, password: string, referralCode?: string, tenantSlug?: string) => {
     const data = await apiFetch('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, phone, password, referral_code: referralCode }),
+      body: JSON.stringify({ name, phone, password, referral_code: referralCode, tenant_slug: tenantSlug || undefined }),
     });
     setToken(data.token);
     return data;
@@ -108,10 +108,10 @@ export const auth = {
     method: 'POST',
     body: JSON.stringify({ phone }),
   }),
-  verifyOtp: async (phone: string, code: string) => {
+  verifyOtp: async (phone: string, code: string, tenantSlug?: string) => {
     const data = await apiFetch('/auth/otp/verify', {
       method: 'POST',
-      body: JSON.stringify({ phone, code }),
+      body: JSON.stringify({ phone, code, tenant_slug: tenantSlug || undefined }),
     });
     setToken(data.token);
     return data;

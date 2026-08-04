@@ -160,7 +160,7 @@ export default function App() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoginError('');
     try {
-      const data = await auth.login(loginPhone, loginPassword);
+      const data = await auth.login(loginPhone, loginPassword, tenant?.slug);
       setUserName(data.user.name);
       if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
@@ -182,7 +182,7 @@ export default function App() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault(); setLoginError('');
     try {
-      const data = await auth.verifyOtp(loginPhone, otpCode);
+      const data = await auth.verifyOtp(loginPhone, otpCode, tenant?.slug);
       setUserName(data.user.name);
       if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);

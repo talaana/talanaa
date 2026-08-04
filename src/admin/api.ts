@@ -1,3 +1,5 @@
+import { getTenantId } from '../api';
+
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 let _token = '';
@@ -7,10 +9,14 @@ export function getAdminToken() { return _token; }
 
 async function apiFetch(path: string, opts: RequestInit = {}) {
   const tk = _token || localStorage.getItem('talana_token') || '';
-  const res = await fetch(`${API}${path}`, {
-    ...opts,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}`, ...(opts.headers as any || {}) },
-  });
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${tk}`,
+    ...(opts.headers as any || {}),
+  };
+  const tid = getTenantId();
+  if (tid) headers['X-Tenant'] = String(tid);
+  const res = await fetch(`${API}${path}`, { ...opts, headers });
   if (!res.ok) { const e = await res.json().catch(()=>({message:'خطا'})); throw new Error(e.message); }
   return res.json();
 }
