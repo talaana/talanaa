@@ -216,10 +216,10 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                     </div>
                     <div>
                       <label className="text-xs font-black text-slate-600 block mb-1.5">آدرس اینترنتی (slug)</label>
-                      <input value={tenantSlug} onChange={e => setTenantSlug(e.target.value.replace(/[^a-z0-9-]/g, ''))}
+                      <input value={tenantSlug} onChange={e => setTenantSlug(e.target.value.replace(/[^a-z0-9_-]/g, ''))}
                         placeholder="my-store"
                         className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none focus:border-amber-500 font-mono" dir="ltr" />
-                      <p className="text-[10px] text-slate-400 mt-1">فقط حروف انگلیسی، اعداد و خط تیره. مثال: my-gold-store</p>
+                      <p className="text-[10px] text-slate-400 mt-1">فقط حروف انگلیسی، اعداد، خط تیره و آندرلاین. مثال: my_gold_store</p>
                     </div>
                     <div>
                       <label className="text-xs font-black text-slate-600 block mb-1.5">دامنه اختصاصی (اختیاری)</label>
