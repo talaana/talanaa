@@ -196,6 +196,69 @@ export const auth = {
   permissions: () => apiFetch('/auth/permissions'),
 };
 
+// Contact auth (customers/suppliers/investors)
+export const contactAuth = {
+  login: async (phone: string, password: string, tenantSlug: string) => {
+    const data = await apiFetch('/auth/contact/login', {
+      method: 'POST',
+      body: JSON.stringify({ phone, password, tenant_slug: tenantSlug }),
+    });
+    setToken(data.token);
+    setAuthContext({
+      type: data.kind || 'contact',
+      role: data.role || null,
+      permissions: [],
+      is_superadmin: false,
+      roles: [data.role || 'customer'],
+    });
+    return data;
+  },
+  register: async (name: string, phone: string, password: string, type: string, tenantSlug: string) => {
+    const data = await apiFetch('/auth/contact/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, phone, password, type, tenant_slug: tenantSlug }),
+    });
+    setToken(data.token);
+    setAuthContext({
+      type: data.kind || 'contact',
+      role: data.role || null,
+      permissions: [],
+      is_superadmin: false,
+      roles: [data.role || 'customer'],
+    });
+    return data;
+  },
+  requestOtp: (phone: string, tenantSlug: string) => apiFetch('/auth/contact/otp/request', {
+    method: 'POST',
+    body: JSON.stringify({ phone, tenant_slug: tenantSlug }),
+  }),
+  verifyOtp: async (phone: string, code: string, tenantSlug: string) => {
+    const data = await apiFetch('/auth/contact/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify({ phone, code, tenant_slug: tenantSlug }),
+    });
+    setToken(data.token);
+    setAuthContext({
+      type: data.kind || 'contact',
+      role: data.role || null,
+      permissions: [],
+      is_superadmin: false,
+      roles: [data.role || 'customer'],
+    });
+    return data;
+  },
+  logout: async () => {
+    try { await apiFetch('/auth/contact/logout', { method: 'POST' }); } catch {}
+    setToken(null);
+    setAuthContext(null);
+  },
+  profile: () => apiFetch('/auth/contact/profile'),
+  updatePassword: (currentPassword: string, newPassword: string) => apiFetch('/auth/contact/password', {
+    method: 'PUT',
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  }),
+};
+
 // Wallet
 export const wallet = {
   get: () => apiFetch('/wallet'),

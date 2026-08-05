@@ -5,7 +5,7 @@ import LandingPage from './components/LandingPage';
 import InstallerPage from './components/InstallerPage';
 import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
+import { auth, contactAuth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
 import { formatToman, formatGram, toPersianDigits } from './utils';
 import { useTenant } from './tenant';
 import AdminPanel from './admin/AdminPanel';
@@ -47,6 +47,7 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
+  const [loginKind, setLoginKind] = useState<'staff' | 'contact'>('staff');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -122,17 +123,21 @@ export default function App() {
 
   const loadUserData = async () => {
     try {
-      const profile = await auth.profile();
-      const u = profile.user;
+      const ctx = getAuthContext();
+      const isContact = ctx?.type === 'contact';
+      const profile = isContact ? await contactAuth.profile() : await auth.profile();
+      const u = isContact ? profile.contact : profile.user;
       setUserName(u.name);
       if (u.wallet) setWalletData({ goldGrams: u.wallet.gold_grams, silverGrams: u.wallet.silver_grams || 0, cashToman: u.wallet.cash_toman });
       setIsLoggedIn(true);
-      // Load permissions for ACL
-      try {
-        const perms = await auth.permissions();
-        setUserPerms(perms.permissions || []);
-        setIsSuperadmin(perms.is_superadmin || false);
-      } catch { /* non-admin users get empty perms */ }
+      // Load permissions for ACL (staff only)
+      if (!isContact) {
+        try {
+          const perms = await auth.permissions();
+          setUserPerms(perms.permissions || []);
+          setIsSuperadmin(perms.is_superadmin || false);
+        } catch { /* non-admin users get empty perms */ }
+      }
     } catch { setToken(null); setIsLoggedIn(false); }
     finally { setIsLoading(false); }
   };
@@ -176,11 +181,14 @@ export default function App() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoginError('');
     try {
-      const data = await auth.login(loginPhone, loginPassword, tenant?.slug);
-      setUserName(data.user.name);
-      if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
+      const api = loginKind === 'contact' ? contactAuth : auth;
+      const data = loginKind === 'contact'
+        ? await contactAuth.login(loginPhone, loginPassword, tenant?.slug || '')
+        : await auth.login(loginPhone, loginPassword, tenant?.slug);
+      const userData = data.user || data.contact;
+      setUserName(userData.name);
+      if (userData.wallet) setWalletData({ goldGrams: userData.wallet.gold_grams, silverGrams: userData.wallet.silver_grams || 0, cashToman: userData.wallet.cash_toman });
       setIsLoggedIn(true);
-      // Auth context already stored in cookie by api layer — read it synchronously
       const ctx = getAuthContext();
       if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
       loadTransactions();
@@ -191,7 +199,11 @@ export default function App() {
     if (loginPhone.length !== 11) { setLoginError('شماره موبایل باید ۱۱ رقم باشد'); return; }
     setLoginError(''); setOtpLoading(true);
     try {
-      await auth.requestOtp(loginPhone);
+      if (loginKind === 'contact') {
+        await contactAuth.requestOtp(loginPhone, tenant?.slug || '');
+      } else {
+        await auth.requestOtp(loginPhone);
+      }
       setOtpSent(true);
     } catch (err: any) { setLoginError(err.message || 'خطا در ارسال کد'); }
     finally { setOtpLoading(false); }
@@ -200,9 +212,12 @@ export default function App() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault(); setLoginError('');
     try {
-      const data = await auth.verifyOtp(loginPhone, otpCode, tenant?.slug);
-      setUserName(data.user.name);
-      if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
+      const data = loginKind === 'contact'
+        ? await contactAuth.verifyOtp(loginPhone, otpCode, tenant?.slug || '')
+        : await auth.verifyOtp(loginPhone, otpCode, tenant?.slug);
+      const userData = data.user || data.contact;
+      setUserName(userData.name);
+      if (userData.wallet) setWalletData({ goldGrams: userData.wallet.gold_grams, silverGrams: userData.wallet.silver_grams || 0, cashToman: userData.wallet.cash_toman });
       setIsLoggedIn(true);
       const ctx = getAuthContext();
       if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
@@ -211,7 +226,13 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    try { await auth.logout(); } catch {}
+    try {
+      if (getAuthContext()?.type === 'contact') {
+        await contactAuth.logout();
+      } else {
+        await auth.logout();
+      }
+    } catch {}
     setToken(null); setAuthContext(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName(''); setUserPerms([]); setIsSuperadmin(false);
   };
 
@@ -280,6 +301,19 @@ export default function App() {
           <h1 className="text-lg font-black text-slate-800">{platformName}</h1>
           <p className="text-xs text-slate-400 font-bold mt-1">{platformSubtitle}</p>
         </div>
+
+        {/* Login kind toggle (staff / customer) */}
+        <div className="flex bg-slate-100 rounded-xl p-1 mb-3">
+          <button onClick={() => { setLoginKind('staff'); setLoginError(''); setOtpSent(false); }}
+            className={`flex-1 py-1.5 rounded-lg text-[11px] font-black transition-all ${loginKind === 'staff' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
+            پرسنل
+          </button>
+          <button onClick={() => { setLoginKind('contact'); setLoginError(''); setOtpSent(false); }}
+            className={`flex-1 py-1.5 rounded-lg text-[11px] font-black transition-all ${loginKind === 'contact' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
+            مشتری / همکار
+          </button>
+        </div>
+
 
         {/* Login mode tabs */}
         <div className="flex bg-slate-100 rounded-xl p-1 mb-5">
