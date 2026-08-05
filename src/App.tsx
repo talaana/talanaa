@@ -72,12 +72,24 @@ export default function App() {
 
   const can = (perm: string) => isSuperadmin || userPerms.includes(perm);
 
-  // Sync tenant ID with API client
+  // Sync tenant ID with API client — and reload auth state when tenant changes
   useEffect(() => {
     if (tenant) {
       setTenantContext(tenant.id, tenant.slug);
+      // Re-check auth: if we have a token for this tenant, load user data
+      const tk = getToken();
+      if (tk) {
+        setIsLoggedIn(true);
+        setIsLoading(true);
+        loadUserData();
+      } else {
+        setIsLoggedIn(false);
+        setIsLoading(false);
+      }
     } else {
       setTenantContext(null, '');
+      setIsLoggedIn(false);
+      setIsLoading(false);
     }
   }, [tenant]);
 
@@ -101,8 +113,6 @@ export default function App() {
 
   const goToAdmin = () => { window.location.hash = '#/admin'; };
   const goToApp = () => { window.location.hash = '#/'; };
-
-  useEffect(() => { if (getToken()) loadUserData(); }, []);
 
   const loadUserData = async () => {
     try {
