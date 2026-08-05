@@ -5,7 +5,7 @@ import LandingPage from './components/LandingPage';
 import InstallerPage from './components/InstallerPage';
 import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext } from './api';
+import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
 import { formatToman, formatGram, toPersianDigits } from './utils';
 import { useTenant } from './tenant';
 import AdminPanel from './admin/AdminPanel';
@@ -81,6 +81,12 @@ export default function App() {
       if (tk) {
         setIsLoggedIn(true);
         setIsLoading(true);
+        // Restore perms from cookie first (instant), then refresh from server
+        const ctx = getAuthContext();
+        if (ctx) {
+          setUserPerms(ctx.permissions);
+          setIsSuperadmin(ctx.is_superadmin);
+        }
         loadUserData();
       } else {
         setIsLoggedIn(false);
@@ -174,8 +180,10 @@ export default function App() {
       setUserName(data.user.name);
       if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
+      // Auth context already stored in cookie by api layer — read it synchronously
+      const ctx = getAuthContext();
+      if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
       loadTransactions();
-      loadPermissions();
     } catch (err: any) { setLoginError(err.message || 'خطا در ورود'); }
   };
 
@@ -196,14 +204,15 @@ export default function App() {
       setUserName(data.user.name);
       if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
+      const ctx = getAuthContext();
+      if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
       loadTransactions();
-      loadPermissions();
     } catch (err: any) { setLoginError(err.message || 'خطا در تأیید کد'); }
   };
 
   const handleLogout = async () => {
     try { await auth.logout(); } catch {}
-    setToken(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName(''); setUserPerms([]); setIsSuperadmin(false);
+    setToken(null); setAuthContext(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName(''); setUserPerms([]); setIsSuperadmin(false);
   };
 
   const handleUpdateName = async (newName: string) => { try { await auth.updateProfile(newName); setUserName(newName); } catch {} };

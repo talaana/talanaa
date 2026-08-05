@@ -46,12 +46,15 @@ export function getToken(): string | null {
 export function setTenantContext(id: number | null, slug: string = '') {
   tenantId = id;
   tenantSlug = slug;
-  // Reload token from cookie for this tenant (clear if no cookie = user never logged in here)
+  // Reload token and auth context from cookies for this tenant
   if (slug) {
     const tk = getCookie(tokenCookieName());
     authToken = tk || null;
+    authContext = null; // force re-read from cookie
+    getAuthContext();    // reload from talana_auth_{slug}
   } else {
     authToken = null;
+    authContext = null;
   }
 }
 
@@ -61,6 +64,43 @@ export function getTenantId(): number | null {
 
 export function getTenantSlug(): string {
   return tenantSlug;
+}
+
+// ========== AUTH CONTEXT (role, permissions — cached in cookie per tenant) ==========
+
+export interface AuthContext {
+  type: string;
+  role: string | null;
+  permissions: string[];
+  is_superadmin: boolean;
+  roles: string[];
+}
+
+let authContext: AuthContext | null = null;
+
+function authCookieName(): string {
+  return tenantSlug ? `talana_auth_${tenantSlug}` : 'talana_auth';
+}
+
+export function setAuthContext(ctx: AuthContext | null) {
+  authContext = ctx;
+  if (ctx) {
+    setCookie(authCookieName(), JSON.stringify(ctx), 30);
+  } else {
+    removeCookie(authCookieName());
+    removeCookie('talana_auth');
+  }
+}
+
+export function getAuthContext(): AuthContext | null {
+  if (authContext) return authContext;
+  // Try loading from cookie (keyed by current tenant slug, then fallback)
+  let raw = tenantSlug ? getCookie(authCookieName()) : null;
+  if (!raw) raw = getCookie('talana_auth');
+  if (raw) {
+    try { authContext = JSON.parse(raw); } catch { authContext = null; }
+  }
+  return authContext;
 }
 
 async function apiFetch(path: string, options: RequestInit = {}): Promise<any> {
@@ -96,6 +136,13 @@ export const auth = {
       body: JSON.stringify({ phone, password, tenant_slug: tenantSlug || undefined }),
     });
     setToken(data.token);
+    setAuthContext({
+      type: data.type || 'user',
+      role: data.role || null,
+      permissions: data.permissions || [],
+      is_superadmin: data.is_superadmin || false,
+      roles: data.roles || [],
+    });
     return data;
   },
   register: async (name: string, phone: string, password: string, referralCode?: string, tenantSlug?: string) => {
@@ -104,6 +151,13 @@ export const auth = {
       body: JSON.stringify({ name, phone, password, referral_code: referralCode, tenant_slug: tenantSlug || undefined }),
     });
     setToken(data.token);
+    setAuthContext({
+      type: data.type || 'user',
+      role: data.role || null,
+      permissions: data.permissions || [],
+      is_superadmin: data.is_superadmin || false,
+      roles: data.roles || [],
+    });
     return data;
   },
   requestOtp: (phone: string) => apiFetch('/auth/otp/request', {
@@ -116,11 +170,19 @@ export const auth = {
       body: JSON.stringify({ phone, code, tenant_slug: tenantSlug || undefined }),
     });
     setToken(data.token);
+    setAuthContext({
+      type: data.type || 'user',
+      role: data.role || null,
+      permissions: data.permissions || [],
+      is_superadmin: data.is_superadmin || false,
+      roles: data.roles || [],
+    });
     return data;
   },
   logout: async () => {
     await apiFetch('/auth/logout', { method: 'POST' });
     setToken(null);
+    setAuthContext(null);
   },
   profile: () => apiFetch('/auth/profile'),
   updateProfile: (name: string) => apiFetch('/auth/profile', {
