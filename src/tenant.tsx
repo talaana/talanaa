@@ -101,7 +101,7 @@ async function fetchTenant(slug?: string, domain?: string): Promise<TenantConfig
 
 export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const resolveTenant = useCallback(async (identifier: { slug?: string; domain?: string }) => {

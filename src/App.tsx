@@ -3,11 +3,11 @@ import { UserWallet, Transaction } from './types';
 import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import InstallerPage from './components/InstallerPage';
-import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield } from 'lucide-react';
+import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield, Coins, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth, contactAuth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
+import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
 import { formatToman, formatGram, toPersianDigits } from './utils';
-import { useTenant } from './tenant';
+import { useTenant, detectTenantFromURL } from './tenant';
 import AdminPanel from './admin/AdminPanel';
 
 const HomeDashboard = lazy(() => import('./components/HomeDashboard'));
@@ -38,6 +38,9 @@ const storeNavItems = [
   { id: 'services', label: 'خدمات', icon: LayoutGrid },
 ];
 
+// Captured at module load time — tells us if URL had a tenant identifier (store vs landing)
+const urlTenant = typeof window !== 'undefined' ? detectTenantFromURL() : null;
+
 export default function App() {
   const { tenant, loading: tenantLoading } = useTenant();
 
@@ -47,7 +50,6 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
-  const [loginKind, setLoginKind] = useState<'staff' | 'contact'>('staff');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -67,7 +69,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAdmin, setShowAdmin] = useState(() => window.location.hash === '#/admin');
   const [showInstaller, setShowInstaller] = useState(false);
-  const [installerPreselectedType, setInstallerPreselectedType] = useState<'marketplace' | 'store' | undefined>();
+  const [installerPreselectedType, setInstallerPreselectedType] = useState<'marketplace' | 'store' | 'supplier' | undefined>();
   const [userPerms, setUserPerms] = useState<string[]>([]);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
 
@@ -76,13 +78,11 @@ export default function App() {
   // Sync tenant ID with API client — and reload auth state when tenant changes
   useEffect(() => {
     if (tenant) {
-      setTenantContext(tenant.id, tenant.slug);
-      // Re-check auth: if we have a token for this tenant, load user data
+      setTenantContext(tenant.id, tenant.slug, tenant.type);
       const tk = getToken();
       if (tk) {
         setIsLoggedIn(true);
         setIsLoading(true);
-        // Restore perms from cookie first (instant), then refresh from server
         const ctx = getAuthContext();
         if (ctx) {
           setUserPerms(ctx.permissions);
@@ -100,7 +100,6 @@ export default function App() {
     }
   }, [tenant]);
 
-  // Determine store type and nav items
   const isMarketplace = !tenant || tenant?.type === 'marketplace' || tenant?.type === 'platform';
   const isStore = tenant?.type === 'store';
   const navItems = isStore ? storeNavItems : marketplaceNavItems;
@@ -123,21 +122,16 @@ export default function App() {
 
   const loadUserData = async () => {
     try {
-      const ctx = getAuthContext();
-      const isContact = ctx?.type === 'contact';
-      const profile = isContact ? await contactAuth.profile() : await auth.profile();
-      const u = isContact ? profile.contact : profile.user;
+      const profile = await auth.profile();
+      const u = profile.user;
       setUserName(u.name);
       if (u.wallet) setWalletData({ goldGrams: u.wallet.gold_grams, silverGrams: u.wallet.silver_grams || 0, cashToman: u.wallet.cash_toman });
       setIsLoggedIn(true);
-      // Load permissions for ACL (staff only)
-      if (!isContact) {
-        try {
-          const perms = await auth.permissions();
-          setUserPerms(perms.permissions || []);
-          setIsSuperadmin(perms.is_superadmin || false);
-        } catch { /* non-admin users get empty perms */ }
-      }
+      try {
+        const perms = await auth.permissions();
+        setUserPerms(perms.permissions || []);
+        setIsSuperadmin(perms.is_superadmin || false);
+      } catch { /* non-admin users get empty perms */ }
     } catch { setToken(null); setIsLoggedIn(false); }
     finally { setIsLoading(false); }
   };
@@ -181,13 +175,9 @@ export default function App() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoginError('');
     try {
-      const api = loginKind === 'contact' ? contactAuth : auth;
-      const data = loginKind === 'contact'
-        ? await contactAuth.login(loginPhone, loginPassword, tenant?.slug || '')
-        : await auth.login(loginPhone, loginPassword, tenant?.slug);
-      const userData = data.user || data.contact;
-      setUserName(userData.name);
-      if (userData.wallet) setWalletData({ goldGrams: userData.wallet.gold_grams, silverGrams: userData.wallet.silver_grams || 0, cashToman: userData.wallet.cash_toman });
+      const data = await auth.login(loginPhone, loginPassword, tenant?.slug);
+      setUserName(data.user.name);
+      if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
       const ctx = getAuthContext();
       if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
@@ -199,11 +189,7 @@ export default function App() {
     if (loginPhone.length !== 11) { setLoginError('شماره موبایل باید ۱۱ رقم باشد'); return; }
     setLoginError(''); setOtpLoading(true);
     try {
-      if (loginKind === 'contact') {
-        await contactAuth.requestOtp(loginPhone, tenant?.slug || '');
-      } else {
-        await auth.requestOtp(loginPhone);
-      }
+      await auth.requestOtp(loginPhone);
       setOtpSent(true);
     } catch (err: any) { setLoginError(err.message || 'خطا در ارسال کد'); }
     finally { setOtpLoading(false); }
@@ -212,12 +198,9 @@ export default function App() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault(); setLoginError('');
     try {
-      const data = loginKind === 'contact'
-        ? await contactAuth.verifyOtp(loginPhone, otpCode, tenant?.slug || '')
-        : await auth.verifyOtp(loginPhone, otpCode, tenant?.slug);
-      const userData = data.user || data.contact;
-      setUserName(userData.name);
-      if (userData.wallet) setWalletData({ goldGrams: userData.wallet.gold_grams, silverGrams: userData.wallet.silver_grams || 0, cashToman: userData.wallet.cash_toman });
+      const data = await auth.verifyOtp(loginPhone, otpCode, tenant?.slug);
+      setUserName(data.user.name);
+      if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
       const ctx = getAuthContext();
       if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
@@ -226,13 +209,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    try {
-      if (getAuthContext()?.type === 'contact') {
-        await contactAuth.logout();
-      } else {
-        await auth.logout();
-      }
-    } catch {}
+    try { await auth.logout(); } catch {}
     setToken(null); setAuthContext(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName(''); setUserPerms([]); setIsSuperadmin(false);
   };
 
@@ -256,18 +233,50 @@ export default function App() {
   const toggleBalances = useCallback(() => setShowBalances(p => !p), []);
   const tabAccent = activeMetal === 'gold' ? 'amber' : 'slate';
 
-  // ===== TENANT LOADING =====
-  if (tenantLoading) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+  // ===== TENANT LOADING — store (URL had a tenant identifier) =====
+  if (tenantLoading && urlTenant) return (
+    <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
       <div className="text-center">
-        <div className="w-10 h-10 border-3 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm font-black text-slate-600">در حال بارگذاری فروشگاه...</p>
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center mx-auto mb-5 shadow-lg animate-pulse">
+          <ShoppingBag className="w-8 h-8 text-white" />
+        </div>
+        <p className="text-sm font-black text-slate-800 mb-1">
+          {urlTenant.slug || urlTenant.domain || 'فروشگاه'}
+        </p>
+        <p className="text-xs font-bold text-slate-400">در حال بارگذاری فروشگاه...</p>
+        <div className="mt-4 w-32 h-1.5 bg-slate-200 rounded-full mx-auto overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-amber-600 to-amber-500 rounded-full animate-[loadingBar_1.5s_ease-in-out_infinite]" style={{width:'60%'}} />
+        </div>
       </div>
     </div>
   );
 
-  // ===== LOADING STATE =====
-  if (isLoading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-10 h-10 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" /></div>;
+  // ===== INITIAL BOOT — landing page (no tenant in URL) =====
+  if (tenantLoading) return (
+    <div dir="rtl" className="min-h-screen bg-white flex items-center justify-center font-sans">
+      <div className="text-center">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center mx-auto mb-4 shadow-md">
+          <Coins className="w-7 h-7 text-white animate-pulse" />
+        </div>
+        <p className="text-lg font-black text-slate-800">طلانا</p>
+        <p className="text-xs font-bold text-slate-400 mt-1">سامانه هوشمند طلا و نقره</p>
+      </div>
+    </div>
+  );
+
+  // ===== AUTH LOADING (stored token — loading user data for a tenant) =====
+  if (isLoading && tenant) return (
+    <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+      <div className="text-center">
+        <img src={platformLogo} alt={platformName} className="w-12 h-12 rounded-xl mx-auto mb-4 object-cover" />
+        <p className="text-sm font-black text-slate-800 mb-1">{platformName}</p>
+        <p className="text-xs font-bold text-slate-400">در حال بارگذاری...</p>
+        <div className="mt-4 w-24 h-1 bg-slate-200 rounded-full mx-auto overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-amber-600 to-amber-500 rounded-full animate-[loadingBar_1.5s_ease-in-out_infinite]" style={{width:'50%'}} />
+        </div>
+      </div>
+    </div>
+  );
 
   // ===== INSTALLER PAGE =====
   if (showInstaller) {
@@ -281,11 +290,30 @@ export default function App() {
   if (!tenant && !tenantLoading) {
     const enterMarketplace = () => { window.location.href = '/?tenant=talana'; };
     const enterStore = (slug: string) => { window.location.href = `/?tenant=${slug}`; };
-    const startBuilding = (type?: 'marketplace' | 'store') => {
+    const startBuilding = (type?: 'marketplace' | 'store' | 'supplier') => {
       setInstallerPreselectedType(type);
       setShowInstaller(true);
     };
     return <LandingPage onEnterMarketplace={enterMarketplace} onEnterStore={enterStore} onStartBuilding={startBuilding} />;
+  }
+
+  // ===== SUPPLIER PUBLIC PAGE — no public storefront (only when NOT trying to access admin) =====
+  if (tenant?.type === 'supplier' && !isLoggedIn && !showAdmin) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">📦</span>
+          </div>
+          <h1 className="text-lg font-black text-slate-800 mb-2">پنل تأمین‌کننده</h1>
+          <p className="text-sm text-slate-400 mb-6">این یک پنل مدیریت خصوصی است و فروشگاه عمومی ندارد.</p>
+          <a href={`/?tenant=${tenant.slug}#/admin`}
+            className="inline-block bg-gradient-to-r from-amber-600 to-amber-500 text-white px-6 py-3 rounded-2xl font-black text-sm">
+            ورود به پنل مدیریت
+          </a>
+        </div>
+      </div>
+    );
   }
 
   // ===== LOGIN SCREEN =====
@@ -301,19 +329,6 @@ export default function App() {
           <h1 className="text-lg font-black text-slate-800">{platformName}</h1>
           <p className="text-xs text-slate-400 font-bold mt-1">{platformSubtitle}</p>
         </div>
-
-        {/* Login kind toggle (staff / customer) */}
-        <div className="flex bg-slate-100 rounded-xl p-1 mb-3">
-          <button onClick={() => { setLoginKind('staff'); setLoginError(''); setOtpSent(false); }}
-            className={`flex-1 py-1.5 rounded-lg text-[11px] font-black transition-all ${loginKind === 'staff' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
-            پرسنل
-          </button>
-          <button onClick={() => { setLoginKind('contact'); setLoginError(''); setOtpSent(false); }}
-            className={`flex-1 py-1.5 rounded-lg text-[11px] font-black transition-all ${loginKind === 'contact' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
-            مشتری / همکار
-          </button>
-        </div>
-
 
         {/* Login mode tabs */}
         <div className="flex bg-slate-100 rounded-xl p-1 mb-5">

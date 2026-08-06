@@ -16,14 +16,16 @@ function removeCookie(name: string) {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
 }
 
-// ========== TOKEN STORAGE (cookie-based, keyed by tenant slug) ==========
+// ========== TOKEN STORAGE (cookie-based, keyed by tenant slug + type) ==========
 
 let authToken: string | null = null;
 let tenantId: number | null = null;
 let tenantSlug: string = '';
+let tenantType: string = '';
 
 function tokenCookieName(): string {
-  return tenantSlug ? `talana_token_${tenantSlug}` : 'talana_token';
+  if (!tenantSlug) return 'talana_token';
+  return tenantType === 'supplier' ? `talana_supplier_token_${tenantSlug}` : `talana_token_${tenantSlug}`;
 }
 
 // Init from cookie on module load (try fallback key first, tenant context set later)
@@ -36,6 +38,7 @@ export function setToken(token: string | null) {
   } else {
     removeCookie(tokenCookieName());
     removeCookie('talana_token');
+    removeCookie('talana_supplier_token');
   }
 }
 
@@ -43,15 +46,23 @@ export function getToken(): string | null {
   return authToken;
 }
 
-export function setTenantContext(id: number | null, slug: string = '') {
+export function setTenantContext(id: number | null, slug: string = '', type: string = '') {
+  // Clear old tenant cookies before switching
+  if (slug && tenantSlug && slug !== tenantSlug) {
+    const oldToken = tenantType === 'supplier' ? `talana_supplier_token_${tenantSlug}` : `talana_token_${tenantSlug}`;
+    const oldAuth = tenantType === 'supplier' ? `talana_supplier_auth_${tenantSlug}` : `talana_auth_${tenantSlug}`;
+    removeCookie(oldToken);
+    removeCookie(oldAuth);
+  }
   tenantId = id;
   tenantSlug = slug;
+  tenantType = type;
   // Reload token and auth context from cookies for this tenant
   if (slug) {
     const tk = getCookie(tokenCookieName());
     authToken = tk || null;
     authContext = null; // force re-read from cookie
-    getAuthContext();    // reload from talana_auth_{slug}
+    getAuthContext();    // reload
   } else {
     authToken = null;
     authContext = null;
@@ -79,7 +90,8 @@ export interface AuthContext {
 let authContext: AuthContext | null = null;
 
 function authCookieName(): string {
-  return tenantSlug ? `talana_auth_${tenantSlug}` : 'talana_auth';
+  if (!tenantSlug) return 'talana_auth';
+  return tenantType === 'supplier' ? `talana_supplier_auth_${tenantSlug}` : `talana_auth_${tenantSlug}`;
 }
 
 export function setAuthContext(ctx: AuthContext | null) {
@@ -89,14 +101,15 @@ export function setAuthContext(ctx: AuthContext | null) {
   } else {
     removeCookie(authCookieName());
     removeCookie('talana_auth');
+    removeCookie('talana_supplier_auth');
   }
 }
 
 export function getAuthContext(): AuthContext | null {
   if (authContext) return authContext;
-  // Try loading from cookie (keyed by current tenant slug, then fallback)
+  // Try loading from cookie (keyed by current tenant slug+type, then fallback)
   let raw = tenantSlug ? getCookie(authCookieName()) : null;
-  if (!raw) raw = getCookie('talana_auth');
+  if (!raw) raw = getCookie('talana_auth') || getCookie('talana_supplier_auth');
   if (raw) {
     try { authContext = JSON.parse(raw); } catch { authContext = null; }
   }

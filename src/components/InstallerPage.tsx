@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Users, ArrowRight, ArrowLeft, Check, Sparkles, Coins } from 'lucide-react';
+import { Store, Users, ArrowRight, ArrowLeft, Check, Sparkles, Coins, Package } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { setToken } from '../api';
 
@@ -7,12 +7,14 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 interface InstallerPageProps {
   onBack: () => void;
-  preselectedType?: 'marketplace' | 'store';
+  preselectedType?: 'marketplace' | 'store' | 'supplier';
 }
 
+type WizardType = 'marketplace' | 'store' | 'supplier';
+
 export default function InstallerPage({ onBack, preselectedType }: InstallerPageProps) {
-  const [step, setStep] = useState(1);
-  const [type, setType] = useState<'marketplace' | 'store'>(preselectedType || 'marketplace');
+  const [step, setStep] = useState(preselectedType === 'supplier' ? 2 : 1);
+  const [type, setType] = useState<WizardType>(preselectedType || 'marketplace');
   const [tenantName, setTenantName] = useState('');
   const [tenantSlug, setTenantSlug] = useState('');
   const [domain, setDomain] = useState('');
@@ -44,6 +46,33 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
   const canNextStep2 = tenantName.trim() && tenantSlug.trim();
   const canNextStep3 = adminName.trim() && adminPhone.trim().length === 11 && adminPassword.trim().length >= 6;
 
+  const isSupp = type === 'supplier';
+  const isMkt = type === 'marketplace';
+  const isStr = type === 'store';
+
+  // Per-type labels
+  const typeLabel = isSupp ? 'تأمین‌کننده' : isMkt ? 'بازارچه' : 'فروشگاه';
+  const typeEntity = isSupp ? 'پنل تأمین‌کننده' : isMkt ? 'بازارچه' : 'فروشگاه';
+  const typeColor = isSupp ? 'blue' : 'amber';
+  const TypeIcon = isSupp ? Package : isMkt ? Users : Store;
+  // Color classes map
+  const colorBg = isSupp ? 'bg-blue-50' : 'bg-amber-50';
+  const colorBg2 = isSupp ? 'bg-blue-100' : 'bg-amber-100';
+  const colorText = isSupp ? 'text-blue-600' : 'text-amber-600';
+  const colorBorder = isSupp ? 'border-blue-400' : 'border-amber-400';
+  const colorRing = isSupp ? 'ring-blue-100' : 'ring-amber-100';
+  const colorBtn = isSupp
+    ? 'bg-gradient-to-r from-blue-600 to-blue-500'
+    : 'bg-gradient-to-r from-amber-600 to-amber-500';
+  const colorBtnHover = isSupp ? 'hover:from-blue-700 hover:to-blue-600' : 'hover:from-amber-700 hover:to-amber-600';
+  const colorDot = isSupp ? 'bg-blue-600' : 'bg-amber-600';
+  const colorStepBg = isSupp ? 'bg-blue-600 text-white' : 'bg-amber-600 text-white';
+  const doneIconBg = isSupp ? 'bg-blue-100' : 'bg-emerald-100';
+  const doneIconColor = isSupp ? 'text-blue-600' : 'text-emerald-600';
+  const colorFocus = isSupp ? 'focus:border-blue-500' : 'focus:border-amber-500';
+  const colorBadgeBg = isSupp ? 'bg-blue-50' : 'bg-amber-50';
+  const colorBadgeText = isSupp ? 'text-blue-600' : 'text-amber-600';
+
   const handleSubmit = async () => {
     setLoading(true); setError('');
     try {
@@ -63,7 +92,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || Object.values(err.errors || {}).flat().join(', ') || 'خطا در ساخت فروشگاه');
+        throw new Error(err.message || Object.values(err.errors || {}).flat().join(', ') || `خطا در ساخت ${typeEntity}`);
       }
 
       const data = await res.json();
@@ -80,7 +109,12 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
 
   const goToStore = () => {
     if (result?.tenant?.slug) {
-      window.location.href = `/?tenant=${result.tenant.slug}`;
+      // Suppliers have no public storefront — go directly to their admin panel
+      if (result.tenant.type === 'supplier') {
+        window.location.href = `/?tenant=${result.tenant.slug}#/admin`;
+      } else {
+        window.location.href = `/?tenant=${result.tenant.slug}`;
+      }
     }
   };
 
@@ -104,14 +138,17 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
         {/* Step indicators */}
         {!done && (
           <div className="max-w-xl mx-auto px-4 pb-3 flex items-center gap-2">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center gap-2 flex-1">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${step >= s ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                  {step > s ? <Check className="w-3 h-3" /> : s}
+            {(isSupp ? [2, 3] : [1, 2, 3]).map((s, i) => {
+              const total = isSupp ? 2 : 3;
+              const isLast = i === total - 1;
+              return (
+              <div key={s} className={`flex items-center gap-2 ${!isLast ? 'flex-1' : ''}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${step >= s ? colorStepBg : 'bg-slate-100 text-slate-400'}`}>
+                  {step > s ? <Check className="w-3 h-3" /> : isSupp ? i + 1 : s}
                 </div>
-                {s < 3 && <div className={`flex-1 h-0.5 rounded ${step > s ? 'bg-amber-600' : 'bg-slate-200'}`} />}
+                {!isLast && <div className={`flex-1 h-0.5 rounded ${step > s ? colorDot : 'bg-slate-200'}`} />}
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
@@ -120,18 +157,20 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
         <AnimatePresence mode="wait">
           {done ? (
             <motion.div key="done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-                <Sparkles className="w-10 h-10 text-emerald-600" />
+              <div className={`w-20 h-20 rounded-full ${doneIconBg} flex items-center justify-center mx-auto mb-6`}>
+                <Sparkles className={`w-10 h-10 ${doneIconColor}`} />
               </div>
-              <h2 className="text-xl font-black text-slate-800 mb-2">🎉 {type === 'marketplace' ? 'بازارچه' : 'فروشگاه'} شما ساخته شد!</h2>
+              <h2 className="text-xl font-black text-slate-800 mb-2">{isSupp ? '🎉 پنل تأمین‌کننده شما ساخته شد!' : `🎉 ${typeEntity} شما ساخته شد!`}</h2>
               <p className="text-sm text-slate-500 font-bold mb-2">{tenantName}</p>
               <p className="text-xs text-slate-400 mb-8">
-                {type === 'marketplace' ? 'حالا می‌توانید فروشندگان را دعوت کنید و محصولات را مدیریت کنید.' : 'حالا می‌توانید محصولات خود را اضافه کرده و فروش را شروع کنید.'}
+                {isSupp ? 'حالا می‌توانید موجودی طلا و نقره را مدیریت کرده و به فروشگاه‌ها و بازارچه‌ها تأمین کنید.' :
+                 isMkt ? 'حالا می‌توانید فروشندگان را دعوت کنید و محصولات را مدیریت کنید.' :
+                 'حالا می‌توانید محصولات خود را اضافه کرده و فروش را شروع کنید.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button onClick={goToStore}
-                  className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-lg hover:shadow-xl transition-all">
-                  ورود به {type === 'marketplace' ? 'بازارچه' : 'فروشگاه'}
+                  className={`${colorBtn} text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-lg hover:shadow-xl transition-all ${colorBtnHover}`}>
+                  {isSupp ? 'ورود به پنل تأمین‌کننده' : `ورود به ${typeEntity}`}
                 </button>
                 <button onClick={onBack}
                   className="bg-white border border-slate-200 text-slate-600 px-8 py-3.5 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all">
@@ -154,7 +193,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
               {step === 1 && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-black text-slate-800 mb-2">چه نوع کسب‌وکاری می‌خواهید؟</h2>
+                    <h2 className="text-xl font-black text-slate-800 mb-2">چه نوع فروشگاهی می‌خواهید؟</h2>
                     <p className="text-xs text-slate-400 font-bold">نوع فروشگاه خود را انتخاب کنید</p>
                   </div>
 
@@ -167,7 +206,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                         </div>
                         <div>
                           <h3 className="text-sm font-black text-slate-800 mb-1">بازارچه (Marketplace)</h3>
-                          <p className="text-xs text-slate-500 leading-relaxed">چندین فروشنده محصولات خود را در پلتفرم شما می‌فروشند. شما مدیر بازارچه هستید و از فروش هر غرفه کمیسیون می‌گیرید.</p>
+                          <p className="text-xs text-slate-500 leading-relaxed">چندین فروشنده محصولات خود را در پلتفرم شما می‌فروشند. شما مدیر بازارچه هستید.</p>
                           <div className="flex gap-2 mt-3">
                             {['چند فروشنده', 'رقابت قیمتی', 'تنوع بالا', 'خدمات سرمایه‌گذاری'].map((f, i) => (
                               <span key={i} className="text-[9px] font-bold bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">{f}</span>
@@ -185,7 +224,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                         </div>
                         <div>
                           <h3 className="text-sm font-black text-slate-800 mb-1">فروشگاه مستقل (Store)</h3>
-                          <p className="text-xs text-slate-500 leading-relaxed">فروشگاه اختصاصی تک‌برندی با دامنه شخصی. شما صاحب برند هستید و محصولات خود را مستقیماً می‌فروشید.</p>
+                          <p className="text-xs text-slate-500 leading-relaxed">فروشگاه اختصاصی تک‌برندی با دامنه شخصی. شما صاحب برند هستید.</p>
                           <div className="flex gap-2 mt-3">
                             {['دامنه اختصاصی', 'برند مستقل', 'مدیریت ساده', 'چند شعبه'].map((f, i) => (
                               <span key={i} className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">{f}</span>
@@ -202,31 +241,35 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
               {step === 2 && (
                 <div className="space-y-5">
                   <div>
-                    <h2 className="text-xl font-black text-slate-800 mb-2">اطلاعات {type === 'marketplace' ? 'بازارچه' : 'فروشگاه'}</h2>
-                    <p className="text-xs text-slate-400 font-bold">نام و آدرس فروشگاه خود را وارد کنید</p>
+                    <h2 className="text-xl font-black text-slate-800 mb-2">اطلاعات {typeLabel}</h2>
+                    <p className="text-xs text-slate-400 font-bold">
+                      {isSupp ? 'نام و مشخصات کسب‌وکار تأمین‌کننده را وارد کنید' : 'نام و آدرس فروشگاه خود را وارد کنید'}
+                    </p>
                   </div>
                   <div className="space-y-4">
                     <div>
                       <label className="text-xs font-black text-slate-600 block mb-1.5">
-                        نام {type === 'marketplace' ? 'بازارچه' : 'فروشگاه'}
+                        نام {typeLabel}
                       </label>
                       <input value={tenantName} onChange={e => handleNameChange(e.target.value)}
-                        placeholder={type === 'marketplace' ? 'مثال: بازار طلای تهران' : 'مثال: گالری طلای مینا'}
-                        className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-right focus:outline-none focus:border-amber-500" />
+                        placeholder={isSupp ? 'مثال: زرگران اصفهان' : isMkt ? 'مثال: بازار طلای تهران' : 'مثال: گالری طلای مینا'}
+                        className={`w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-right focus:outline-none ${colorFocus}`} />
                     </div>
                     <div>
                       <label className="text-xs font-black text-slate-600 block mb-1.5">آدرس اینترنتی (slug)</label>
                       <input value={tenantSlug} onChange={e => setTenantSlug(e.target.value.replace(/[^a-z0-9_-]/g, ''))}
-                        placeholder="my-store"
-                        className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none focus:border-amber-500 font-mono" dir="ltr" />
-                      <p className="text-[10px] text-slate-400 mt-1">فقط حروف انگلیسی، اعداد، خط تیره و آندرلاین. مثال: my_gold_store</p>
+                        placeholder={isSupp ? 'my-supplier' : 'my-store'}
+                        className={`w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none ${colorFocus} font-mono`} dir="ltr" />
+                      <p className="text-[10px] text-slate-400 mt-1">فقط حروف انگلیسی، اعداد، خط تیره و آندرلاین. مثال: my_gold_supplier</p>
                     </div>
-                    <div>
-                      <label className="text-xs font-black text-slate-600 block mb-1.5">دامنه اختصاصی (اختیاری)</label>
-                      <input value={domain} onChange={e => setDomain(e.target.value)}
-                        placeholder="my-store.com"
-                        className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none focus:border-amber-500 font-mono" dir="ltr" />
-                    </div>
+                    {!isSupp && (
+                      <div>
+                        <label className="text-xs font-black text-slate-600 block mb-1.5">دامنه اختصاصی (اختیاری)</label>
+                        <input value={domain} onChange={e => setDomain(e.target.value)}
+                          placeholder="my-store.com"
+                          className={`w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none ${colorFocus} font-mono`} dir="ltr" />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -236,26 +279,26 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                 <div className="space-y-5">
                   <div>
                     <h2 className="text-xl font-black text-slate-800 mb-2">حساب مدیریت</h2>
-                    <p className="text-xs text-slate-400 font-bold">اطلاعات مدیر {type === 'marketplace' ? 'بازارچه' : 'فروشگاه'} را وارد کنید</p>
+                    <p className="text-xs text-slate-400 font-bold">اطلاعات مدیر {typeLabel} را وارد کنید</p>
                   </div>
                   <div className="space-y-4">
                     <div>
                       <label className="text-xs font-black text-slate-600 block mb-1.5">نام مدیر</label>
                       <input value={adminName} onChange={e => setAdminName(e.target.value)}
                         placeholder="نام و نام خانوادگی"
-                        className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-right focus:outline-none focus:border-amber-500" />
+                        className={`w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-right focus:outline-none ${colorFocus}`} />
                     </div>
                     <div>
                       <label className="text-xs font-black text-slate-600 block mb-1.5">شماره موبایل</label>
                       <input value={adminPhone} onChange={e => setAdminPhone(e.target.value.replace(/\D/g, '').substring(0, 11))}
                         placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                        className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none focus:border-amber-500 font-mono" dir="ltr" />
+                        className={`w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none ${colorFocus} font-mono`} dir="ltr" />
                     </div>
                     <div>
                       <label className="text-xs font-black text-slate-600 block mb-1.5">رمز عبور</label>
                       <input type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)}
                         placeholder="حداقل ۶ کاراکتر"
-                        className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none focus:border-amber-500" dir="ltr" />
+                        className={`w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm text-left focus:outline-none ${colorFocus}`} dir="ltr" />
                     </div>
                   </div>
                 </div>
@@ -276,13 +319,13 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                 {step < 3 ? (
                   <button onClick={() => setStep(s => s + 1)}
                     disabled={step === 1 ? !canNextStep1 : !canNextStep2}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3 rounded-xl text-sm font-black shadow-md hover:shadow-lg transition-all disabled:opacity-50">
+                    className={`flex-1 flex items-center justify-center gap-2 ${colorBtn} text-white py-3 rounded-xl text-sm font-black shadow-md hover:shadow-lg transition-all disabled:opacity-50`}>
                     بعدی <ArrowLeft className="w-4 h-4" />
                   </button>
                 ) : (
                   <button onClick={handleSubmit} disabled={loading || !canNextStep3}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3 rounded-xl text-sm font-black shadow-md hover:shadow-lg transition-all disabled:opacity-50">
-                    {loading ? 'در حال ساخت...' : `ساخت ${type === 'marketplace' ? 'بازارچه' : 'فروشگاه'}`}
+                    className={`flex-1 flex items-center justify-center gap-2 ${colorBtn} text-white py-3 rounded-xl text-sm font-black shadow-md hover:shadow-lg transition-all disabled:opacity-50`}>
+                    {loading ? 'در حال ساخت...' : `ساخت ${typeEntity}`}
                     <Sparkles className="w-4 h-4" />
                   </button>
                 )}

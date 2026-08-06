@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { Store, Users, Shield, Zap, Sparkles, TrendingUp, ArrowLeft, Globe, ShoppingBag, Coins, Layers, Check } from 'lucide-react';
+import { Store, Users, Shield, Zap, Sparkles, TrendingUp, ArrowLeft, Globe, ShoppingBag, Coins, Layers, Check, Package } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface LandingPageProps {
   onEnterMarketplace: () => void;
   onEnterStore: (slug: string) => void;
-  onStartBuilding: (type?: 'marketplace' | 'store') => void;
+  onStartBuilding: (type?: 'marketplace' | 'store' | 'supplier') => void;
 }
 
 const stores = [
-  { slug: 'talana', name: 'طلانا', desc: 'بازارچه طلا و نقره — ۴ فروشنده فعال', type: 'marketplace', icon: '🛒' },
-  { slug: 'silver-bazaar', name: 'بازار نقره', desc: 'بازارچه تخصصی نقره — ۲ فروشنده', type: 'marketplace', icon: '🥈' },
+  { slug: 'silver-bazaar', name: 'بازار نقره', desc: 'بازارچه تخصصی نقره و زیورآلات', type: 'marketplace', icon: '🪙' },
   { slug: 'diamond-gallery', name: 'گالری الماس', desc: 'فروشگاه تخصصی الماس و جواهرات', type: 'store', icon: '💎' },
   { slug: 'pars-gold', name: 'طلافروشی پارس', desc: 'فروشگاه طلای ۱۸ و ۲۴ عیار', type: 'store', icon: '👑' },
   { slug: 'tehran-jewelry', name: 'جواهری تهران', desc: 'زیورآلات دست‌ساز و سفارشی', type: 'store', icon: '🌸' },
@@ -198,6 +197,29 @@ export default function LandingPage({ onEnterMarketplace, onEnterStore, onStartB
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ====== SUPPLIER CTA ====== */}
+      <section className="py-16 md:py-20 bg-gradient-to-b from-blue-50/50 to-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-6">
+            <Package className="w-8 h-8 text-blue-600" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-3">پنل تأمین‌کنندگان</h2>
+          <p className="text-sm text-slate-500 font-bold mb-4 max-w-lg mx-auto leading-relaxed">
+            تأمین‌کننده طلا و نقره هستید؟ عضو اکوسیستم B2B طلانا شوید. موجودی خود را مدیریت کنید، قیمت‌گذاری کنید
+            و مستقیماً به فروشگاه‌ها و بازارچه‌ها طلا و نقره تأمین کنید — بدون نیاز به فروشگاه عمومی.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            {['مدیریت موجودی', 'قیمت‌گذاری هوشمند', 'پنل اختصاصی', 'گزارشات مالی', 'اتصال به فروشگاه‌ها'].map((f, i) => (
+              <span key={i} className="text-[10px] font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{f}</span>
+            ))}
+          </div>
+          <button onClick={() => { onStartBuilding('supplier'); }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-lg hover:shadow-xl transition-all">
+            ثبت‌نام به عنوان تأمین‌کننده
+          </button>
         </div>
       </section>
 
