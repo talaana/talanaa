@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Users, ArrowRight, ArrowLeft, Check, Sparkles, Coins, Package } from 'lucide-react';
+import { Store, Users, ArrowRight, ArrowLeft, Check, Sparkles, Package, Upload, Palette } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { setToken } from '../api';
 
@@ -25,6 +25,8 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [brandColor, setBrandColor] = useState('#ca8a04');
+  const [brandLogoPreview, setBrandLogoPreview] = useState<string | null>(null);
 
   const handleNameChange = (name: string) => {
     setTenantName(name);
@@ -44,7 +46,8 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
 
   const canNextStep1 = !!type;
   const canNextStep2 = tenantName.trim() && tenantSlug.trim();
-  const canNextStep3 = adminName.trim() && adminPhone.trim().length === 11 && adminPassword.trim().length >= 6;
+  const canNextStep3 = true; // brand color always has a default
+  const canNextStep4 = adminName.trim() && adminPhone.trim().length === 11 && adminPassword.trim().length >= 6;
 
   const isSupp = type === 'supplier';
   const isMkt = type === 'marketplace';
@@ -87,6 +90,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
           admin_phone: adminPhone,
           admin_password: adminPassword,
           domain: domain || null,
+          brand_color: brandColor,
         }),
       });
 
@@ -127,8 +131,8 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
             <ArrowRight className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center">
-              <Coins className="w-4 h-4 text-white" />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center">
+              <img src="/talana_logo.png" alt="طلانا" className="w-7 h-7 rounded-lg object-cover" />
             </div>
             <span className="text-sm font-black">طلانا</span>
           </div>
@@ -138,8 +142,9 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
         {/* Step indicators */}
         {!done && (
           <div className="max-w-xl mx-auto px-4 pb-3 flex items-center gap-2">
-            {(isSupp ? [2, 3] : [1, 2, 3]).map((s, i) => {
-              const total = isSupp ? 2 : 3;
+            {(isSupp ? [2, 3, 4] : [1, 2, 3, 4]).map((s, i) => {
+              const steps = isSupp ? [2, 3, 4] : [1, 2, 3, 4];
+              const total = steps.length;
               const isLast = i === total - 1;
               return (
               <div key={s} className={`flex items-center gap-2 ${!isLast ? 'flex-1' : ''}`}>
@@ -274,8 +279,116 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                 </div>
               )}
 
-              {/* Step 3: Admin account */}
+              {/* Step 3: Brand identity — logo upload + color picker */}
               {step === 3 && (
+                <div className="space-y-5">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-800 mb-2">هویت بصری برند</h2>
+                    <p className="text-xs text-slate-400 font-bold">لوگو و رنگ برند {typeLabel} خود را انتخاب کنید</p>
+                  </div>
+
+                  {/* Logo upload */}
+                  <div>
+                    <label className="text-xs font-black text-slate-600 block mb-2">لوگوی برند</label>
+                    <div className="flex items-start gap-4">
+                      {/* Preview */}
+                      <div className={`w-20 h-20 rounded-2xl border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden ${brandLogoPreview ? 'border-transparent' : 'border-slate-200'}`}
+                        style={brandLogoPreview ? {} : {}}>
+                        {brandLogoPreview ? (
+                          <img src={brandLogoPreview} alt="پیش‌نمایش لوگو" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-center">
+                            <Upload className="w-5 h-5 text-slate-300 mx-auto mb-1" />
+                            <span className="text-[9px] font-bold text-slate-300">لوگو</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <label className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black cursor-pointer transition-all border border-slate-200 hover:bg-slate-50`}>
+                          <Upload className="w-4 h-4" />
+                          بارگذاری لوگو
+                          <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = () => setBrandLogoPreview(reader.result as string);
+                                reader.readAsDataURL(file);
+                              }
+                            }} />
+                        </label>
+                        <p className="text-[9px] text-slate-400 mt-1.5">PNG, JPEG, SVG یا WebP — حداکثر ۲ مگابایت</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-100" />
+
+                  {/* Brand color picker */}
+                  <div>
+                    <label className="text-xs font-black text-slate-600 block mb-2">
+                      <Palette className="w-4 h-4 inline-block ml-1" />
+                      رنگ برند
+                    </label>
+
+                    {/* Color input + live preview */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="relative">
+                        <input type="color" value={brandColor}
+                          onChange={e => setBrandColor(e.target.value)}
+                          className="w-12 h-12 rounded-xl cursor-pointer border-2 border-slate-200 p-0.5" />
+                      </div>
+                      <input value={brandColor}
+                        onChange={e => setBrandColor(e.target.value)}
+                        className="bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-sm font-mono text-left focus:outline-none focus:border-amber-500 w-28"
+                        dir="ltr" maxLength={7} />
+                      <span className="text-xs text-slate-400 font-bold">کد HEX رنگ اصلی</span>
+                    </div>
+
+                    {/* Preset color swatches */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {['#ca8a04', '#d97706', '#e11d48', '#7c3aed', '#2563eb', '#0891b2', '#059669', '#4f46e5', '#1e293b'].map(c => (
+                        <button key={c} onClick={() => setBrandColor(c)}
+                          className={`w-8 h-8 rounded-lg border-2 transition-all ${brandColor === c ? 'border-slate-800 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
+                          style={{ backgroundColor: c }} title={c} />
+                      ))}
+                    </div>
+
+                    {/* Live preview card */}
+                    <div className="rounded-2xl border border-slate-200 overflow-hidden">
+                      <div className="px-4 py-2.5 flex items-center gap-2" style={{ backgroundColor: brandColor }}>
+                        <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center">
+                          <span className="text-white text-[8px] font-black">T</span>
+                        </div>
+                        <span className="text-xs font-black text-white">{tenantName || 'نام برند'}</span>
+                      </div>
+                      <div className="p-4 space-y-2" style={{ backgroundColor: `${brandColor}10` }}>
+                        <div className="flex gap-2">
+                          <div className="h-2 rounded flex-1" style={{ backgroundColor: brandColor }} />
+                          <div className="h-2 rounded w-12" style={{ backgroundColor: `${brandColor}60` }} />
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="h-5 rounded w-2/3" style={{ backgroundColor: `${brandColor}25` }} />
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="h-5 rounded w-1/2" style={{ backgroundColor: `${brandColor}15` }} />
+                          <div className="h-5 rounded w-1/3" style={{ backgroundColor: `${brandColor}15` }} />
+                        </div>
+                      </div>
+                      <div className="px-4 py-1.5 flex items-center gap-1.5" style={{ backgroundColor: `${brandColor}08` }}>
+                        <span className="text-[9px] font-bold" style={{ color: brandColor }}>رنگ اصلی: {brandColor}</span>
+                        <span className="text-[9px] text-slate-400">|</span>
+                        <span className="text-[9px] text-slate-400">پس‌زمینه: تینت ۱۰٪</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Admin account */}
+              {step === 4 && (
                 <div className="space-y-5">
                   <div>
                     <h2 className="text-xl font-black text-slate-800 mb-2">حساب مدیریت</h2>
@@ -316,14 +429,14 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                     <ArrowRight className="w-4 h-4" /> قبلی
                   </button>
                 )}
-                {step < 3 ? (
+                {step < 4 ? (
                   <button onClick={() => setStep(s => s + 1)}
-                    disabled={step === 1 ? !canNextStep1 : !canNextStep2}
+                    disabled={step === 1 ? !canNextStep1 : step === 2 ? !canNextStep2 : !canNextStep3}
                     className={`flex-1 flex items-center justify-center gap-2 ${colorBtn} text-white py-3 rounded-xl text-sm font-black shadow-md hover:shadow-lg transition-all disabled:opacity-50`}>
                     بعدی <ArrowLeft className="w-4 h-4" />
                   </button>
                 ) : (
-                  <button onClick={handleSubmit} disabled={loading || !canNextStep3}
+                  <button onClick={handleSubmit} disabled={loading || !canNextStep4}
                     className={`flex-1 flex items-center justify-center gap-2 ${colorBtn} text-white py-3 rounded-xl text-sm font-black shadow-md hover:shadow-lg transition-all disabled:opacity-50`}>
                     {loading ? 'در حال ساخت...' : `ساخت ${typeEntity}`}
                     <Sparkles className="w-4 h-4" />

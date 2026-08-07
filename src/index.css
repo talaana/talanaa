@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+:root {
+  --brand-color: #ca8a04;
+  --brand-color-light: #ca8a0418;
+  --brand-color-lighter: #ca8a040a;
+}
+
 @theme {
   --font-sans: "Vazirmatn", system-ui, -apple-system, sans-serif;
   --font-mono: "Vazirmatn", monospace;
@@ -48,6 +54,11 @@ html, body {
   color: #0f172a;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: none;
+}
+
+::selection {
+  background-color: var(--brand-color);
+  color: white;
 }
 
 /* Safe area inset helper for iOS PWA */

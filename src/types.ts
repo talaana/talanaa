@@ -59,8 +59,9 @@ export interface TenantConfig {
   id: number;
   name: string;
   slug: string;
-  type: 'marketplace' | 'store';
+  type: 'marketplace' | 'store' | 'supplier';
   domain: string | null;
   logo: string | null;
+  brand_color: string | null;
   settings: Record<string, any> | null;
 }

@@ -3,7 +3,7 @@ import { UserWallet, Transaction } from './types';
 import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import InstallerPage from './components/InstallerPage';
-import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield, Coins, ShoppingBag } from 'lucide-react';
+import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
 import { formatToman, formatGram, toPersianDigits } from './utils';
@@ -40,6 +40,22 @@ const storeNavItems = [
 
 // Captured at module load time — tells us if URL had a tenant identifier (store vs landing)
 const urlTenant = typeof window !== 'undefined' ? detectTenantFromURL() : null;
+
+// Tenant branding cache — store name/logo/brand_color in localStorage for instant display on revisit
+const TENANT_CACHE_KEY = 'talana_tenant_cache';
+function cacheTenantBranding(tenant: { slug: string; name: string; logo: string | null; brand_color: string | null }) {
+  try {
+    const cache = JSON.parse(localStorage.getItem(TENANT_CACHE_KEY) || '{}');
+    cache[tenant.slug] = { name: tenant.name, logo: tenant.logo, brand_color: tenant.brand_color };
+    localStorage.setItem(TENANT_CACHE_KEY, JSON.stringify(cache));
+  } catch {}
+}
+function getCachedTenant(slug: string): { name: string; logo: string | null; brand_color: string | null } | null {
+  try {
+    const cache = JSON.parse(localStorage.getItem(TENANT_CACHE_KEY) || '{}');
+    return cache[slug] || null;
+  } catch { return null; }
+}
 
 export default function App() {
   const { tenant, loading: tenantLoading } = useTenant();
@@ -79,6 +95,7 @@ export default function App() {
   useEffect(() => {
     if (tenant) {
       setTenantContext(tenant.id, tenant.slug, tenant.type);
+      cacheTenantBranding({ slug: tenant.slug, name: tenant.name, logo: tenant.logo, brand_color: tenant.brand_color });
       const tk = getToken();
       if (tk) {
         setIsLoggedIn(true);
@@ -110,6 +127,21 @@ export default function App() {
     : isStore
     ? 'فروشگاه آنلاین طلا و نقره'
     : 'سامانه هوشمند معاملات طلا و نقره';
+
+  // Apply brand color as CSS custom properties
+  const brandColor = tenant?.brand_color || '#ca8a04';
+  const brandColorLight = brandColor + '18'; // ~10% opacity hex suffix for backgrounds
+  const brandColorLighter = brandColor + '0a'; // ~4% opacity
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--brand-color', brandColor);
+    root.style.setProperty('--brand-color-light', brandColorLight);
+    root.style.setProperty('--brand-color-lighter', brandColorLighter);
+    // Update browser theme color for PWA/mobile title bar
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', brandColor);
+  }, [brandColor, brandColorLight, brandColorLighter]);
 
   useEffect(() => {
     const onHashChange = () => setShowAdmin(window.location.hash === '#/admin');
@@ -233,46 +265,42 @@ export default function App() {
   const toggleBalances = useCallback(() => setShowBalances(p => !p), []);
   const tabAccent = activeMetal === 'gold' ? 'amber' : 'slate';
 
-  // ===== TENANT LOADING — store (URL had a tenant identifier) =====
-  if (tenantLoading && urlTenant) return (
-    <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
-      <div className="text-center">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center mx-auto mb-5 shadow-lg animate-pulse">
-          <ShoppingBag className="w-8 h-8 text-white" />
-        </div>
-        <p className="text-sm font-black text-slate-800 mb-1">
-          {urlTenant.slug || urlTenant.domain || 'فروشگاه'}
-        </p>
-        <p className="text-xs font-bold text-slate-400">در حال بارگذاری فروشگاه...</p>
-        <div className="mt-4 w-32 h-1.5 bg-slate-200 rounded-full mx-auto overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-amber-600 to-amber-500 rounded-full animate-[loadingBar_1.5s_ease-in-out_infinite]" style={{width:'60%'}} />
+  // ===== STORE / MARKETPLACE LOADING (URL has tenant, or tenant resolved but auth loading) =====
+  if ((tenantLoading && urlTenant) || (isLoading && tenant)) {
+    const cached = getCachedTenant(tenant?.slug || urlTenant?.slug || '');
+    const displayName = tenant?.name || cached?.name || urlTenant?.slug || 'فروشگاه';
+    const displayLogo = tenant?.logo ?? cached?.logo ?? null;
+    const displayBrand = tenant?.brand_color || cached?.brand_color || '#ca8a04';
+    const displayBrandLight = displayBrand + 'dd';
+
+    return (
+      <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+        <div className="text-center">
+          {displayLogo ? (
+            <img src={displayLogo} alt={displayName} className="w-14 h-14 rounded-xl mx-auto mb-4 object-cover shadow-md animate-pulse" />
+          ) : (
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-md animate-pulse"
+              style={{ background: `linear-gradient(135deg, ${displayBrand}, ${displayBrandLight})` }}>
+              <ShoppingBag className="w-7 h-7 text-white" />
+            </div>
+          )}
+          <p className="text-sm font-black text-slate-800 mb-3">{displayName}</p>
+          <div className="w-28 h-1.5 bg-slate-200 rounded-full mx-auto overflow-hidden">
+            <div className="h-full rounded-full animate-[loadingBar_1.5s_ease-in-out_infinite]" style={{ width: '50%', background: `linear-gradient(90deg, ${displayBrand}, ${displayBrandLight})` }} />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  // ===== INITIAL BOOT — landing page (no tenant in URL) =====
+  // ===== LANDING PAGE LOADING (no tenant in URL) =====
   if (tenantLoading) return (
     <div dir="rtl" className="min-h-screen bg-white flex items-center justify-center font-sans">
       <div className="text-center">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center mx-auto mb-4 shadow-md">
-          <Coins className="w-7 h-7 text-white animate-pulse" />
-        </div>
-        <p className="text-lg font-black text-slate-800">طلانا</p>
-        <p className="text-xs font-bold text-slate-400 mt-1">سامانه هوشمند طلا و نقره</p>
-      </div>
-    </div>
-  );
-
-  // ===== AUTH LOADING (stored token — loading user data for a tenant) =====
-  if (isLoading && tenant) return (
-    <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
-      <div className="text-center">
-        <img src={platformLogo} alt={platformName} className="w-12 h-12 rounded-xl mx-auto mb-4 object-cover" />
-        <p className="text-sm font-black text-slate-800 mb-1">{platformName}</p>
-        <p className="text-xs font-bold text-slate-400">در حال بارگذاری...</p>
-        <div className="mt-4 w-24 h-1 bg-slate-200 rounded-full mx-auto overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-amber-600 to-amber-500 rounded-full animate-[loadingBar_1.5s_ease-in-out_infinite]" style={{width:'50%'}} />
+        <img src="/talana_logo.png" alt="طلانا" className="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-md object-cover animate-pulse" />
+        <p className="text-lg font-black text-slate-800 mb-3">طلانا</p>
+        <div className="w-32 h-1.5 bg-slate-200 rounded-full mx-auto overflow-hidden">
+          <div className="h-full rounded-full animate-[loadingBar_1.5s_ease-in-out_infinite]" style={{width:'60%', background: 'linear-gradient(90deg, #ca8a04, #d97706)'}} />
         </div>
       </div>
     </div>
@@ -308,7 +336,8 @@ export default function App() {
           <h1 className="text-lg font-black text-slate-800 mb-2">پنل تأمین‌کننده</h1>
           <p className="text-sm text-slate-400 mb-6">این یک پنل مدیریت خصوصی است و فروشگاه عمومی ندارد.</p>
           <a href={`/?tenant=${tenant.slug}#/admin`}
-            className="inline-block bg-gradient-to-r from-amber-600 to-amber-500 text-white px-6 py-3 rounded-2xl font-black text-sm">
+            className="inline-block text-white px-6 py-3 rounded-2xl font-black text-sm"
+            style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>
             ورود به پنل مدیریت
           </a>
         </div>
@@ -353,7 +382,8 @@ export default function App() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div><label className="text-xs font-black text-slate-600 block mb-1.5">رمز عبور</label><input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••" className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-left focus:outline-none focus:border-amber-600" dir="ltr" /></div>
             {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
-            <button type="submit" className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all">ورود به {platformName}</button>
+            <button type="submit" className="w-full text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all"
+              style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>ورود به {platformName}</button>
             <p className="text-center text-[10px] text-slate-400 font-bold">demo: 09123456789 / password</p>
           </form>
         ) : (
@@ -362,7 +392,8 @@ export default function App() {
               <>
                 {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
                 <button type="button" onClick={handleRequestOtp} disabled={otpLoading}
-                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50">
+                  className="w-full text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>
                   {otpLoading ? 'در حال ارسال...' : 'دریافت کد تأیید'}
                 </button>
                 <p className="text-center text-[10px] text-slate-400 font-bold">کد به شماره شما ارسال می‌شود</p>
@@ -371,7 +402,8 @@ export default function App() {
               <>
                 <div><label className="text-xs font-black text-slate-600 block mb-1.5">کد تأیید ۶ رقمی</label><input type="text" value={otpCode} onChange={e => setOtpCode(e.target.value)} placeholder="111111" maxLength={6} className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-center focus:outline-none focus:border-amber-600 font-mono tracking-widest" dir="ltr" /></div>
                 {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
-                <button type="submit" className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all">تأیید و ورود</button>
+                <button type="submit" className="w-full text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all"
+                  style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>تأیید و ورود</button>
                 <button type="button" onClick={() => { setOtpSent(false); setOtpCode(''); setLoginError(''); }}
                   className="w-full text-center text-[11px] text-slate-400 font-bold hover:text-slate-600">ارسال مجدد کد</button>
                 <p className="text-center text-[10px] text-slate-400 font-bold">کد تست: 111111</p>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Users, Shield, Zap, Sparkles, TrendingUp, ArrowLeft, Globe, ShoppingBag, Coins, Layers, Check, Package } from 'lucide-react';
+import { Store, Users, Shield, Zap, Sparkles, TrendingUp, ArrowLeft, Globe, ShoppingBag, Layers, Check, Package } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface LandingPageProps {
@@ -40,11 +40,10 @@ export default function LandingPage({ onEnterMarketplace, onEnterStore, onStartB
       <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center">
-              <Coins className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+              <img src="/talana_logo.png" alt="طلانا" className="w-9 h-9 rounded-xl object-cover" />
             </div>
             <span className="text-base font-black text-slate-800">طلانا</span>
-            <span className="hidden sm:inline text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">SaaS</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-500">
             <a href="#features" className="hover:text-amber-600 transition-colors">ویژگی‌ها</a>
@@ -65,7 +64,7 @@ export default function LandingPage({ onEnterMarketplace, onEnterStore, onStartB
         <div className="max-w-6xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <span className="inline-block bg-amber-100 text-amber-700 text-[10px] font-black px-3 py-1 rounded-full mb-6">
-              پلتفرم SaaS طلا و نقره
+              اولین اکوسیستم طلا و نقره ایران
             </span>
             <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight mb-4">
               بازارچه طلا و نقره‌ات را<br />
@@ -283,8 +282,8 @@ export default function LandingPage({ onEnterMarketplace, onEnterStore, onStartB
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center">
-                <Coins className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                <img src="/talana_logo.png" alt="طلانا" className="w-8 h-8 rounded-lg object-cover" />
               </div>
               <span className="text-sm font-black text-white">طلانا</span>
             </div>
