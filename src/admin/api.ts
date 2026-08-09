@@ -28,4 +28,25 @@ export const admin = {
   roles: { list: () => apiFetch('/admin/roles'), create: (d: any) => apiFetch('/admin/roles', {method:'POST',body:JSON.stringify(d)}), update: (id:number,d:any) => apiFetch(`/admin/roles/${id}`,{method:'PUT',body:JSON.stringify(d)}), remove: (id:number) => apiFetch(`/admin/roles/${id}`,{method:'DELETE'}) },
   users: { list: (tid?:number) => apiFetch(`/admin/users${tid?`?tenant_id=${tid}`:''}`), update: (id:number,d:any) => apiFetch(`/admin/users/${id}`,{method:'PUT',body:JSON.stringify(d)}) },
   tenants: { list: () => apiFetch('/admin/tenants'), create: (d:any) => apiFetch('/admin/tenants',{method:'POST',body:JSON.stringify(d)}), get: (id:number) => apiFetch(`/admin/tenants/${id}`), update: (id:number,d:any) => apiFetch(`/admin/tenants/${id}`,{method:'PUT',body:JSON.stringify(d)}), toggle: (id:number) => apiFetch(`/admin/tenants/${id}/toggle`,{method:'PUT'}), impersonate: (id:number) => apiFetch(`/admin/tenants/${id}/impersonate`,{method:'POST'}) },
+  categories: {
+    list: (params?: Record<string,any>) => apiFetch(`/admin/categories?${new URLSearchParams(params||{}).toString()}`),
+    create: (d:any) => apiFetch('/admin/categories', {method:'POST',body:JSON.stringify(d)}),
+    update: (id:number,d:any) => apiFetch(`/admin/categories/${id}`, {method:'PUT',body:JSON.stringify(d)}),
+    remove: (id:number) => apiFetch(`/admin/categories/${id}`, {method:'DELETE'}),
+  },
+  products: {
+    list: (params?: Record<string,any>) => apiFetch(`/admin/products?${new URLSearchParams(params||{}).toString()}`),
+    create: (d:any) => apiFetch('/admin/products', {method:'POST',body:JSON.stringify(d)}),
+    update: (id:number,d:any) => apiFetch(`/admin/products/${id}`, {method:'PUT',body:JSON.stringify(d)}),
+    remove: (id:number) => apiFetch(`/admin/products/${id}`, {method:'DELETE'}),
+  },
+  orders: {
+    list: (params?: Record<string,any>) => apiFetch(`/admin/orders?${new URLSearchParams(params||{}).toString()}`),
+  },
+  branches: {
+    list: (params?: Record<string,any>) => apiFetch(`/admin/branches?${new URLSearchParams(params||{}).toString()}`),
+    create: (d:any) => apiFetch('/admin/branches', {method:'POST',body:JSON.stringify(d)}),
+    update: (id:number,d:any) => apiFetch(`/admin/branches/${id}`, {method:'PUT',body:JSON.stringify(d)}),
+    remove: (id:number) => apiFetch(`/admin/branches/${id}`, {method:'DELETE'}),
+  },
 };

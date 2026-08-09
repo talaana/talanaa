@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, BarChart3, CreditCard, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, Menu, X, ChevronDown, FolderTree } from 'lucide-react';
 import { admin, setAdminToken } from './api';
 import AdminDashboard from './pages/Dashboard';
 import AdminRoles from './pages/Roles';
 import AdminUsers from './pages/Users';
 import AdminTenants from './pages/Tenants';
+import AdminCategories from './pages/Categories';
+import AdminProducts from './pages/Products';
+import AdminOrders from './pages/Orders';
+import AdminBranches from './pages/Branches';
 
 interface Props { onBack: () => void; token: string; }
 
@@ -18,6 +22,7 @@ export default function AdminPanel({ onBack, token }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
 
   // Impersonation state
   const [impersonatedTenant, setImpersonatedTenant] = useState<any>(null);
@@ -95,15 +100,19 @@ export default function AdminPanel({ onBack, token }: Props) {
 
   const isMarketplaceAdmin = !isSuperadmin && tenant?.type === 'marketplace';
   const tenantNav = isMarketplaceAdmin ? [
-    { id: 'dashboard', label: 'داشبورد بازارچه', icon: BarChart3 },
+    { id: 'dashboard', label: 'داشبورد بازارچه', icon: LayoutDashboard },
     { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
-    { id: 'products', label: 'محصولات', icon: Package },
+    { id: 'products', label: 'محصولات', icon: Package, sub: [
+      { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
+    ]},
     { id: 'sellers', label: 'فروشندگان', icon: Users },
     { id: 'users', label: 'کاربران', icon: Shield },
   ] : [
-    { id: 'dashboard', label: 'داشبورد فروشگاه', icon: BarChart3 },
+    { id: 'dashboard', label: 'داشبورد فروشگاه', icon: LayoutDashboard },
     { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
-    { id: 'products', label: 'محصولات', icon: Package },
+    { id: 'products', label: 'محصولات', icon: Package, sub: [
+      { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
+    ]},
     { id: 'branches', label: 'شعب', icon: Store },
   ];
 
@@ -188,10 +197,29 @@ export default function AdminPanel({ onBack, token }: Props) {
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {nav.map(item => (
-          <button key={item.id} onClick={() => navigateTo(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-right transition-all ${page === item.id ? navActive : navInactive}`}>
-            <item.icon className="w-4.5 h-4.5" /><span>{item.label}</span>
-          </button>
+          <React.Fragment key={item.id}>
+            <button
+              onClick={() => {
+                if (item.sub) setProductsOpen(!productsOpen);
+                else navigateTo(item.id);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-right transition-all ${page === item.id ? navActive : navInactive}`}>
+              <item.icon className="w-4.5 h-4.5" /><span className="flex-1">{item.label}</span>
+              {item.sub && (
+                <ChevronDown className={`w-4 h-4 transition-transform ${productsOpen ? 'rotate-180' : ''}`} />
+              )}
+            </button>
+            {item.sub && productsOpen && (
+              <div className="mr-4 space-y-1 border-r-2 border-slate-100 pr-2">
+                {item.sub.map(sub => (
+                  <button key={sub.id} onClick={() => navigateTo(sub.id)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-right transition-all ${page === sub.id ? 'text-amber-600 bg-amber-50' : 'text-slate-400 hover:text-slate-600'}`}>
+                    <sub.icon className="w-3.5 h-3.5" /><span>{sub.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </React.Fragment>
         ))}
       </nav>
 
@@ -276,11 +304,11 @@ export default function AdminPanel({ onBack, token }: Props) {
           {page === 'roles' && <AdminRoles />}
           {page === 'users' && <AdminUsers can={can} isSuperadmin={isSuperadmin} />}
           {page === 'tenants' && <AdminTenants onImpersonate={handleImpersonate} />}
-          {!isSuperadmin && page === 'dashboard' && <TenantDashboard isMarketplace={isMarketplaceAdmin} />}
-          {!isSuperadmin && page === 'products' && <TenantProducts />}
-          {!isSuperadmin && page === 'orders' && <TenantOrders />}
-          {!isSuperadmin && page === 'sellers' && <TenantSellers />}
-          {!isSuperadmin && page === 'branches' && <TenantBranches />}
+          {page === 'categories' && <AdminCategories />}
+          {page === 'products' && <AdminProducts />}
+          {page === 'orders' && <AdminOrders />}
+          {page === 'branches' && <AdminBranches />}
+          {page === 'sellers' && <AdminSellers />}
         </div>
       </main>
     </div>
@@ -289,71 +317,7 @@ export default function AdminPanel({ onBack, token }: Props) {
 
 // ============ TENANT SUB-PAGES ============
 
-function TenantDashboard({ isMarketplace }: { isMarketplace?: boolean }) {
-  return (
-    <div className="space-y-4 lg:space-y-6">
-      <div>
-        <h2 className="text-lg lg:text-xl font-black text-slate-800">{isMarketplace ? 'داشبورد بازارچه' : 'داشبورد فروشگاه'}</h2>
-        <p className="text-xs text-slate-400 mt-1">{isMarketplace ? 'خلاصه وضعیت بازارچه شما' : 'خلاصه وضعیت فروشگاه شما'}</p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: 'سفارشات فعال', value: '۰', icon: <ShoppingBag className="w-8 h-8" />, color: 'bg-amber-100 text-amber-600' },
-          { label: 'محصولات', value: '۰', icon: <Package className="w-8 h-8" />, color: 'bg-purple-100 text-purple-600' },
-          { label: 'درآمد ماه', value: '۰ تومان', icon: <CreditCard className="w-8 h-8" />, color: 'bg-emerald-100 text-emerald-600' },
-        ].map((s, i) => (
-          <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <div className={`w-14 h-14 rounded-2xl ${s.color} flex items-center justify-center mb-4`}>{s.icon}</div>
-            <div className="text-xs font-black text-slate-500">{s.label}</div>
-            <div className="text-xl font-black text-slate-800 mt-1">{s.value}</div>
-          </div>
-        ))}
-      </div>
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
-        <Package className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-        <h3 className="text-sm font-black text-slate-600">{isMarketplace ? 'بازارچه شما آماده است' : 'فروشگاه شما آماده است'}</h3>
-        <p className="text-xs text-slate-400 mt-2">{isMarketplace ? 'از طریق پنل مدیریت می‌توانید فروشندگان را مدیریت کرده، محصولات را کنترل و سفارشات را پیگیری کنید.' : 'از طریق پنل مدیریت می‌توانید محصولات جدید اضافه کرده، سفارشات را مدیریت و شعب فروشگاه را کنترل کنید.'}</p>
-      </div>
-    </div>
-  );
-}
-
-function TenantProducts() {
-  return (
-    <div className="space-y-4 lg:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg lg:text-xl font-black text-slate-800">محصولات فروشگاه</h2>
-          <p className="text-xs text-slate-400 mt-1">مدیریت محصولات و موجودی</p>
-        </div>
-        <button className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ محصول جدید</button>
-      </div>
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
-        <Package className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-        <h3 className="text-sm font-black text-slate-600">هنوز محصولی ثبت نشده</h3>
-        <p className="text-xs text-slate-400 mt-2">اولین محصول فروشگاه خود را اضافه کنید.</p>
-      </div>
-    </div>
-  );
-}
-
-function TenantOrders() {
-  return (
-    <div className="space-y-4 lg:space-y-6">
-      <div>
-        <h2 className="text-lg lg:text-xl font-black text-slate-800">سفارشات</h2>
-        <p className="text-xs text-slate-400 mt-1">مدیریت سفارشات مشتریان</p>
-      </div>
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
-        <ShoppingBag className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-        <h3 className="text-sm font-black text-slate-600">سفارشی ثبت نشده</h3>
-        <p className="text-xs text-slate-400 mt-2">سفارشات جدید مشتریان در این بخش نمایش داده می‌شود.</p>
-      </div>
-    </div>
-  );
-}
-
-function TenantSellers() {
+function AdminSellers() {
   return (
     <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -361,31 +325,11 @@ function TenantSellers() {
           <h2 className="text-lg lg:text-xl font-black text-slate-800">فروشندگان بازارچه</h2>
           <p className="text-xs text-slate-400 mt-1">مدیریت فروشندگان فعال در بازارچه</p>
         </div>
-        <button className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ فروشنده جدید</button>
       </div>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
         <Users className="w-12 h-12 text-slate-200 mx-auto mb-3" />
         <h3 className="text-sm font-black text-slate-600">مدیریت فروشندگان</h3>
         <p className="text-xs text-slate-400 mt-2">فروشندگان فعال در بازارچه را مدیریت کنید.</p>
-      </div>
-    </div>
-  );
-}
-
-function TenantBranches() {
-  return (
-    <div className="space-y-4 lg:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg lg:text-xl font-black text-slate-800">شعب فروشگاه</h2>
-          <p className="text-xs text-slate-400 mt-1">مدیریت شعب و آدرس‌های فیزیکی</p>
-        </div>
-        <button className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-black self-end sm:self-auto">+ شعبه جدید</button>
-      </div>
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
-        <Store className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-        <h3 className="text-sm font-black text-slate-600">شعب فروشگاه</h3>
-        <p className="text-xs text-slate-400 mt-2">شعب فیزیکی فروشگاه خود را ثبت کنید.</p>
       </div>
     </div>
   );
