@@ -14,6 +14,8 @@ interface HeaderProps {
   isMarketplace?: boolean;
   showAdminButton?: boolean;
   onGoToAdmin?: () => void;
+  silverTabColor?: string;
+  brandColor?: string;
 }
 
 export default function Header({ 
@@ -28,6 +30,8 @@ export default function Header({
   isMarketplace = true,
   showAdminButton = false,
   onGoToAdmin,
+  silverTabColor = '#475569',
+  brandColor = '#ca8a04',
 }: HeaderProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -45,8 +49,6 @@ export default function Header({
   }, []);
 
   const activePrice = activeMetal === 'gold' ? goldPrice18k : silverPrice999;
-  const iconColor = activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600';
-  const iconHover = activeMetal === 'gold' ? 'hover:text-amber-700' : 'hover:text-slate-700';
 
   return (
     <header className="sticky top-0 z-50 bg-white px-4 py-3 text-slate-800 transform-gpu shadow-[0_2px_15px_-3px_rgba(0,0,0,0.015)]" id="app-header" role="banner">
@@ -55,18 +57,19 @@ export default function Header({
         {/* Visual Right in RTL: Profile icon */}
         <button 
           onClick={() => onNavigateToTab('profile')} 
-          className={`${iconColor} ${iconHover} transition-colors duration-200 focus:outline-none p-1`}
+          className="transition-colors duration-200 focus:outline-none p-1"
+          style={{ color: activeMetal === 'gold' ? brandColor : silverTabColor }}
           title="حساب کاربری"
           aria-label="پروفایل کاربری"
           id="btn-header-profile"
         >
-          <User className={`w-6 h-6 ${iconColor}`} aria-hidden="true" />
+          <User className="w-6 h-6" style={{ color: activeMetal === 'gold' ? brandColor : silverTabColor }} aria-hidden="true" />
         </button>
 
         {/* Visual Center: Brand Logo and Title */}
         <div className="flex items-center gap-2">
           {!isOnline && (
-            <WifiOff className={`w-4 h-4 ${iconColor} animate-pulse`} title="آفلاین - حالت محلی" aria-label="آفلاین" />
+            <WifiOff className="w-4 h-4 animate-pulse" style={{ color: activeMetal === 'gold' ? brandColor : silverTabColor }} title="آفلاین - حالت محلی" aria-label="آفلاین" />
           )}
           <img 
             src={platformLogo} 
@@ -114,9 +117,10 @@ export default function Header({
             aria-pressed={activeMetal === 'gold'}
             className={`flex-1 py-1.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 focus:outline-none ${
               activeMetal === 'gold'
-                ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-xs'
+                ? 'text-white shadow-xs'
                 : 'text-slate-500 hover:text-slate-700'
             }`}
+            style={activeMetal === 'gold' ? { background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` } : undefined}
           >
             <img src="/assets/gold.png" alt="طلا" className={`w-8 h-8 object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
             <span>طلا</span>
@@ -128,9 +132,10 @@ export default function Header({
             aria-pressed={activeMetal === 'silver'}
             className={`flex-1 py-1.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 focus:outline-none ${
               activeMetal === 'silver'
-                ? 'bg-slate-700 text-white shadow-xs'
+                ? 'text-white shadow-xs'
                 : 'text-slate-500 hover:text-slate-700'
             }`}
+            style={activeMetal === 'silver' ? { background: `linear-gradient(135deg, ${silverTabColor}, ${silverTabColor}dd)` } : undefined}
           >
             <img src="/assets/silver.png" alt="نقره" className="w-8 h-8 object-contain" />
             <span>نقره</span>
@@ -139,20 +144,21 @@ export default function Header({
       </div>
 
       {/* Real-time price display under the switcher */}
-      <div className={`max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6 flex items-center justify-between mt-2 px-4 py-2.5 rounded-xl border text-xs font-bold ${
-        activeMetal === 'gold'
-          ? 'bg-amber-500/10 border-amber-500/20 text-amber-900'
-          : 'bg-slate-500/10 border-slate-500/20 text-slate-900'
-      }`} id="header-live-price">
+      <div className="max-w-md mx-auto lg:max-w-none lg:mx-0 lg:px-6 flex items-center justify-between mt-2 px-4 py-2.5 rounded-xl border text-xs font-bold"
+        style={{
+          backgroundColor: activeMetal === 'gold' ? `${brandColor}10` : `${silverTabColor}10`,
+          borderColor: activeMetal === 'gold' ? `${brandColor}20` : `${silverTabColor}20`,
+          color: activeMetal === 'gold' ? brandColor : silverTabColor,
+        }} id="header-live-price">
         <div className="flex items-center gap-2 flex-row">
           <span className="relative flex h-2 w-2">
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${activeMetal === 'gold' ? 'bg-amber-500' : 'bg-slate-500'}`}></span>
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: activeMetal === 'gold' ? brandColor : silverTabColor }}></span>
           </span>
           <span className="font-black">نرخ لحظه‌ای {activeMetal === 'gold' ? 'طلا' : 'نقره'}:</span>
         </div>
         <div className="flex items-baseline gap-1.5 flex-row">
           <span className="text-sm font-black">{formatToman(activePrice)}</span>
-          <span className={`text-[11px] font-bold ${activeMetal === 'gold' ? 'text-amber-700' : 'text-slate-600'}`}>تومان / گرم</span>
+          <span className="text-[11px] font-bold" style={{ color: activeMetal === 'gold' ? brandColor : silverTabColor }}>تومان / گرم</span>
         </div>
       </div>
 

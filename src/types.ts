@@ -63,5 +63,6 @@ export interface TenantConfig {
   domain: string | null;
   logo: string | null;
   brand_color: string | null;
+  silver_tab_color: string | null;
   settings: Record<string, any> | null;
 }

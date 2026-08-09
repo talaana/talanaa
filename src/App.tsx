@@ -132,16 +132,22 @@ export default function App() {
   const brandColor = tenant?.brand_color || '#ca8a04';
   const brandColorLight = brandColor + '18'; // ~10% opacity hex suffix for backgrounds
   const brandColorLighter = brandColor + '0a'; // ~4% opacity
+  const silverColor = tenant?.silver_tab_color || '#475569';
+  const silverColorLight = silverColor + '18';
+  const silverColorLighter = silverColor + '0a';
 
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--brand-color', brandColor);
     root.style.setProperty('--brand-color-light', brandColorLight);
     root.style.setProperty('--brand-color-lighter', brandColorLighter);
+    root.style.setProperty('--silver-color', silverColor);
+    root.style.setProperty('--silver-color-light', silverColorLight);
+    root.style.setProperty('--silver-color-lighter', silverColorLighter);
     // Update browser theme color for PWA/mobile title bar
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) metaTheme.setAttribute('content', brandColor);
-  }, [brandColor, brandColorLight, brandColorLighter]);
+  }, [brandColor, brandColorLight, brandColorLighter, silverColor]);
 
   useEffect(() => {
     const onHashChange = () => setShowAdmin(window.location.hash === '#/admin');
@@ -263,7 +269,6 @@ export default function App() {
   }, []);
 
   const toggleBalances = useCallback(() => setShowBalances(p => !p), []);
-  const tabAccent = activeMetal === 'gold' ? 'amber' : 'slate';
 
   // ===== STORE / MARKETPLACE LOADING (URL has tenant, or tenant resolved but auth loading) =====
   if ((tenantLoading && urlTenant) || (isLoading && tenant)) {
@@ -423,7 +428,8 @@ export default function App() {
   const showMobileNav = ['home', 'vitrine', 'trade', 'services'].includes(activeTab) && !isProductDetailOpen && !isServicePageOpen;
 
   return (
-    <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-800 flex font-sans selection:bg-amber-600 selection:text-white">
+    <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-800 flex font-sans" style={{ ['--selection-bg' as any]: brandColor }}>
+      <style>{`::selection{background-color:${brandColor};color:white}`}</style>
       {/* SIDEBAR — desktop only */}
       {!sidebarHidden && (
         <aside className="hidden lg:flex lg:flex-col lg:w-72 lg:min-h-screen lg:bg-white lg:border-l lg:border-slate-100 lg:flex-shrink-0 lg:shadow-sm lg:sticky lg:top-0">
@@ -441,11 +447,11 @@ export default function App() {
           <div className="p-4 border-b border-slate-50 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-slate-400">طلای ۱۸ عیار</span>
-              <span className="text-xs font-black text-amber-600">{showBalances ? `${formatGram(walletData.goldGrams)} گرم` : '****'}</span>
+              <span className="text-xs font-black" style={{ color: brandColor }}>{showBalances ? `${formatGram(walletData.goldGrams)} گرم` : '****'}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-slate-400">نقره ۹۹۹</span>
-              <span className="text-xs font-black text-slate-600">{showBalances ? `${formatGram(walletData.silverGrams)} گرم` : '****'}</span>
+              <span className="text-xs font-black" style={{ color: silverColor }}>{showBalances ? `${formatGram(walletData.silverGrams)} گرم` : '****'}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-slate-400">کیف پول</span>
@@ -459,9 +465,10 @@ export default function App() {
                 onClick={() => setActiveMetal('gold')}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-black transition-all ${
                   activeMetal === 'gold'
-                    ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-sm'
+                    ? 'text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
+                style={activeMetal === 'gold' ? { background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` } : undefined}
               >
                 <img src="/assets/gold.png" alt="" className={`w-5 h-5 object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
                 طلا
@@ -470,18 +477,21 @@ export default function App() {
                 onClick={() => setActiveMetal('silver')}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-black transition-all ${
                   activeMetal === 'silver'
-                    ? 'bg-slate-700 text-white shadow-sm'
+                    ? 'text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
+                style={activeMetal === 'silver' ? { background: `linear-gradient(135deg, ${silverColor}, ${silverColor}dd)` } : undefined}
               >
                 <img src="/assets/silver.png" alt="" className="w-5 h-5 object-contain" />
                 نقره
               </button>
             </div>
             {/* Live price */}
-            <div className={`mt-2 text-center text-[9px] font-black rounded-lg py-1 ${
-              activeMetal === 'gold' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'
-            }`}>
+            <div className="mt-2 text-center text-[9px] font-black rounded-lg py-1"
+              style={{
+                backgroundColor: activeMetal === 'gold' ? `${brandColor}18` : `${silverColor}18`,
+                color: activeMetal === 'gold' ? brandColor : silverColor,
+              }}>
               {formatToman(activeMetal === 'gold' ? goldPrice18k : silverPrice999)} تومان / گرم
             </div>
           </div>
@@ -489,7 +499,12 @@ export default function App() {
           <nav className="flex-1 p-3 space-y-1">
             {navItems.map(item => (
               <button key={item.id} onClick={() => handleNavigateToTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black transition-all text-right ${activeTab === item.id ? (activeMetal === 'gold' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-700') : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}>
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black transition-all text-right ${activeTab === item.id ? '' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
+                style={activeTab === item.id ? {
+                  backgroundColor: activeMetal === 'gold' ? `${brandColor}18` : `${silverColor}18`,
+                  color: activeMetal === 'gold' ? brandColor : silverColor,
+                } : undefined}
+              >
                 <item.icon className="w-5 h-5" /><span>{item.label}</span>
               </button>
             ))}
@@ -533,6 +548,8 @@ export default function App() {
               isMarketplace={isMarketplace}
               showAdminButton={can('admin.access')}
               onGoToAdmin={goToAdmin}
+              silverTabColor={silverColor}
+              brandColor={brandColor}
             />
           </div>
         )}
@@ -560,8 +577,11 @@ export default function App() {
           <div className="max-w-md mx-auto grid grid-cols-4 h-14 text-center text-[11px] font-black">
             {navItems.map(item => (
               <button key={item.id} onClick={() => handleNavigateToTab(item.id)}
-                className={`relative flex flex-col items-center justify-center gap-1 transition-all focus:outline-none ${activeTab === item.id ? (activeMetal === 'gold' ? 'text-amber-600' : 'text-slate-600') : 'text-slate-400 hover:text-slate-600'}`}>
-                {activeTab === item.id && <span className={`absolute top-0 w-6 h-0.5 rounded-full ${activeMetal === 'gold' ? 'bg-amber-600' : 'bg-slate-600'}`} />}
+                className={`relative flex flex-col items-center justify-center gap-1 transition-all focus:outline-none ${activeTab === item.id ? '' : 'text-slate-400 hover:text-slate-600'}`}
+                style={activeTab === item.id ? { color: activeMetal === 'gold' ? brandColor : silverColor } : undefined}
+              >
+                {activeTab === item.id && <span className="absolute top-0 w-6 h-0.5 rounded-full"
+                  style={{ backgroundColor: activeMetal === 'gold' ? brandColor : silverColor }} />}
                 <item.icon className="w-6 h-6" /><span>{item.label}</span>
               </button>
             ))}

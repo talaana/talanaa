@@ -26,6 +26,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
   const [done, setDone] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [brandColor, setBrandColor] = useState('#ca8a04');
+  const [silverTabColor, setSilverTabColor] = useState('#475569');
   const [brandLogoPreview, setBrandLogoPreview] = useState<string | null>(null);
 
   const handleNameChange = (name: string) => {
@@ -91,6 +92,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
           admin_password: adminPassword,
           domain: domain || null,
           brand_color: brandColor,
+          silver_tab_color: silverTabColor,
         }),
       });
 
@@ -330,7 +332,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                   <div>
                     <label className="text-xs font-black text-slate-600 block mb-2">
                       <Palette className="w-4 h-4 inline-block ml-1" />
-                      رنگ برند
+                      رنگ برند (طلا)
                     </label>
 
                     {/* Color input + live preview */}
@@ -344,7 +346,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                         onChange={e => setBrandColor(e.target.value)}
                         className="bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-sm font-mono text-left focus:outline-none focus:border-amber-500 w-28"
                         dir="ltr" maxLength={7} />
-                      <span className="text-xs text-slate-400 font-bold">کد HEX رنگ اصلی</span>
+                      <span className="text-xs text-slate-400 font-bold">کد HEX رنگ طلا</span>
                     </div>
 
                     {/* Preset color swatches */}
@@ -378,9 +380,62 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                         </div>
                       </div>
                       <div className="px-4 py-1.5 flex items-center gap-1.5" style={{ backgroundColor: `${brandColor}08` }}>
-                        <span className="text-[9px] font-bold" style={{ color: brandColor }}>رنگ اصلی: {brandColor}</span>
+                        <span className="text-[9px] font-bold" style={{ color: brandColor }}>رنگ طلا: {brandColor}</span>
                         <span className="text-[9px] text-slate-400">|</span>
                         <span className="text-[9px] text-slate-400">پس‌زمینه: تینت ۱۰٪</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Silver tab color picker */}
+                  <div>
+                    <label className="text-xs font-black text-slate-600 block mb-2">
+                      <Palette className="w-4 h-4 inline-block ml-1" />
+                      رنگ تب نقره
+                    </label>
+
+                    {/* Color input + live preview */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="relative">
+                        <input type="color" value={silverTabColor}
+                          onChange={e => setSilverTabColor(e.target.value)}
+                          className="w-12 h-12 rounded-xl cursor-pointer border-2 border-slate-200 p-0.5" />
+                      </div>
+                      <input value={silverTabColor}
+                        onChange={e => setSilverTabColor(e.target.value)}
+                        className="bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-sm font-mono text-left focus:outline-none focus:border-slate-500 w-28"
+                        dir="ltr" maxLength={7} />
+                      <span className="text-xs text-slate-400 font-bold">کد HEX رنگ نقره</span>
+                    </div>
+
+                    {/* Preset silver swatches */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {['#475569', '#334155', '#64748b', '#94a3b8', '#3b82f6', '#6366f1', '#8b5cf6', '#1e293b', '#0f172a'].map(c => (
+                        <button key={c} onClick={() => setSilverTabColor(c)}
+                          className={`w-8 h-8 rounded-lg border-2 transition-all ${silverTabColor === c ? 'border-slate-800 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
+                          style={{ backgroundColor: c }} title={c} />
+                      ))}
+                    </div>
+
+                    {/* Live preview for silver tab */}
+                    <div className="rounded-2xl border border-slate-200 overflow-hidden">
+                      <div className="px-4 py-2.5 flex items-center gap-2" style={{ backgroundColor: silverTabColor }}>
+                        <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center">
+                          <span className="text-white text-[8px] font-black">ن</span>
+                        </div>
+                        <span className="text-xs font-black text-white">تب نقره</span>
+                      </div>
+                      <div className="p-4 space-y-2" style={{ backgroundColor: `${silverTabColor}10` }}>
+                        <div className="flex gap-2">
+                          <div className="h-2 rounded flex-1" style={{ backgroundColor: silverTabColor }} />
+                          <div className="h-2 rounded w-12" style={{ backgroundColor: `${silverTabColor}60` }} />
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="h-5 rounded w-2/3" style={{ backgroundColor: `${silverTabColor}25` }} />
+                        </div>
+                      </div>
+                      <div className="px-4 py-1.5 flex items-center gap-1.5" style={{ backgroundColor: `${silverTabColor}08` }}>
+                        <span className="text-[9px] font-bold" style={{ color: silverTabColor }}>رنگ نقره: {silverTabColor}</span>
                       </div>
                     </div>
                   </div>
