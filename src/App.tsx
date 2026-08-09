@@ -6,7 +6,7 @@ import InstallerPage from './components/InstallerPage';
 import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
-import { formatToman, formatGram, toPersianDigits } from './utils';
+import { formatToman, formatGram, toPersianDigits, apiAssetUrl } from './utils';
 import { useTenant, detectTenantFromURL } from './tenant';
 import AdminPanel from './admin/AdminPanel';
 
@@ -121,7 +121,7 @@ export default function App() {
   const isStore = tenant?.type === 'store';
   const navItems = isStore ? storeNavItems : marketplaceNavItems;
   const platformName = tenant?.name || 'طلانا';
-  const platformLogo = tenant?.logo || '/talana_logo.png';
+  const platformLogo = tenant?.logo ? apiAssetUrl(tenant.logo) : '/talana_logo.png';
   const platformSubtitle = isMarketplace
     ? 'بازارچه آنلاین طلا و نقره'
     : isStore
@@ -274,7 +274,7 @@ export default function App() {
   if ((tenantLoading && urlTenant) || (isLoading && tenant)) {
     const cached = getCachedTenant(tenant?.slug || urlTenant?.slug || '');
     const displayName = tenant?.name || cached?.name || urlTenant?.slug || 'فروشگاه';
-    const displayLogo = tenant?.logo ?? cached?.logo ?? null;
+    const displayLogo = tenant?.logo ? apiAssetUrl(tenant.logo) : (cached?.logo ? apiAssetUrl(cached.logo) : null);
     const displayBrand = tenant?.brand_color || cached?.brand_color || '#ca8a04';
     const displayBrandLight = displayBrand + 'dd';
 
@@ -356,7 +356,7 @@ export default function App() {
       <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
         <div className="text-center mb-6">
           {tenant?.logo ? (
-            <img src={tenant.logo} alt={platformName} className="w-16 h-16 mx-auto rounded-xl mb-3 object-cover" />
+            <img src={apiAssetUrl(tenant.logo)} alt={platformName} className="w-16 h-16 mx-auto rounded-xl mb-3 object-cover" />
           ) : (
             <img src={platformLogo} alt={platformName} className="w-16 h-16 mx-auto rounded-xl mb-3" />
           )}

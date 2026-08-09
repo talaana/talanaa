@@ -63,3 +63,16 @@ export function formatPercent(percentage: number | string | undefined | null): s
   return toPersianDigits(percentage);
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+/**
+ * Resolve an asset path against the API base URL.
+ * Relative paths like /storage/logos/foo.png become http://localhost:8000/storage/logos/foo.png.
+ * Absolute URLs pass through unchanged.
+ */
+export function apiAssetUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return API_BASE + path;
+}
+
