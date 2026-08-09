@@ -93,6 +93,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
           domain: domain || null,
           brand_color: brandColor,
           silver_tab_color: silverTabColor,
+          logo: brandLogoPreview || null,
         }),
       });
 
