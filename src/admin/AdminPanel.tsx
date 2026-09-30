@@ -8,7 +8,6 @@ import AdminTenants from './pages/Tenants';
 import AdminCategories from './pages/Categories';
 import AdminProducts from './pages/Products';
 import AdminOrders from './pages/Orders';
-import AdminBranches from './pages/Branches';
 
 interface Props { onBack: () => void; token: string; }
 
@@ -87,11 +86,15 @@ export default function AdminPanel({ onBack, token }: Props) {
   const navigateTo = (id: string) => {
     setPage(id);
     setMobileMenuOpen(false);
+    // Auto-expand products accordion when navigating to products/categories
+    if (id === 'products' || id === 'categories') setProductsOpen(true);
   };
 
   const can = (slug: string) => isSuperadmin || perms.includes(slug);
 
-  const superNav = [
+  type NavItem = { id: string; label: string; icon: React.FC<any>; sub?: NavItem[] };
+
+  const superNav: NavItem[] = [
     { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
     { id: 'tenants', label: 'فروشگاه‌ها', icon: Store },
     { id: 'users', label: 'کاربران', icon: Users },
@@ -99,10 +102,11 @@ export default function AdminPanel({ onBack, token }: Props) {
   ];
 
   const isMarketplaceAdmin = !isSuperadmin && tenant?.type === 'marketplace';
-  const tenantNav = isMarketplaceAdmin ? [
+  const tenantNav: NavItem[] = isMarketplaceAdmin ? [
     { id: 'dashboard', label: 'داشبورد بازارچه', icon: LayoutDashboard },
     { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
     { id: 'products', label: 'محصولات', icon: Package, sub: [
+      { id: 'products', label: 'همه محصولات', icon: Package },
       { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
     ]},
     { id: 'sellers', label: 'فروشندگان', icon: Users },
@@ -111,9 +115,9 @@ export default function AdminPanel({ onBack, token }: Props) {
     { id: 'dashboard', label: 'داشبورد فروشگاه', icon: LayoutDashboard },
     { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
     { id: 'products', label: 'محصولات', icon: Package, sub: [
+      { id: 'products', label: 'همه محصولات', icon: Package },
       { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
     ]},
-    { id: 'branches', label: 'شعب', icon: Store },
   ];
 
   const nav = isSuperadmin ? superNav : tenantNav;
@@ -307,7 +311,6 @@ export default function AdminPanel({ onBack, token }: Props) {
           {page === 'categories' && <AdminCategories />}
           {page === 'products' && <AdminProducts />}
           {page === 'orders' && <AdminOrders />}
-          {page === 'branches' && <AdminBranches />}
           {page === 'sellers' && <AdminSellers />}
         </div>
       </main>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { admin } from '../api';
 import { toPersianDigits } from '../../utils';
 import { Plus, Store, ToggleLeft, ToggleRight, Save, X, LogIn, ShoppingBag, Users } from 'lucide-react';
+import Dropdown from '../../components/Dropdown';
 
 export default function AdminTenants({ onImpersonate }: { onImpersonate?: (tenantId: number) => void }) {
   const [tenants, setTenants] = useState<any[]>([]);
@@ -35,11 +36,12 @@ export default function AdminTenants({ onImpersonate }: { onImpersonate?: (tenan
             <input value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} placeholder="نام فروشگاه" className="bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm text-right" />
             <input value={form.slug} onChange={e => setForm(f=>({...f,slug:e.target.value}))} placeholder="slug" dir="ltr" className="bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm text-left font-mono" />
             <input value={form.domain} onChange={e => setForm(f=>({...f,domain:e.target.value}))} placeholder="domain.com" dir="ltr" className="bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm text-left font-mono" />
-            <select value={form.type} onChange={e => setForm(f=>({...f,type:e.target.value}))}
-              className="bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-3 text-sm text-right">
-              <option value="marketplace">🛒 بازارچه (چند فروشنده)</option>
-              <option value="store">🏪 فروشگاه (تک فروشنده)</option>
-            </select>
+            <Dropdown
+              options={[{ value: 'marketplace', label: 'بازارچه (چند فروشنده)' }, { value: 'store', label: 'فروشگاه (تک فروشنده)' }]}
+              value={form.type}
+              onChange={v => setForm(f => ({ ...f, type: String(v) }))}
+              placeholder="نوع فروشگاه"
+            />
           </div>
           <div className="flex gap-2">
             <button onClick={handleSave} className="flex items-center gap-1.5 bg-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-black"><Save className="w-4 h-4" /> ذخیره</button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { formatToman, toPersianDigits } from '../utils';
 import { installments, products as productsApi } from '../api';
 import { ArrowRight } from 'lucide-react';
+import Dropdown from './Dropdown';
 
 interface Props { wallet: any; activeMetal: 'gold' | 'silver'; goldPrice18k: number; silverPrice999: number; onBack: () => void; onToast: (msg: string) => void; }
 
@@ -59,15 +60,21 @@ export default function ServiceInstallment({ wallet, activeMetal, goldPrice18k, 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-[10px] font-bold text-slate-500 block mb-1.5">تعداد اقساط (ماه)</label>
-          <select value={months} onChange={e => setMonths(+e.target.value)} className="w-full bg-white border border-slate-100 rounded-xl py-3 px-3 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
-            {[3,6,9,12,18,24].map(m => <option key={m} value={m}>{toPersianDigits(m)} ماه</option>)}
-          </select>
+          <Dropdown
+            options={[3,6,9,12,18,24].map(m => ({ value: m, label: `${toPersianDigits(m)} ماه` }))}
+            value={months}
+            onChange={v => setMonths(+v)}
+            placeholder="تعداد ماه"
+          />
         </div>
         <div>
           <label className="text-[10px] font-bold text-slate-500 block mb-1.5">پیش‌پرداخت (٪)</label>
-          <select value={downPct} onChange={e => setDownPct(+e.target.value)} className="w-full bg-white border border-slate-100 rounded-xl py-3 px-3 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
-            {[10,20,30,50].map(p => <option key={p} value={p}>{toPersianDigits(p)}٪</option>)}
-          </select>
+          <Dropdown
+            options={[10,20,30,50].map(p => ({ value: p, label: `${toPersianDigits(p)}٪` }))}
+            value={downPct}
+            onChange={v => setDownPct(+v)}
+            placeholder="درصد پیش‌پرداخت"
+          />
         </div>
       </div>
       <button onClick={handleCalculate} className="w-full py-3.5 rounded-2xl bg-emerald-600 text-white text-sm font-black shadow-md">محاسبه اقساط</button>

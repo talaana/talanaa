@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { admin } from '../api';
 import { toPersianDigits } from '../../utils';
 import { Plus, Trash2, Save, X, ShieldCheck } from 'lucide-react';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 export default function AdminRoles() {
   const [roles, setRoles] = useState<any[]>([]);
@@ -9,6 +10,8 @@ export default function AdminRoles() {
   const [editRole, setEditRole] = useState<any>(null);
   const [form, setForm] = useState({ name: '', slug: '', permissions: [] as number[] });
   const [showForm, setShowForm] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -32,7 +35,15 @@ export default function AdminRoles() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: number) => { if (confirm('حذف شود؟')) { await admin.roles.remove(id); load(); } };
+  const handleDelete = (id: number) => setDeleteId(id);
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    try { await admin.roles.remove(deleteId); setDeleteId(null); load(); }
+    catch (e: any) { alert(e.message); setDeleteId(null); }
+    finally { setDeleting(false); }
+  };
 
   const togglePerm = (pid: number) => {
     setForm(f => ({ ...f, permissions: f.permissions.includes(pid) ? f.permissions.filter(p => p !== pid) : [...f.permissions, pid] }));
@@ -90,6 +101,16 @@ export default function AdminRoles() {
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="حذف نقش"
+        message="آیا از حذف این نقش اطمینان دارید؟ کاربران این نقش دسترسی‌های خود را از دست خواهند داد."
+        confirmLabel="حذف نقش"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={deleting}
+      />
     </div>
   );
 }

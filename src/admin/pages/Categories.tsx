@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { admin } from '../api';
 import { Plus, Search, Edit, Trash2, ArrowRight, Check, X, ChevronUp, ChevronDown, Package } from 'lucide-react';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 interface Category {
   id: number;
@@ -28,6 +29,8 @@ export default function AdminCategories({ onClose }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -70,9 +73,14 @@ export default function AdminCategories({ onClose }: Props) {
     setEditId(c.id); setName(c.name); setSlug(c.slug); setIsActive(c.is_active); setShowForm(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('حذف این دسته‌بندی؟ محصولات مرتبط حذف نمی‌شوند.')) return;
-    try { await admin.categories.remove(id); load(); } catch (e: any) { alert(e.message); }
+  const handleDelete = (id: number) => setDeleteId(id);
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    try { await admin.categories.remove(deleteId); setDeleteId(null); load(); }
+    catch (e: any) { alert(e.message); setDeleteId(null); }
+    finally { setDeleting(false); }
   };
 
   const toggleSort = (field: SortField) => {
@@ -121,8 +129,8 @@ export default function AdminCategories({ onClose }: Props) {
 
       {/* Form modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/30" onClick={() => { setShowForm(false); resetForm(); }}>
+          <div className="bg-white rounded-t-2xl lg:rounded-2xl p-6 w-full lg:max-w-md shadow-xl max-h-[90vh] overflow-y-auto animate-[slideUp_0.3s_ease-out]" onClick={e => e.stopPropagation()}>
             <h3 className="text-base font-black text-slate-800 mb-4">{editId ? 'ویرایش دسته‌بندی' : 'دسته‌بندی جدید'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -214,6 +222,16 @@ export default function AdminCategories({ onClose }: Props) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="حذف دسته‌بندی"
+        message="محصولات مرتبط با این دسته‌بندی حذف نمی‌شوند، اما از دسته‌بندی خارج می‌شوند."
+        confirmLabel="حذف دسته‌بندی"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={deleting}
+      />
     </div>
   );
 }

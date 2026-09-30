@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { admin } from '../api';
 import { toPersianDigits } from '../../utils';
 import { Save, Search } from 'lucide-react';
+import Dropdown from '../../components/Dropdown';
 
 export default function AdminUsers({ can, isSuperadmin }: { can: (s: string) => boolean; isSuperadmin: boolean }) {
   const [users, setUsers] = useState<any[]>([]);
@@ -28,11 +29,14 @@ export default function AdminUsers({ can, isSuperadmin }: { can: (s: string) => 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-xl font-black text-slate-800">مدیریت کاربران</h2>
         {isSuperadmin && (
-          <select value={filterTenant} onChange={e => setFilterTenant(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl py-2 px-3 text-sm text-right">
-            <option value="">همه فروشگاه‌ها</option>
-            {tenants.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
+          <div className="w-48">
+            <Dropdown
+              options={[{ value: '', label: 'همه فروشگاه‌ها' }, ...tenants.map((t: any) => ({ value: t.id, label: t.name }))]}
+              value={filterTenant || ''}
+              onChange={v => setFilterTenant(String(v))}
+              placeholder="همه فروشگاه‌ها"
+            />
+          </div>
         )}
       </div>
 
@@ -45,11 +49,14 @@ export default function AdminUsers({ can, isSuperadmin }: { can: (s: string) => 
                   <input value={editUser.name} onChange={e => setEditUser((f: any) => ({ ...f, name: e.target.value }))}
                     className="bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-sm flex-1 text-right" />
                   {isSuperadmin && (
-                    <select value={editUser._tenant_id || ''} onChange={e => setEditUser((f: any) => ({ ...f, _tenant_id: e.target.value ? +e.target.value : null }))}
-                      className="bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-sm">
-                      <option value="">بدون فروشگاه</option>
-                      {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                    </select>
+                    <div className="w-40">
+                      <Dropdown
+                        options={[{ value: '', label: 'بدون فروشگاه' }, ...tenants.map((t: any) => ({ value: t.id, label: t.name }))]}
+                        value={editUser._tenant_id || ''}
+                        onChange={v => setEditUser((f: any) => ({ ...f, _tenant_id: v ? +v : null }))}
+                        placeholder="بدون فروشگاه"
+                      />
+                    </div>
                   )}
                 </div>
                 <div className="flex flex-wrap gap-1.5">

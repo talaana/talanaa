@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { admin } from '../api';
 import { Plus, Search, Edit, Trash2, ArrowRight, Check, X, ChevronUp, ChevronDown, Package, Eye } from 'lucide-react';
 import { toPersianDigits, formatToman, formatGram } from '../../utils';
+import Dropdown, { DropdownOption } from '../../components/Dropdown';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 interface Product {
   id: number; title: string; category_id: number; seller_id: number | null;
@@ -27,6 +29,8 @@ export default function AdminProducts({ onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState<any[]>([]);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Form
   const [title, setTitle] = useState('');
@@ -87,9 +91,14 @@ export default function AdminProducts({ onClose }: Props) {
     setTaxPercent(String(p.tax_percentage)); setIsActive(p.is_active); setShowForm(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('حذف این محصول؟')) return;
-    try { await admin.products.remove(id); load(); } catch (e: any) { alert(e.message); }
+  const handleDelete = (id: number) => setDeleteId(id);
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    try { await admin.products.remove(deleteId); setDeleteId(null); load(); }
+    catch (e: any) { alert(e.message); setDeleteId(null); }
+    finally { setDeleting(false); }
   };
 
   const toggleSort = (field: SortField) => {
@@ -128,8 +137,8 @@ export default function AdminProducts({ onClose }: Props) {
 
       {/* Create/Edit Form */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 overflow-y-auto">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/30 overflow-y-auto" onClick={() => { setShowForm(false); resetForm(); }}>
+          <div className="bg-white rounded-t-2xl lg:rounded-2xl p-6 w-full lg:max-w-lg shadow-xl max-h-[90vh] overflow-y-auto animate-[slideUp_0.3s_ease-out]" onClick={e => e.stopPropagation()}>
             <h3 className="text-base font-black text-slate-800 mb-4">{editId ? 'ویرایش محصول' : 'محصول جدید'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -140,19 +149,21 @@ export default function AdminProducts({ onClose }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-black text-slate-600 block mb-1.5">دسته‌بندی</label>
-                  <select value={categoryId} onChange={e => setCategoryId(e.target.value ? Number(e.target.value) : '')}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-right focus:outline-none focus:border-amber-500">
-                    <option value="">انتخاب کنید</option>
-                    {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <Dropdown
+                    options={[{ value: '', label: 'انتخاب کنید' }, ...categories.map((c: any) => ({ value: c.id, label: c.name }))]}
+                    value={categoryId || ''}
+                    onChange={v => setCategoryId(v ? Number(v) : '')}
+                    placeholder="انتخاب کنید"
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-black text-slate-600 block mb-1.5">فلز</label>
-                  <select value={metal} onChange={e => setMetal(e.target.value as 'gold' | 'silver')}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-right focus:outline-none focus:border-amber-500">
-                    <option value="gold">طلا</option>
-                    <option value="silver">نقره</option>
-                  </select>
+                  <Dropdown
+                    options={[{ value: 'gold', label: 'طلا' }, { value: 'silver', label: 'نقره' }]}
+                    value={metal}
+                    onChange={v => setMetal(v as 'gold' | 'silver')}
+                    placeholder="انتخاب فلز"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -254,6 +265,16 @@ export default function AdminProducts({ onClose }: Props) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="حذف محصول"
+        message="آیا از حذف این محصول اطمینان دارید؟ این عمل قابل بازگشت نیست."
+        confirmLabel="حذف محصول"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={deleting}
+      />
     </div>
   );
 }

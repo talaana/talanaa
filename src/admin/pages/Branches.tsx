@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { admin } from '../api';
 import { Plus, Search, Edit, Trash2, ArrowRight, Check, X, ChevronUp, ChevronDown, Store, Phone, MapPin } from 'lucide-react';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 interface Branch {
   id: number; name: string; slug: string; city: string | null; address: string | null;
@@ -22,6 +23,8 @@ export default function AdminBranches({ onClose }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -60,9 +63,14 @@ export default function AdminBranches({ onClose }: Props) {
     setPhone(b.phone || ''); setIsActive(b.is_active); setShowForm(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('حذف این شعبه؟')) return;
-    try { await admin.branches.remove(id); load(); } catch (e: any) { alert(e.message); }
+  const handleDelete = (id: number) => setDeleteId(id);
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    try { await admin.branches.remove(deleteId); setDeleteId(null); load(); }
+    catch (e: any) { alert(e.message); setDeleteId(null); }
+    finally { setDeleting(false); }
   };
 
   const toggleSort = (field: SortField) => {
@@ -100,8 +108,8 @@ export default function AdminBranches({ onClose }: Props) {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/30" onClick={() => { setShowForm(false); resetForm(); }}>
+          <div className="bg-white rounded-t-2xl lg:rounded-2xl p-6 w-full lg:max-w-md shadow-xl max-h-[90vh] overflow-y-auto animate-[slideUp_0.3s_ease-out]" onClick={e => e.stopPropagation()}>
             <h3 className="text-base font-black text-slate-800 mb-4">{editId ? 'ویرایش شعبه' : 'شعبه جدید'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -198,6 +206,16 @@ export default function AdminBranches({ onClose }: Props) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="حذف شعبه"
+        message="آیا از حذف این شعبه اطمینان دارید؟ این عمل قابل بازگشت نیست."
+        confirmLabel="حذف شعبه"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={deleting}
+      />
     </div>
   );
 }
