@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, Menu, X, ChevronDown, FolderTree } from 'lucide-react';
+import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, Menu, X, ChevronDown, FolderTree, Sparkles } from 'lucide-react';
 import { admin, setAdminToken } from './api';
 import AdminDashboard from './pages/Dashboard';
 import AdminRoles from './pages/Roles';
@@ -8,12 +8,19 @@ import AdminTenants from './pages/Tenants';
 import AdminCategories from './pages/Categories';
 import AdminProducts from './pages/Products';
 import AdminOrders from './pages/Orders';
+import AdminExperienceBuilderPage from '../features/cinematic-experience/pages/AdminExperienceBuilderPage';
 
 interface Props { onBack: () => void; token: string; }
 
 const sidebarWidth = 'w-64';
 
 export default function AdminPanel({ onBack, token }: Props) {
+  // Redirect to login if no token
+  if (!token) {
+    window.location.href = '/#/login';
+    return null;
+  }
+
   const [page, setPage] = useState('dashboard');
   const [perms, setPerms] = useState<string[]>([]);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
@@ -28,9 +35,14 @@ export default function AdminPanel({ onBack, token }: Props) {
   const [impersonatedToken, setImpersonatedToken] = useState<string>('');
   const [impersonating, setImpersonating] = useState(false);
 
-  const loadPermissions = (tenantId?: number) => {
+  // Detect if we're in a tenant context (from URL or impersonation)
+  const isTenantContext = !!tenant?.id || !!impersonatedTenant?.id;
+  const currentTenantId = impersonatedTenant?.id || tenant?.id;
+
+  const loadPermissions = () => {
     setLoading(true); setError('');
-    const qs = tenantId ? `?tenant_id=${tenantId}` : '';
+    // If in tenant context, pass tenant_id to get scoped permissions
+    const qs = currentTenantId ? `?tenant_id=${currentTenantId}` : '';
     admin.permissions(qs).then(d => {
       setPerms(d.permissions);
       setIsSuperadmin(d.is_superadmin);
@@ -43,9 +55,9 @@ export default function AdminPanel({ onBack, token }: Props) {
   };
 
   useEffect(() => {
-    setAdminToken(token);
-    loadPermissions();
-  }, []);
+      setAdminToken(token);
+      loadPermissions();
+    }, [token, currentTenantId]);
 
   const handleImpersonate = async (tenantId: number) => {
     setImpersonating(true);
@@ -95,11 +107,12 @@ export default function AdminPanel({ onBack, token }: Props) {
   type NavItem = { id: string; label: string; icon: React.FC<any>; sub?: NavItem[] };
 
   const superNav: NavItem[] = [
-    { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
-    { id: 'tenants', label: 'فروشگاه‌ها', icon: Store },
-    { id: 'users', label: 'کاربران', icon: Users },
-    { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
-  ];
+      { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
+      { id: 'tenants', label: 'فروشگاه‌ها', icon: Store },
+      { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
+      { id: 'users', label: 'کاربران', icon: Users },
+      { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
+    ];
 
   const isMarketplaceAdmin = !isSuperadmin && tenant?.type === 'marketplace';
   const tenantNav: NavItem[] = isMarketplaceAdmin ? [
@@ -109,6 +122,7 @@ export default function AdminPanel({ onBack, token }: Props) {
       { id: 'products', label: 'همه محصولات', icon: Package },
       { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
     ]},
+    { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
     { id: 'sellers', label: 'فروشندگان', icon: Users },
     { id: 'users', label: 'کاربران', icon: Shield },
   ] : [
@@ -118,6 +132,7 @@ export default function AdminPanel({ onBack, token }: Props) {
       { id: 'products', label: 'همه محصولات', icon: Package },
       { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
     ]},
+    { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
   ];
 
   const nav = isSuperadmin ? superNav : tenantNav;
@@ -312,6 +327,7 @@ export default function AdminPanel({ onBack, token }: Props) {
           {page === 'products' && <AdminProducts />}
           {page === 'orders' && <AdminOrders />}
           {page === 'sellers' && <AdminSellers />}
+          {page === 'experience-builder' && <AdminExperienceBuilderPage />}
         </div>
       </main>
     </div>

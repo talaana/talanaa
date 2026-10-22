@@ -3,6 +3,10 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "npm install",
+  "rewrites": [
+    { "source": "/experience/:slug", "destination": "/" },
+    { "source": "/experience", "destination": "/" }
+  ],
   "env": {
     "VITE_API_URL": "https://api.talaana.ir/api",
     "VITE_APP_NAME": "Talana",

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { UserWallet, Transaction } from './types';
 import Header from './components/Header';
-import LandingPage from './components/LandingPage';
 import InstallerPage from './components/InstallerPage';
+import LoginPage from './components/LoginPage';
+import MainJewelryExperienceLanding from './features/cinematic-experience/pages/MainJewelryExperienceLanding';
+import DynamicCampaignExperiencePage from './features/cinematic-experience/pages/DynamicCampaignExperiencePage';
+import { detectExperienceRoute } from './features/cinematic-experience/lib/routes';
 import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
@@ -84,12 +87,14 @@ export default function App() {
   const [isServicePageOpen, setIsServicePageOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAdmin, setShowAdmin] = useState(() => window.location.hash === '#/admin');
-  const [showInstaller, setShowInstaller] = useState(false);
-  const [installerPreselectedType, setInstallerPreselectedType] = useState<'marketplace' | 'store' | 'supplier' | undefined>();
-  const [userPerms, setUserPerms] = useState<string[]>([]);
-  const [isSuperadmin, setIsSuperadmin] = useState(false);
+    const [showInstaller, setShowInstaller] = useState(false);
+    const [installerPreselectedType, setInstallerPreselectedType] = useState<'marketplace' | 'store' | 'supplier' | undefined>();
+    const [userPerms, setUserPerms] = useState<string[]>([]);
+    const [isSuperadmin, setIsSuperadmin] = useState(false);
+    const [showLoginPage, setShowLoginPage] = useState(() => window.location.hash === '#/login');
+    const [loginRedirect, setLoginRedirect] = useState<'admin' | 'landing'>(() => window.location.hash === '#/admin' ? 'admin' : 'landing');
 
-  const can = (perm: string) => isSuperadmin || userPerms.includes(perm);
+    const can = (perm: string) => isSuperadmin || userPerms.includes(perm);
 
   // Sync tenant ID with API client — and reload auth state when tenant changes
   useEffect(() => {
@@ -150,13 +155,18 @@ export default function App() {
   }, [brandColor, brandColorLight, brandColorLighter, silverColor]);
 
   useEffect(() => {
-    const onHashChange = () => setShowAdmin(window.location.hash === '#/admin');
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
+      const onHashChange = () => {
+        setShowAdmin(window.location.hash === '#/admin');
+        setShowLoginPage(window.location.hash === '#/login');
+        setLoginRedirect(window.location.hash === '#/admin' ? 'admin' : 'landing');
+      };
+      window.addEventListener('hashchange', onHashChange);
+      return () => window.removeEventListener('hashchange', onHashChange);
+    }, []);
 
-  const goToAdmin = () => { window.location.hash = '#/admin'; };
-  const goToApp = () => { window.location.hash = '#/'; };
+    const goToAdmin = () => { window.location.hash = '#/admin'; };
+    const goToApp = () => { window.location.hash = '#/'; };
+    const goToLogin = () => { window.location.hash = '#/login'; };
 
   const loadUserData = async () => {
     try {
@@ -270,7 +280,113 @@ export default function App() {
 
   const toggleBalances = useCallback(() => setShowBalances(p => !p), []);
 
-  // ===== STORE / MARKETPLACE LOADING (URL has tenant, or tenant resolved but auth loading) =====
+    // ===== CINEMATIC EXPERIENCE ROUTES (/experience and /experience/:slug) =====
+    const experienceRoute = typeof window !== 'undefined' ? detectExperienceRoute() : null;
+    const handleExperienceDirectPurchase = useCallback((_product: { id: string }) => {
+      window.location.href = '/?tenant=talana';
+    }, []);
+
+    if (experienceRoute?.kind === 'campaign') {
+      return (
+        <DynamicCampaignExperiencePage
+          slug={experienceRoute.slug}
+          rawGoldPerGramToman={goldPrice18k}
+          onDirectPurchase={handleExperienceDirectPurchase}
+        />
+      );
+    }
+    if (experienceRoute?.kind === 'landing') {
+      const enterMarketplace = () => { window.location.href = '/?tenant=talana'; };
+      const enterStore = (slug: string) => { window.location.href = `/?tenant=${slug}`; };
+      const startBuilding = (type?: 'marketplace' | 'store' | 'supplier') => {
+        setInstallerPreselectedType(type);
+        setShowInstaller(true);
+      };
+      return (
+        <MainJewelryExperienceLanding
+          rawGoldPerGramToman={goldPrice18k}
+          onEnterMarketplace={enterMarketplace}
+          onEnterStore={enterStore}
+          onStartBuilding={startBuilding}
+          onDirectPurchase={handleExperienceDirectPurchase}
+        />
+      );
+    }
+
+    // ===== LOGIN PAGE ROUTE =====
+        if (showLoginPage) {
+          const handleLogin = async (phone: string, password: string) => {
+            setLoginError('');
+            try {
+              const data = await auth.login(phone, password, tenant?.slug);
+              setUserName(data.user.name);
+              if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
+              setIsLoggedIn(true);
+              const ctx = getAuthContext();
+              if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
+              setShowLoginPage(false);
+              window.location.hash = loginRedirect === 'admin' ? '#/admin' : '#/';
+              loadTransactions();
+            } catch (err: any) { setLoginError(err.message || 'خطا در ورود'); }
+          };
+
+          const handleRequestOtp = async (phone: string) => {
+            if (phone.length !== 11) { setLoginError('شماره موبایل باید ۱۱ رقم باشد'); return; }
+            setLoginError(''); setOtpLoading(true);
+            try {
+              await auth.requestOtp(phone);
+              setOtpSent(true);
+            } catch (err: any) { setLoginError(err.message || 'خطا در ارسال کد'); }
+            finally { setOtpLoading(false); }
+          };
+
+          const handleVerifyOtp = async (phone: string, code: string) => {
+            setLoginError('');
+            try {
+              const data = await auth.verifyOtp(phone, code, tenant?.slug);
+              setUserName(data.user.name);
+              if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
+              setIsLoggedIn(true);
+              const ctx = getAuthContext();
+              if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
+              setShowLoginPage(false);
+              window.location.hash = loginRedirect === 'admin' ? '#/admin' : '#/';
+              loadTransactions();
+            } catch (err: any) { setLoginError(err.message || 'خطا در تأیید کد'); }
+          };
+
+      return (
+        <LoginPage
+          platformName={platformName}
+          platformLogo={platformLogo}
+          platformSubtitle={platformSubtitle}
+          brandColor={brandColor}
+          silverColor={silverColor}
+          onLogin={handleLogin}
+          onRequestOtp={handleRequestOtp}
+          onVerifyOtp={handleVerifyOtp}
+          loginMode={loginMode}
+          setLoginMode={setLoginMode}
+          loginPhone={loginPhone}
+          setLoginPhone={setLoginPhone}
+          loginPassword={loginPassword}
+          setLoginPassword={setLoginPassword}
+          loginError={loginError}
+          setLoginError={setLoginError}
+          otpCode={otpCode}
+          setOtpCode={setOtpCode}
+          otpSent={otpSent}
+          setOtpSent={setOtpSent}
+          otpLoading={otpLoading}
+          setOtpLoading={setOtpLoading}
+        />
+      );
+    }
+
+    // ===== ADMIN PANEL =====
+    if (showAdmin) return <AdminPanel onBack={() => { window.location.hash = '#/'; }} token={getToken() || ''} />;
+
+    // ===== STORE / MARKETPLACE LOADING (URL has tenant, or tenant resolved but auth loading) =====
   if ((tenantLoading && urlTenant) || (isLoading && tenant)) {
     const cached = getCachedTenant(tenant?.slug || urlTenant?.slug || '');
     const displayName = tenant?.name || cached?.name || urlTenant?.slug || 'فروشگاه';
@@ -317,108 +433,53 @@ export default function App() {
       onBack={() => setShowInstaller(false)}
       preselectedType={installerPreselectedType}
     />;
-  }
+  };
 
-  // ===== LANDING PAGE (no tenant) =====
-  if (!tenant && !tenantLoading) {
-    const enterMarketplace = () => { window.location.href = '/?tenant=talana'; };
-    const enterStore = (slug: string) => { window.location.href = `/?tenant=${slug}`; };
-    const startBuilding = (type?: 'marketplace' | 'store' | 'supplier') => {
-      setInstallerPreselectedType(type);
-      setShowInstaller(true);
-    };
-    return <LandingPage onEnterMarketplace={enterMarketplace} onEnterStore={enterStore} onStartBuilding={startBuilding} />;
-  }
+    // ===== LANDING PAGE (no tenant) — cinematic showcase experience =====
+    if (!tenant && !tenantLoading) {
+      const enterMarketplace = () => { window.location.href = '/?tenant=talana'; };
+      const enterStore = (slug: string) => { window.location.href = `/?tenant=${slug}`; };
+      const startBuilding = (type?: 'marketplace' | 'store' | 'supplier') => {
+        setInstallerPreselectedType(type);
+        setShowInstaller(true);
+      };
+      return (
+        <MainJewelryExperienceLanding
+          rawGoldPerGramToman={goldPrice18k}
+          onEnterMarketplace={enterMarketplace}
+          onEnterStore={enterStore}
+          onStartBuilding={startBuilding}
+          onDirectPurchase={handleExperienceDirectPurchase}
+        />
+      );
+    }
 
-  // ===== SUPPLIER PUBLIC PAGE — no public storefront (only when NOT trying to access admin) =====
-  if (tenant?.type === 'supplier' && !isLoggedIn && !showAdmin) {
-    return (
-      <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">📦</span>
+    // ===== SUPPLIER PUBLIC PAGE — no public storefront (only when NOT trying to access admin) =====
+    if (tenant?.type === 'supplier' && !isLoggedIn && !showAdmin) {
+      return (
+        <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">📦</span>
+            </div>
+            <h1 className="text-lg font-black text-slate-800 mb-2">پنل تأمین‌کننده</h1>
+            <p className="text-sm text-slate-400 mb-6">این یک پنل مدیریت خصوصی است و فروشگاه عمومی ندارد.</p>
+            <a href={`/?tenant=${tenant.slug}#/login`}
+              className="inline-block text-white px-6 py-3 rounded-2xl font-black text-sm"
+              style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>
+              ورود به پنل مدیریت
+            </a>
           </div>
-          <h1 className="text-lg font-black text-slate-800 mb-2">پنل تأمین‌کننده</h1>
-          <p className="text-sm text-slate-400 mb-6">این یک پنل مدیریت خصوصی است و فروشگاه عمومی ندارد.</p>
-          <a href={`/?tenant=${tenant.slug}#/admin`}
-            className="inline-block text-white px-6 py-3 rounded-2xl font-black text-sm"
-            style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>
-            ورود به پنل مدیریت
-          </a>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  // ===== LOGIN SCREEN =====
-  if (!isLoggedIn) return (
-    <div dir="rtl" className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-        <div className="text-center mb-6">
-          {tenant?.logo ? (
-            <img src={apiAssetUrl(tenant.logo)} alt={platformName} className="w-16 h-16 mx-auto rounded-xl mb-3 object-cover" />
-          ) : (
-            <img src={platformLogo} alt={platformName} className="w-16 h-16 mx-auto rounded-xl mb-3" />
-          )}
-          <h1 className="text-lg font-black text-slate-800">{platformName}</h1>
-          <p className="text-xs text-slate-400 font-bold mt-1">{platformSubtitle}</p>
-        </div>
-
-        {/* Login mode tabs */}
-        <div className="flex bg-slate-100 rounded-xl p-1 mb-5">
-          <button onClick={() => { setLoginMode('password'); setLoginError(''); setOtpSent(false); }}
-            className={`flex-1 py-2 rounded-lg text-xs font-black transition-all ${loginMode === 'password' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
-            رمز عبور
-          </button>
-          <button onClick={() => { setLoginMode('otp'); setLoginError(''); setOtpSent(false); }}
-            className={`flex-1 py-2 rounded-lg text-xs font-black transition-all ${loginMode === 'otp' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
-            کد یکبار مصرف
-          </button>
-        </div>
-
-        {/* Phone input (shared) */}
-        <div className="mb-4">
-          <label className="text-xs font-black text-slate-600 block mb-1.5">شماره موبایل</label>
-          <input type="text" value={loginPhone} onChange={e => { setLoginPhone(e.target.value); setOtpSent(false); }}
-            placeholder="۰۹۱۲۳۴۵۶۷۸۹" className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-left focus:outline-none focus:border-amber-600 font-mono" dir="ltr" />
-        </div>
-
-        {loginMode === 'password' ? (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div><label className="text-xs font-black text-slate-600 block mb-1.5">رمز عبور</label><input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••" className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-left focus:outline-none focus:border-amber-600" dir="ltr" /></div>
-            {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
-            <button type="submit" className="w-full text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all"
-              style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>ورود به {platformName}</button>
-            <p className="text-center text-[10px] text-slate-400 font-bold">demo: 09123456789 / password</p>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            {!otpSent ? (
-              <>
-                {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
-                <button type="button" onClick={handleRequestOtp} disabled={otpLoading}
-                  className="w-full text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
-                  style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>
-                  {otpLoading ? 'در حال ارسال...' : 'دریافت کد تأیید'}
-                </button>
-                <p className="text-center text-[10px] text-slate-400 font-bold">کد به شماره شما ارسال می‌شود</p>
-              </>
-            ) : (
-              <>
-                <div><label className="text-xs font-black text-slate-600 block mb-1.5">کد تأیید ۶ رقمی</label><input type="text" value={otpCode} onChange={e => setOtpCode(e.target.value)} placeholder="111111" maxLength={6} className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm text-slate-800 text-center focus:outline-none focus:border-amber-600 font-mono tracking-widest" dir="ltr" /></div>
-                {loginError && <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-xl">{loginError}</p>}
-                <button type="submit" className="w-full text-white py-3.5 rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all"
-                  style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>تأیید و ورود</button>
-                <button type="button" onClick={() => { setOtpSent(false); setOtpCode(''); setLoginError(''); }}
-                  className="w-full text-center text-[11px] text-slate-400 font-bold hover:text-slate-600">ارسال مجدد کد</button>
-                <p className="text-center text-[10px] text-slate-400 font-bold">کد تست: 111111</p>
-              </>
-            )}
-          </form>
-        )}
-      </div>
-    </div>
-  );
+    // ===== LOGIN SCREEN (fallback for logged out users without tenant) =====
+    if (!isLoggedIn) {
+      setShowLoginPage(true);
+      window.location.hash = '#/login';
+      return <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center font-sans"><div className="text-center"><div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto" /></div></div>;
+    }
 
   if (showAdmin) return <AdminPanel onBack={goToApp} token={getToken() || ''} />;
 

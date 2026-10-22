@@ -1,0 +1,96 @@
+{
+  "entryNodeId": "seq-foyer",
+  "nodes": [
+    {
+      "id": "seq-foyer",
+      "kind": "sequence",
+      "title": "سرسرای اصلی بوتیک",
+      "subtitle": "ورود به دنیای طلا و جواهر",
+      "x": 0,
+      "y": 80,
+      "hotspots": [
+        { "id": "hs-foyer-1", "x": 0.38, "y": 0.55, "label": "انگشتر سولیتر الماس", "productId": "prod-solitaire-ring" },
+        { "id": "hs-foyer-2", "x": 0.68, "y": 0.42, "label": "گردنبند الماس و طلای سفید", "productId": "prod-necklace" }
+      ],
+      "productIds": ["prod-solitaire-ring", "prod-necklace"]
+    },
+    {
+      "id": "seq-solitaire",
+      "kind": "sequence",
+      "title": "سوئیت الماس سولیتر",
+      "subtitle": "درخشش الماس‌های تراش‌عالی",
+      "x": 240,
+      "y": 80,
+      "hotspots": [
+        { "id": "hs-solitaire-1", "x": 0.5, "y": 0.5, "label": "الماس سولیتر ۱.۵ قیراط", "productId": "prod-solitaire-ring" }
+      ],
+      "productIds": ["prod-solitaire-ring"]
+    },
+    {
+      "id": "seq-bridal",
+      "kind": "sequence",
+      "title": "کلکسیون عروس",
+      "subtitle": "ست‌های عروس دست‌ساز",
+      "x": 480,
+      "y": 80,
+      "hotspots": [
+        { "id": "hs-bridal-1", "x": 0.35, "y": 0.5, "label": "ست عروس طلای ۱۸ عیار", "productId": "prod-bridal-set" },
+        { "id": "hs-bridal-2", "x": 0.62, "y": 0.55, "label": "انگشتر یاقوت کبود", "productId": "prod-sapphire-ring" }
+      ],
+      "productIds": ["prod-bridal-set", "prod-sapphire-ring"]
+    },
+    {
+      "id": "seq-vip",
+      "kind": "sequence",
+      "title": "سالن خصوصی VIP",
+      "subtitle": "مشاوره و رزرو اختصاصی",
+      "x": 720,
+      "y": 80,
+      "hotspots": [],
+      "productIds": []
+    },
+    {
+      "id": "seq-vault",
+      "kind": "sequence",
+      "title": "خزانه شمش و سکه",
+      "subtitle": "طلای سرمایه‌گذاری ۲۴ عیار",
+      "x": 960,
+      "y": 80,
+      "hotspots": [
+        { "id": "hs-vault-1", "x": 0.42, "y": 0.5, "label": "شمش طلای سوئیسی", "productId": "prod-bullion-bar" },
+        { "id": "hs-vault-2", "x": 0.66, "y": 0.5, "label": "سکه تمام بهار آزادی", "productId": "prod-gold-coin" }
+      ],
+      "productIds": ["prod-bullion-bar", "prod-gold-coin"]
+    }
+  ],
+  "edges": [
+    {
+      "id": "t-foyer-solitaire",
+      "source": "seq-foyer",
+      "target": "seq-solitaire",
+      "kind": "crossfade",
+      "durationMs": 900
+    },
+    {
+      "id": "t-solitaire-bridal",
+      "source": "seq-solitaire",
+      "target": "seq-bridal",
+      "kind": "crossfade",
+      "durationMs": 900
+    },
+    {
+      "id": "t-bridal-vip",
+      "source": "seq-bridal",
+      "target": "seq-vip",
+      "kind": "crossfade",
+      "durationMs": 900
+    },
+    {
+      "id": "t-vip-vault",
+      "source": "seq-vip",
+      "target": "seq-vault",
+      "kind": "crossfade",
+      "durationMs": 900
+    }
+  ]
+}

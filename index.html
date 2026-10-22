@@ -62,7 +62,22 @@
     <!-- Skip to content -->
     <a href="#app-main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:right-2 focus:z-[100] focus:bg-amber-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl focus:font-bold focus:text-sm">رفتن به محتوای اصلی</a>
 
-    <div id="root"></div>
+    <div id="root">
+      <!-- Skeleton loading UI - shown before React mounts -->
+      <div class="min-h-screen bg-slate-50 flex items-center justify-center font-sans" dir="rtl">
+        <div class="text-center space-y-6">
+          <div class="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-md object-cover animate-pulse bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center">
+            <svg class="w-8 h-8 text-white mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <p class="text-lg font-black text-slate-800">طلانا</p>
+          <div class="w-32 h-1.5 bg-slate-200 rounded-full mx-auto overflow-hidden">
+            <div class="h-full rounded-full animate-[loadingBar_1.5s_ease_in_out_infinite]" style="width:60%;background:linear-gradient(90deg,#ca8a04,#d97706)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
