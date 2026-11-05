@@ -18,7 +18,7 @@ interface Props {
 export default function DynamicCampaignExperiencePage({ slug, rawGoldPerGramToman, onDirectPurchase }: Props) {
   const campaign = useMemo(() => CampaignStorage.getBySlug(slug), [slug]);
 
-  if (!campaign) {
+  if (!campaign || !campaign.published) {
     return (
       <div dir="rtl" className="min-h-screen bg-[#0a0d13] text-white flex items-center justify-center p-6 font-sans">
         <div className="text-center space-y-4">

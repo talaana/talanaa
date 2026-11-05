@@ -58,7 +58,7 @@ export default function InvestmentTab({
   };
 
   const handleTomanChange = (val: string) => {
-    const rawVal = val.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+    const rawVal = val.replace(/[,٬]/g, '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
     setTomanInput(rawVal);
     if (!rawVal || isNaN(Number(rawVal))) {
       setGramsInput('');
@@ -225,7 +225,7 @@ export default function InvestmentTab({
             <div className="relative">
               <input
                 type="text"
-                value={tomanInput ? toPersianDigits(tomanInput) : ''}
+                value={tomanInput ? toPersianDigits(/^\d+$/.test(tomanInput) ? Number(tomanInput).toLocaleString('en-US') : tomanInput) : ''}
                 onChange={(e) => handleTomanChange(e.target.value)}
                 placeholder={toPersianDigits("مثلاً ۵,۰۰۰,۰۰۰")}
                 className={`w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-right font-black text-slate-800 focus:outline-none ${inputFocus} transition-all text-sm`}

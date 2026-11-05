@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { admin } from '../api';
+import { toPersianDigits } from '../../utils';
 import { Plus, Search, Edit, Trash2, ArrowRight, Check, X, ChevronUp, ChevronDown, Package } from 'lucide-react';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
@@ -9,14 +10,14 @@ interface Category {
   slug: string;
   icon: string | null;
   is_active: boolean;
-  product_count: number;
+  products_count: number;
 }
 
 interface Props {
   onClose?: () => void;
 }
 
-type SortField = 'name' | 'slug' | 'product_count' | 'is_active';
+type SortField = 'name' | 'slug' | 'products_count' | 'is_active';
 type SortDir = 'asc' | 'desc';
 
 export default function AdminCategories({ onClose }: Props) {
@@ -185,8 +186,8 @@ export default function AdminCategories({ onClose }: Props) {
                   <th className="text-right py-3 px-4 text-[10px] font-black text-slate-500 cursor-pointer select-none" onClick={() => toggleSort('slug')}>
                     اسلاگ <SortIcon field="slug" />
                   </th>
-                  <th className="text-center py-3 px-4 text-[10px] font-black text-slate-500 cursor-pointer select-none" onClick={() => toggleSort('product_count')}>
-                    محصولات <SortIcon field="product_count" />
+                  <th className="text-center py-3 px-4 text-[10px] font-black text-slate-500 cursor-pointer select-none" onClick={() => toggleSort('products_count')}>
+                    محصولات <SortIcon field="products_count" />
                   </th>
                   <th className="text-center py-3 px-4 text-[10px] font-black text-slate-500 cursor-pointer select-none" onClick={() => toggleSort('is_active')}>
                     وضعیت <SortIcon field="is_active" />
@@ -199,7 +200,7 @@ export default function AdminCategories({ onClose }: Props) {
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4 font-bold text-slate-800">{c.name}</td>
                     <td className="py-3 px-4 text-xs font-mono text-slate-400" dir="ltr">{c.slug}</td>
-                    <td className="py-3 px-4 text-center text-xs font-bold text-slate-600">{c.product_count ?? 0}</td>
+                    <td className="py-3 px-4 text-center text-xs font-bold text-slate-600">{toPersianDigits(c.products_count ?? 0)}</td>
                     <td className="py-3 px-4 text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black ${c.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
                         {c.is_active ? 'فعال' : 'غیرفعال'}

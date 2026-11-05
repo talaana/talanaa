@@ -100,8 +100,10 @@ async function fetchTenant(slug?: string, domain?: string): Promise<TenantConfig
 }
 
 export function TenantProvider({ children }: { children: React.ReactNode }) {
+  // Start loading when a tenant identifier is present, so consumers (e.g. the
+  // admin guard) never evaluate against "no tenant" before resolution begins.
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => !!detectTenantFromURL());
   const [error, setError] = useState<string | null>(null);
 
   const resolveTenant = useCallback(async (identifier: { slug?: string; domain?: string }) => {

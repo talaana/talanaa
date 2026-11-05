@@ -122,7 +122,7 @@ export default function Header({
             }`}
             style={activeMetal === 'gold' ? { background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` } : undefined}
           >
-            <img src="/assets/gold.png" alt="طلا" className={`w-8 h-8 object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
+            <img src="/assets/gold.png" alt="" className={`w-8 h-8 object-contain ${activeMetal === 'gold' ? 'brightness-0 invert' : ''}`} />
             <span>طلا</span>
           </button>
 
@@ -137,7 +137,7 @@ export default function Header({
             }`}
             style={activeMetal === 'silver' ? { background: `linear-gradient(135deg, ${silverTabColor}, ${silverTabColor}dd)` } : undefined}
           >
-            <img src="/assets/silver.png" alt="نقره" className="w-8 h-8 object-contain" />
+            <img src="/assets/silver.png" alt="" className="w-8 h-8 object-contain" />
             <span>نقره</span>
           </button>
         </div>

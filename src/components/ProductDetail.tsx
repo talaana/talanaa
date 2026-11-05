@@ -79,7 +79,7 @@ export default function ProductDetail({ product, wallet, goldPrice18k, silverPri
         <div className="bg-white p-4 rounded-3xl border border-slate-100/80 shadow-xs space-y-1.5">
           <div className="flex justify-between items-center flex-row-reverse">
             <span className="text-[9px] bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded-full font-black">عیار ۱۸ (۷۵۰)</span>
-            <span className="text-[10px] text-slate-400 font-extrabold">غرفه: {toPersianDigits(product.sellerName)}</span>
+            {product.sellerName ? <span className="text-[10px] text-slate-400 font-extrabold">غرفه: {toPersianDigits(product.sellerName)}</span> : <span />}
           </div>
           <h3 className="text-sm font-black text-slate-800">{toPersianDigits(product.title)}</h3>
           <p className="text-[11px] text-slate-500 leading-relaxed pt-1.5 border-t border-slate-50 mt-1.5 font-medium">{toPersianDigits(product.description)}</p>

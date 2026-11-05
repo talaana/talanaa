@@ -64,7 +64,7 @@ export function setTenantContext(id: number | null, slug: string = '', type: str
     authContext = null; // force re-read from cookie
     getAuthContext();    // reload
   } else {
-    authToken = null;
+    authToken = getCookie('talana_token');
     authContext = null;
   }
 }
@@ -204,7 +204,7 @@ export const auth = {
   }),
   updatePassword: (currentPassword: string, newPassword: string) => apiFetch('/auth/password', {
     method: 'PUT',
-    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword, new_password_confirmation: newPassword }),
   }),
   permissions: () => apiFetch('/auth/permissions'),
 };

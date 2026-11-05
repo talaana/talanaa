@@ -75,6 +75,7 @@ export default function App() {
 
   const [walletData, setWalletData] = useState<UserWallet>({ goldGrams: 0, silverGrams: 0, cashToman: 0 });
   const [userName, setUserName] = useState<string>('');
+  const [userPhone, setUserPhone] = useState<string>('');
   const [txList, setTxList] = useState<Transaction[]>([]);
   const [activeTab, setActiveTab] = useState<string>('home');
   const [goldPrice18k, setGoldPrice18k] = useState<number>(8650000);
@@ -97,7 +98,10 @@ export default function App() {
     const can = (perm: string) => isSuperadmin || userPerms.includes(perm);
 
   // Sync tenant ID with API client — and reload auth state when tenant changes
+  const [syncedTenantSlug, setSyncedTenantSlug] = useState<string | null>(null);
+
   useEffect(() => {
+    setSyncedTenantSlug(tenant?.slug ?? '');
     if (tenant) {
       setTenantContext(tenant.id, tenant.slug, tenant.type);
       cacheTenantBranding({ slug: tenant.slug, name: tenant.name, logo: tenant.logo, brand_color: tenant.brand_color });
@@ -121,6 +125,16 @@ export default function App() {
       setIsLoading(false);
     }
   }, [tenant]);
+
+  // The preload splash in index.html doubles as the boot loader: keep it visible
+  // until the app has real content to show, so no secondary spinner flashes.
+  // When showAdmin is set, AdminPanel emits the readiness signal instead.
+  useEffect(() => {
+    if (showAdmin) return;
+    const tenantSyncPending = !!urlTenant && (tenantLoading || (!!tenant && syncedTenantSlug !== tenant.slug));
+    const booting = tenantLoading || (!!tenant && isLoading) || tenantSyncPending;
+    if (!booting) (window as any).__tlBootReady?.();
+  }, [showAdmin, tenantLoading, isLoading, tenant, syncedTenantSlug]);
 
   const isMarketplace = !tenant || tenant?.type === 'marketplace' || tenant?.type === 'platform';
   const isStore = tenant?.type === 'store';
@@ -158,7 +172,7 @@ export default function App() {
       const onHashChange = () => {
         setShowAdmin(window.location.hash === '#/admin');
         setShowLoginPage(window.location.hash === '#/login');
-        setLoginRedirect(window.location.hash === '#/admin' ? 'admin' : 'landing');
+        if (window.location.hash !== '#/login') setLoginRedirect(window.location.hash === '#/admin' ? 'admin' : 'landing');
       };
       window.addEventListener('hashchange', onHashChange);
       return () => window.removeEventListener('hashchange', onHashChange);
@@ -173,12 +187,22 @@ export default function App() {
       const profile = await auth.profile();
       const u = profile.user;
       setUserName(u.name);
+      setUserPhone(u.phone || '');
       if (u.wallet) setWalletData({ goldGrams: u.wallet.gold_grams, silverGrams: u.wallet.silver_grams || 0, cashToman: u.wallet.cash_toman });
       setIsLoggedIn(true);
       try {
         const perms = await auth.permissions();
         setUserPerms(perms.permissions || []);
         setIsSuperadmin(perms.is_superadmin || false);
+        // Login response carries no role/permissions — persist them for the admin guard
+        const newCtx = {
+          type: 'user' as const,
+          role: perms.roles?.[0] || null,
+          permissions: perms.permissions || [],
+          is_superadmin: perms.is_superadmin || false,
+          roles: perms.roles || [],
+        };
+        setAuthContext(newCtx);
       } catch { /* non-admin users get empty perms */ }
     } catch { setToken(null); setIsLoggedIn(false); }
     finally { setIsLoading(false); }
@@ -193,14 +217,6 @@ export default function App() {
         amountToman: t.amount_toman, weightGrams: t.weight_grams, status: t.status, details: t.details, image: t.image,
       })));
     } catch {}
-  };
-
-  const loadPermissions = async () => {
-    try {
-      const perms = await auth.permissions();
-      setUserPerms(perms.permissions || []);
-      setIsSuperadmin(perms.is_superadmin || false);
-    } catch { setUserPerms([]); setIsSuperadmin(false); }
   };
 
   useEffect(() => {
@@ -224,11 +240,10 @@ export default function App() {
     e.preventDefault(); setLoginError('');
     try {
       const data = await auth.login(loginPhone, loginPassword, tenant?.slug);
-      setUserName(data.user.name);
+      setUserName(data.user.name); setUserPhone(data.user.phone || '');
       if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
-      const ctx = getAuthContext();
-      if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
+      await loadUserData();
       loadTransactions();
     } catch (err: any) { setLoginError(err.message || 'خطا در ورود'); }
   };
@@ -247,18 +262,17 @@ export default function App() {
     e.preventDefault(); setLoginError('');
     try {
       const data = await auth.verifyOtp(loginPhone, otpCode, tenant?.slug);
-      setUserName(data.user.name);
+      setUserName(data.user.name); setUserPhone(data.user.phone || '');
       if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
       setIsLoggedIn(true);
-      const ctx = getAuthContext();
-      if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
+      await loadUserData();
       loadTransactions();
     } catch (err: any) { setLoginError(err.message || 'خطا در تأیید کد'); }
   };
 
   const handleLogout = async () => {
     try { await auth.logout(); } catch {}
-    setToken(null); setAuthContext(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName(''); setUserPerms([]); setIsSuperadmin(false);
+    setToken(null); setAuthContext(null); setIsLoggedIn(false); setWalletData({ goldGrams: 0, silverGrams: 0, cashToman: 0 }); setTxList([]); setUserName(''); setUserPhone(''); setUserPerms([]); setIsSuperadmin(false);
   };
 
   const handleUpdateName = async (newName: string) => { try { await auth.updateProfile(newName); setUserName(newName); } catch {} };
@@ -319,7 +333,7 @@ export default function App() {
             setLoginError('');
             try {
               const data = await auth.login(phone, password, tenant?.slug);
-              setUserName(data.user.name);
+              setUserName(data.user.name); setUserPhone(data.user.phone || '');
               if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
               setIsLoggedIn(true);
               const ctx = getAuthContext();
@@ -344,7 +358,7 @@ export default function App() {
             setLoginError('');
             try {
               const data = await auth.verifyOtp(phone, code, tenant?.slug);
-              setUserName(data.user.name);
+              setUserName(data.user.name); setUserPhone(data.user.phone || '');
               if (data.user.wallet) setWalletData({ goldGrams: data.user.wallet.gold_grams, silverGrams: data.user.wallet.silver_grams || 0, cashToman: data.user.wallet.cash_toman });
               setIsLoggedIn(true);
               const ctx = getAuthContext();
@@ -384,10 +398,19 @@ export default function App() {
     }
 
     // ===== ADMIN PANEL =====
-    if (showAdmin) return <AdminPanel onBack={() => { window.location.hash = '#/'; }} token={getToken() || ''} />;
+    // The tenant token cookie is only readable once the tenant effect has synced the API context.
+    const tenantSyncPending = !!urlTenant && (tenantLoading || (!!tenant && syncedTenantSlug !== tenant.slug));
+    if (showAdmin && !tenantSyncPending && !getToken()) {
+      setShowAdmin(false);
+      setShowLoginPage(true);
+      setLoginRedirect('admin');
+      window.location.hash = '#/login';
+      return null;
+    }
+    if (showAdmin && !tenantSyncPending) return <AdminPanel onBack={() => { window.location.hash = '#/'; }} token={getToken() || ''} />;
 
     // ===== STORE / MARKETPLACE LOADING (URL has tenant, or tenant resolved but auth loading) =====
-  if ((tenantLoading && urlTenant) || (isLoading && tenant)) {
+  if ((tenantLoading && urlTenant) || (isLoading && tenant) || tenantSyncPending) {
     const cached = getCachedTenant(tenant?.slug || urlTenant?.slug || '');
     const displayName = tenant?.name || cached?.name || urlTenant?.slug || 'فروشگاه';
     const displayLogo = tenant?.logo ? apiAssetUrl(tenant.logo) : (cached?.logo ? apiAssetUrl(cached.logo) : null);
@@ -620,11 +643,11 @@ export default function App() {
             <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.08 }}>
               <Suspense fallback={<TabFallback />}>
                 {activeTab === 'home' && <HomeDashboard wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} priceTrend={priceTrend} activeMetal={activeMetal} showBalances={showBalances} onToggleBalances={toggleBalances} onNavigateToTab={handleNavigateToTab} onTransaction={handleNewTransaction} onServicePageToggle={setIsServicePageOpen} isMarketplace={isMarketplace} />}
-                {activeTab === 'vitrine' && <MarketplaceTab wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} activeMetal={activeMetal} onTransaction={handleNewTransaction} onProductDetailToggle={setIsProductDetailOpen} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} isStandaloneStore={isStore} />}
+                {activeTab === 'vitrine' && <MarketplaceTab wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} activeMetal={activeMetal} onTransaction={handleNewTransaction} onProductDetailToggle={setIsProductDetailOpen} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} isStandaloneStore={isStore} platformName={platformName} platformLogo={platformLogo} />}
                 {activeTab === 'trade' && <InvestmentTab wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} priceTrend={priceTrend} activeMetal={activeMetal} onTransaction={handleNewTransaction} />}
                 {activeTab === 'services' && <ServicesTab onNavigateToTab={handleNavigateToTab} activeMetal={activeMetal} wallet={walletData} goldPrice18k={goldPrice18k} silverPrice999={silverPrice999} onServicePageToggle={setIsServicePageOpen} onToast={() => {}} />}
                 {activeTab === 'orders' && <OrdersTab transactions={txList} onBack={() => setActiveTab('home')} />}
-                {activeTab === 'profile' && <ProfileTab wallet={walletData} userName={userName} onUpdateName={handleUpdateName} onUpdateWallet={setWalletData} onResetData={handleLogout} goldPrice18k={goldPrice18k} activeMetal={activeMetal} onBack={() => setActiveTab('home')} />}
+                {activeTab === 'profile' && <ProfileTab wallet={walletData} userName={userName} userPhone={userPhone} onUpdateName={handleUpdateName} onUpdateWallet={setWalletData} onResetData={handleLogout} goldPrice18k={goldPrice18k} activeMetal={activeMetal} onBack={() => setActiveTab('home')} />}
                 {activeTab === 'notifications' && <NotificationsTab onBack={() => setActiveTab('home')} />}
               </Suspense>
             </motion.div>

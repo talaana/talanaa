@@ -1,0 +1,75 @@
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .invoice-page {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+  }
+
+  .invoice-page table {
+    page-break-inside: auto;
+  }
+
+  .invoice-page tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .invoice-page thead {
+    display: table-header-group;
+  }
+
+  .invoice-page tfoot {
+    display: table-footer-group;
+  }
+
+  .invoice-signature {
+    page-break-inside: avoid;
+  }
+
+  .invoice-totals {
+    page-break-inside: avoid;
+  }
+
+  /* Isolate the invoice preview when printing from DocumentPreview */
+  body.printing-document * {
+    visibility: hidden;
+  }
+  body.printing-document .print-shadow,
+  body.printing-document .print-shadow * {
+    visibility: visible;
+  }
+  body.printing-document .print-shadow {
+    position: absolute;
+    inset: 0;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+}
+
+@media screen {
+  .print-only {
+    display: none;
+  }
+}

@@ -1,0 +1,727 @@
+import React, { useState, useEffect } from 'react';
+import { admin } from '../api';
+import { FileText, Plus, Search, ChevronDown, X, Check, CreditCard, Banknote, ArrowLeftRight, Eye, Edit, Trash2 } from 'lucide-react';
+import { formatToman, toPersianDigits } from '../../utils';
+import DocumentPreview from '../components/DocumentPreview';
+
+interface Invoice {
+  id: number;
+  invoice_number: string;
+  type: 'sale' | 'purchase' | 'service';
+  status: 'issued' | 'paid' | 'overdue' | 'cancelled';
+  subtotal: number;
+  tax_amount: number;
+  discount_amount: number;
+  total_amount: number;
+  paid_amount: number;
+  due_date: string;
+  issued_at: string;
+  paid_at: string | null;
+  notes: string | null;
+  contact?: { id: number; name: string; phone: string; type: string };
+  user?: { id: number; name: string };
+  template_snapshot?: {
+    blocks: any[];
+    styles: Record<string, any> | null;
+    template_id: number;
+    template_slug: string;
+    snapshot_at: string;
+  } | null;
+}
+
+interface Contact {
+  id: number;
+  name: string;
+  phone: string;
+  type: string;
+}
+
+const statusLabels: Record<string, string> = {
+  issued: 'صادر شده',
+  paid: 'پرداخت شده',
+  overdue: 'سررسید گذشته',
+  cancelled: 'لغو شده',
+};
+
+const statusColors: Record<string, string> = {
+  issued: 'bg-amber-50 text-amber-700',
+  paid: 'bg-emerald-50 text-emerald-700',
+  overdue: 'bg-rose-50 text-rose-700',
+  cancelled: 'bg-slate-100 text-slate-500',
+};
+
+const typeLabels: Record<string, string> = {
+  sale: 'فروش',
+  purchase: 'خرید',
+  service: 'خدمات',
+};
+
+export default function AdminInvoices() {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState<Invoice | null>(null);
+  const [showPay, setShowPay] = useState<Invoice | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Invoice | null>(null);
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [search, setSearch] = useState('');
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const params: Record<string, string> = {};
+      if (filterStatus) params.status = filterStatus;
+      if (filterType) params.type = filterType;
+      const data = await admin.invoices.list(params);
+      setInvoices(data.data || []);
+    } catch {}
+    finally { setLoading(false); }
+  };
+
+  const loadContacts = async () => {
+    try {
+      const data = await admin.contacts.list();
+      setContacts(data.data || data || []);
+    } catch {}
+  };
+
+  useEffect(() => { load(); }, [filterStatus, filterType]);
+  useEffect(() => { loadContacts(); }, []);
+
+  const handlePay = async (amount: number, method: string, accountId?: number) => {
+    if (!showPay) return;
+    try {
+      await admin.invoices.pay(showPay.id, { amount, payment_method: method, payment_account_id: accountId });
+      setShowPay(null);
+      load();
+    } catch (e: any) { alert(e.message); }
+  };
+
+  const handleEdit = async (data: any) => {
+    if (!showEdit) return;
+    try {
+      await admin.invoices.update(showEdit.id, data);
+      setShowEdit(null);
+      load();
+    } catch (e: any) { alert(e.message); }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    try {
+      await admin.invoices.delete(deleteConfirm.id);
+      setDeleteConfirm(null);
+      load();
+    } catch (e: any) { alert(e.message); }
+  };
+
+  const filtered = invoices.filter(inv => {
+    if (search) {
+      return inv.invoice_number.includes(search) ||
+        inv.contact?.name.includes(search) ||
+        inv.contact?.phone.includes(search);
+    }
+    return true;
+  });
+
+  return (
+    <div className="space-y-4 lg:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg lg:text-xl font-black text-slate-800">فاکتورها</h2>
+          <p className="text-xs text-slate-400 mt-1">مدیریت فاکتورهای فروش و خرید</p>
+        </div>
+        <button onClick={() => setShowCreate(true)}
+          className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-colors">
+          <Plus className="w-4 h-4" />
+          فاکتور جدید
+        </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="جستجو..."
+            className="w-full bg-white border border-slate-200 rounded-xl py-2.5 pr-10 pl-4 text-sm text-right focus:outline-none focus:border-amber-500" />
+        </div>
+        <select value={filterType} onChange={e => setFilterType(e.target.value)}
+          className="bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-amber-500">
+          <option value="">همه انواع</option>
+          <option value="sale">فروش</option>
+          <option value="purchase">خرید</option>
+          <option value="service">خدمات</option>
+        </select>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          className="bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-amber-500">
+          <option value="">همه وضعیت‌ها</option>
+          <option value="issued">صادر شده</option>
+          <option value="paid">پرداخت شده</option>
+          <option value="overdue">سررسید گذشته</option>
+          <option value="cancelled">لغو شده</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12"><div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto" /></div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 text-center">
+          <FileText className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+          <h3 className="text-sm font-black text-slate-600">فاکتوری ثبت نشده</h3>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-sm">
+              <thead className="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th className="px-4 py-3 font-bold text-slate-600">شماره</th>
+                  <th className="px-4 py-3 font-bold text-slate-600">نوع</th>
+                  <th className="px-4 py-3 font-bold text-slate-600">مخاطب</th>
+                  <th className="px-4 py-3 font-bold text-slate-600">مبلغ کل</th>
+                  <th className="px-4 py-3 font-bold text-slate-600">پرداخت شده</th>
+                  <th className="px-4 py-3 font-bold text-slate-600">وضعیت</th>
+                  <th className="px-4 py-3 font-bold text-slate-600">سررسید</th>
+                  <th className="px-4 py-3 font-bold text-slate-600">عملیات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filtered.map(inv => (
+                  <tr key={inv.id} onClick={() => setSelectedInvoice(inv)} className="hover:bg-slate-50/50 transition-colors cursor-pointer">
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{toPersianDigits(inv.invoice_number)}</td>
+                    <td className="px-4 py-3">{typeLabels[inv.type] || inv.type}</td>
+                    <td className="px-4 py-3">{inv.contact?.name || '—'}</td>
+                    <td className="px-4 py-3 font-bold">{formatToman(inv.total_amount)}</td>
+                    <td className="px-4 py-3 text-emerald-600">{formatToman(inv.paid_amount || 0)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-bold ${statusColors[inv.status]}`}>
+                        {statusLabels[inv.status] || inv.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{inv.due_date?.slice(0, 10)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedInvoice(inv); }}
+                          className="text-slate-500 hover:text-slate-700 text-xs font-bold flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5" /> مشاهده
+                        </button>
+                        {inv.status !== 'paid' && inv.status !== 'cancelled' && (
+                          <>
+                            <button onClick={(e) => { e.stopPropagation(); setShowPay(inv); }}
+                              className="text-amber-600 hover:text-amber-700 text-xs font-bold">
+                              پرداخت
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); setShowEdit(inv); }}
+                              className="text-blue-600 hover:text-blue-700 text-xs font-bold flex items-center gap-1">
+                              <Edit className="w-3.5 h-3.5" /> ویرایش
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(inv); }}
+                              className="text-rose-600 hover:text-rose-700 text-xs font-bold flex items-center gap-1">
+                              <Trash2 className="w-3.5 h-3.5" /> حذف
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {showPay && (
+        <PayModal invoice={showPay} onClose={() => setShowPay(null)} onPay={handlePay} />
+      )}
+
+      {showCreate && (
+        <CreateModal contacts={contacts} onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }} />
+      )}
+
+      {showEdit && (
+        <EditModal invoice={showEdit} contacts={contacts} onClose={() => setShowEdit(null)} onSaved={handleEdit} />
+      )}
+
+      {deleteConfirm && (
+        <DeleteConfirmModal invoice={deleteConfirm} onClose={() => setDeleteConfirm(null)} onDelete={handleDelete} />
+      )}
+
+      {selectedInvoice && (
+        <DocumentPreview
+          kind="invoice"
+          document={selectedInvoice}
+          onClose={() => setSelectedInvoice(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+interface PaymentAccount {
+  id: number;
+  account_type: 'bank_account' | 'card' | 'wallet';
+  bank_name: string | null;
+  account_number: string | null;
+  card_number: string | null;
+  account_holder: string | null;
+  is_default: boolean;
+}
+
+function PayModal({ invoice, onClose, onPay }: { invoice: Invoice; onClose: () => void; onPay: (amount: number, method: string, accountId?: number) => void }) {
+  const remaining = invoice.total_amount - (invoice.paid_amount || 0);
+  const [amount, setAmount] = useState(remaining.toString());
+  const [method, setMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
+  const [accounts, setAccounts] = useState<PaymentAccount[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (method === 'transfer') {
+      admin.paymentAccounts.list().then(data => {
+        setAccounts(data || []);
+        const defaultAccount = (data || []).find((a: PaymentAccount) => a.is_default);
+        if (defaultAccount) setSelectedAccount(defaultAccount.id);
+      }).catch(() => {});
+    }
+  }, [method]);
+
+  const handlePay = () => {
+    onPay(parseInt(amount) || 0, method, method === 'transfer' ? selectedAccount || undefined : undefined);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-black text-slate-800">پرداخت فاکتور</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
+        </div>
+        
+        <div className="space-y-3 mb-6">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">شماره فاکتور:</span>
+            <span className="font-mono font-bold">{toPersianDigits(invoice.invoice_number)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">مبلغ کل:</span>
+            <span className="font-bold">{formatToman(invoice.total_amount)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">پرداخت شده:</span>
+            <span className="text-emerald-600 font-bold">{formatToman(invoice.paid_amount || 0)}</span>
+          </div>
+          <div className="flex justify-between text-sm border-t pt-3">
+            <span className="text-slate-500">باقی‌مانده:</span>
+            <span className="text-amber-600 font-black">{formatToman(remaining)}</span>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-bold text-slate-600 mb-2">مبلغ پرداخت (تومان)</label>
+          <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl py-3 px-4 text-right focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-bold text-slate-600 mb-3">روش پرداخت</label>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => setMethod('cash')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${method === 'cash' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-slate-300'}`}
+            >
+              <Banknote className={`w-6 h-6 ${method === 'cash' ? 'text-amber-600' : 'text-slate-400'}`} />
+              <span className={`text-xs font-bold ${method === 'cash' ? 'text-amber-700' : 'text-slate-600'}`}>نقدی</span>
+            </button>
+            <button
+              onClick={() => setMethod('card')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${method === 'card' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-slate-300'}`}
+            >
+              <CreditCard className={`w-6 h-6 ${method === 'card' ? 'text-amber-600' : 'text-slate-400'}`} />
+              <span className={`text-xs font-bold ${method === 'card' ? 'text-amber-700' : 'text-slate-600'}`}>کارت‌خوان</span>
+            </button>
+            <button
+              onClick={() => setMethod('transfer')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${method === 'transfer' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-slate-300'}`}
+            >
+              <ArrowLeftRight className={`w-6 h-6 ${method === 'transfer' ? 'text-amber-600' : 'text-slate-400'}`} />
+              <span className={`text-xs font-bold ${method === 'transfer' ? 'text-amber-700' : 'text-slate-600'}`}>کارت به کارت</span>
+            </button>
+          </div>
+        </div>
+
+        {method === 'transfer' && accounts.length > 0 && (
+          <div className="mb-4">
+            <label className="block text-sm font-bold text-slate-600 mb-2">حساب مقصد</label>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {accounts.map(account => (
+                <button
+                  key={account.id}
+                  onClick={() => setSelectedAccount(account.id)}
+                  className={`w-full text-right p-3 rounded-xl border-2 transition-all ${selectedAccount === account.id ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-slate-300'}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-bold text-slate-800">{account.bank_name || 'حساب بانکی'}</span>
+                    {account.is_default && <span className="text-[10px] font-black text-amber-600">پیش‌فرض</span>}
+                  </div>
+                  {account.card_number && (
+                    <div className="font-mono text-xs text-slate-600" dir="ltr">{account.card_number}</div>
+                  )}
+                  {account.account_holder && (
+                    <div className="text-xs text-slate-500 mt-1">{account.account_holder}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {method === 'transfer' && accounts.length === 0 && (
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-xs text-amber-700 font-bold">حسابی برای دریافت وجه تعریف نشده است. لطفاً ابتدا در بخش "حساب‌های پرداخت" حساب خود را اضافه کنید.</p>
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50">انصراف</button>
+          <button onClick={handlePay} disabled={method === 'transfer' && !selectedAccount}
+            className="flex-1 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            <Check className="w-4 h-4" />
+            پرداخت
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateModal({ contacts, onClose, onCreated }: { contacts: Contact[]; onClose: () => void; onCreated: () => void }) {
+  const [type, setType] = useState<'sale' | 'purchase'>('sale');
+  const [contactId, setContactId] = useState('');
+  const [items, setItems] = useState([{ description: '', amount: 0 }]);
+  const [discount, setDiscount] = useState(0);
+  const [dueDate, setDueDate] = useState('');
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const addItem = () => setItems([...items, { description: '', amount: 0 }]);
+  const removeItem = (i: number) => setItems(items.filter((_, idx) => idx !== i));
+  const updateItem = (i: number, field: string, value: any) => {
+    const next = [...items];
+    (next[i] as any)[field] = value;
+    setItems(next);
+  };
+
+  const subtotal = items.reduce((s, i) => s + (i.amount || 0), 0);
+  const tax = Math.round(subtotal * 0.09);
+  const total = subtotal + tax - (discount || 0);
+
+  const handleSubmit = async () => {
+    if (!contactId) { alert('مخاطب را انتخاب کنید'); return; }
+    if (items.some(i => !i.description || !i.amount)) { alert('تمام آیتم‌ها را پر کنید'); return; }
+    setLoading(true);
+    try {
+      await admin.invoices.create({
+        type,
+        contact_id: parseInt(contactId),
+        items: items.map(i => ({ description: i.description, amount: i.amount })),
+        discount_amount: discount || 0,
+        due_date: dueDate || undefined,
+        notes: notes || undefined,
+      });
+      onCreated();
+    } catch (e: any) { alert(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-black text-slate-800">فاکتور جدید</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="invoice-type" className="block text-sm font-bold text-slate-600 mb-2">نوع فاکتور</label>
+            <select id="invoice-type" value={type} onChange={e => setType(e.target.value as any)}
+              className="w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-amber-500">
+              <option value="sale">فروش</option>
+              <option value="purchase">خرید</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="invoice-contact" className="block text-sm font-bold text-slate-600 mb-2">مخاطب</label>
+            <select id="invoice-contact" value={contactId} onChange={e => setContactId(e.target.value)}
+              className="w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-amber-500">
+              <option value="">انتخاب کنید...</option>
+              {contacts.map(c => <option key={c.id} value={c.id}>{c.name} — {c.phone}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-bold text-slate-600">آیتم‌ها</label>
+              <button onClick={addItem} className="text-amber-600 hover:text-amber-700 text-xs font-bold">+ افزودن</button>
+            </div>
+            <div className="space-y-2">
+              {items.map((item, i) => (
+                <div key={i} className="flex gap-2">
+                  <input value={item.description} onChange={e => updateItem(i, 'description', e.target.value)}
+                    placeholder="توضیح" className="flex-1 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-amber-500" />
+                  <input type="number" value={item.amount || ''} onChange={e => updateItem(i, 'amount', parseInt(e.target.value) || 0)}
+                    placeholder="مبلغ" className="w-32 border border-slate-200 rounded-xl py-2 px-3 text-sm text-right focus:outline-none focus:border-amber-500" />
+                  {items.length > 1 && (
+                    <button onClick={() => removeItem(i)} className="text-rose-500 hover:text-rose-600 px-2"><X className="w-4 h-4" /></button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="invoice-discount" className="block text-sm font-bold text-slate-600 mb-2">تخفیف (تومان)</label>
+              <input id="invoice-discount" type="number" value={discount || ''} onChange={e => setDiscount(parseInt(e.target.value) || 0)}
+                className="w-full border border-slate-200 rounded-xl py-3 px-4 text-right focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label htmlFor="invoice-due-date" className="block text-sm font-bold text-slate-600 mb-2">سررسید</label>
+              <input id="invoice-due-date" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-amber-500" />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="invoice-notes" className="block text-sm font-bold text-slate-600 mb-2">یادداشت</label>
+            <textarea id="invoice-notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+              className="w-full border border-slate-200 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-amber-500" />
+          </div>
+
+          <div className="bg-slate-50 rounded-xl p-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">جمع کل:</span>
+              <span className="font-bold">{formatToman(subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">مالیات (۹٪):</span>
+              <span className="font-bold">{formatToman(tax)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">تخفیف:</span>
+                <span className="text-rose-600 font-bold">-{formatToman(discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm border-t pt-2">
+              <span className="font-black text-slate-700">مبلغ نهایی:</span>
+              <span className="font-black text-amber-600">{formatToman(total)}</span>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50">انصراف</button>
+            <button onClick={handleSubmit} disabled={loading}
+              className="flex-1 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm disabled:opacity-50">
+              {loading ? 'در حال ثبت...' : 'ثبت فاکتور'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditModal({ invoice, contacts, onClose, onSaved }: { invoice: Invoice; contacts: Contact[]; onClose: () => void; onSaved: (data: any) => void }) {
+  const [type, setType] = useState<'sale' | 'purchase' | 'service'>(invoice.type);
+  const [contactId, setContactId] = useState(invoice.contact?.id.toString() || '');
+  const [items, setItems] = useState(invoice.template_snapshot?.blocks?.filter((b: any) => b.type === 'item').map((b: any) => ({ description: b.data?.description || '', amount: b.data?.amount || 0 })) || [{ description: '', amount: 0 }]);
+  const [discount, setDiscount] = useState(invoice.discount_amount || 0);
+  const [dueDate, setDueDate] = useState(invoice.due_date?.slice(0, 10) || '');
+  const [notes, setNotes] = useState(invoice.notes || '');
+  const [loading, setLoading] = useState(false);
+
+  const addItem = () => setItems([...items, { description: '', amount: 0 }]);
+  const removeItem = (i: number) => setItems(items.filter((_, idx) => idx !== i));
+  const updateItem = (i: number, field: string, value: any) => {
+    const next = [...items];
+    (next[i] as any)[field] = value;
+    setItems(next);
+  };
+
+  const subtotal = items.reduce((s, i) => s + (i.amount || 0), 0);
+  const tax = Math.round(subtotal * 0.09);
+  const total = subtotal + tax - (discount || 0);
+
+  const handleSubmit = async () => {
+    if (!contactId) { alert('مخاطب را انتخاب کنید'); return; }
+    setLoading(true);
+    try {
+      const data: any = {
+        discount_amount: discount || 0,
+        due_date: dueDate || undefined,
+        notes: notes || undefined,
+      };
+      // Only send items if they exist
+      if (items.length > 0 && items.some(i => i.description && i.amount)) {
+        data.items = items.map(i => ({ description: i.description, amount: i.amount }));
+      }
+      await onSaved(data);
+    } catch (e: any) { alert(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-black text-slate-800">ویرایش فاکتور</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="edit-invoice-type" className="block text-sm font-bold text-slate-600 mb-2">نوع فاکتور</label>
+            <select id="edit-invoice-type" value={type} onChange={e => setType(e.target.value as any)}
+              className="w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-amber-500">
+              <option value="sale">فروش</option>
+              <option value="purchase">خرید</option>
+              <option value="service">خدمات</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="edit-invoice-contact" className="block text-sm font-bold text-slate-600 mb-2">مخاطب</label>
+            <select id="edit-invoice-contact" value={contactId} onChange={e => setContactId(e.target.value)}
+              className="w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-amber-500">
+              <option value="">انتخاب کنید...</option>
+              {contacts.map(c => <option key={c.id} value={c.id}>{c.name} — {c.phone}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-bold text-slate-600">آیتم‌ها</label>
+              <button onClick={addItem} className="text-amber-600 hover:text-amber-700 text-xs font-bold">+ افزودن</button>
+            </div>
+            <div className="space-y-2">
+              {items.map((item, i) => (
+                <div key={i} className="flex gap-2">
+                  <input value={item.description} onChange={e => updateItem(i, 'description', e.target.value)}
+                    placeholder="توضیح" className="flex-1 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-amber-500" />
+                  <input type="number" value={item.amount || ''} onChange={e => updateItem(i, 'amount', parseInt(e.target.value) || 0)}
+                    placeholder="مبلغ" className="w-32 border border-slate-200 rounded-xl py-2 px-3 text-sm text-right focus:outline-none focus:border-amber-500" />
+                  {items.length > 1 && (
+                    <button onClick={() => removeItem(i)} className="text-rose-500 hover:text-rose-600 px-2"><X className="w-4 h-4" /></button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="edit-invoice-discount" className="block text-sm font-bold text-slate-600 mb-2">تخفیف (تومان)</label>
+              <input id="edit-invoice-discount" type="number" value={discount || ''} onChange={e => setDiscount(parseInt(e.target.value) || 0)}
+                className="w-full border border-slate-200 rounded-xl py-3 px-4 text-right focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label htmlFor="edit-invoice-due-date" className="block text-sm font-bold text-slate-600 mb-2">سررسید</label>
+              <input id="edit-invoice-due-date" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-amber-500" />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="edit-invoice-notes" className="block text-sm font-bold text-slate-600 mb-2">یادداشت</label>
+            <textarea id="edit-invoice-notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+              className="w-full border border-slate-200 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-amber-500" />
+          </div>
+
+          <div className="bg-slate-50 rounded-xl p-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">جمع کل:</span>
+              <span className="font-bold">{formatToman(subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">مالیات (۹٪):</span>
+              <span className="font-bold">{formatToman(tax)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">تخفیف:</span>
+                <span className="text-rose-600 font-bold">-{formatToman(discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm border-t pt-2">
+              <span className="font-black text-slate-700">مبلغ نهایی:</span>
+              <span className="font-black text-amber-600">{formatToman(total)}</span>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50">انصراف</button>
+            <button onClick={handleSubmit} disabled={loading}
+              className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm disabled:opacity-50">
+              {loading ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeleteConfirmModal({ invoice, onClose, onDelete }: { invoice: Invoice; onClose: () => void; onDelete: () => void }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await onDelete();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-black text-slate-800">حذف فاکتور</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-sm text-slate-600 mb-3">آیا از حذف فاکتور زیر اطمینان دارید؟</p>
+          <div className="bg-slate-50 rounded-xl p-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">شماره فاکتور:</span>
+              <span className="font-mono font-bold">{toPersianDigits(invoice.invoice_number)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">مخاطب:</span>
+              <span className="font-bold">{invoice.contact?.name || '—'}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">مبلغ کل:</span>
+              <span className="font-bold">{formatToman(invoice.total_amount)}</span>
+            </div>
+          </div>
+          <p className="text-xs text-rose-600 mt-3 font-bold">این عملیات قابل بازگشت نیست.</p>
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50">انصراف</button>
+          <button onClick={handleDelete} disabled={loading}
+            className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm disabled:opacity-50">
+            {loading ? 'در حال حذف...' : 'حذف فاکتور'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

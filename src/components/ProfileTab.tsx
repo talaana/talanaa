@@ -12,6 +12,7 @@ import { auth, bankAccounts, branches } from '../api';
 interface ProfileTabProps {
   wallet: UserWallet;
   userName: string;
+  userPhone: string;
   onUpdateName: (name: string) => void;
   onUpdateWallet: (wallet: UserWallet) => void;
   onResetData: () => void;
@@ -23,7 +24,7 @@ interface ProfileTabProps {
 type Page = null | 'invite' | 'accounts' | 'limits' | 'account-settings' | 'security' | 'branches' | 'licenses' | 'rules' | 'support';
 
 export default function ProfileTab({
-  wallet, userName, onUpdateName, onUpdateWallet, onResetData,
+  wallet, userName, userPhone, onUpdateName, onUpdateWallet, onResetData,
   goldPrice18k, activeMetal, onBack,
 }: ProfileTabProps) {
   const [fingerprintEnabled, setFingerprintEnabled] = useState(false);
@@ -195,7 +196,7 @@ export default function ProfileTab({
       <PageHeader title="تنظیمات اطلاعات حساب" />
       {[
         { label: 'نام و نام خانوادگی', value: userName },
-        { label: 'شماره موبایل', value: '۰۹۱۲۳۴۵۶۷۸۹' },
+        { label: 'شماره موبایل', value: toPersianDigits(userPhone) },
         { label: 'کد ملی', value: '۰۰۱۲۳۴۵۶۷۸' },
         { label: 'تاریخ عضویت', value: '۱۴۰۲/۰۸/۱۵' },
         { label: 'وضعیت احراز هویت', value: 'تایید شده (سطح ۲)', green: true },
@@ -350,7 +351,7 @@ export default function ProfileTab({
               <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center"><User className="w-6 h-6 text-yellow-100" /></div>
               <div className="flex flex-col text-right">
                 <span className="text-sm font-black tracking-tight">{toPersianDigits(userName) || 'کاربر طلانا'}</span>
-                <span className="text-[10px] text-yellow-100 font-extrabold mt-0.5">{toPersianDigits('۰۹۱۲ ۳۴۵ ۶۷۸۹')}</span>
+                <span dir="ltr" className="text-[10px] text-yellow-100 font-extrabold mt-0.5">{toPersianDigits(userPhone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3'))}</span>
               </div>
             </div>
             <button onClick={() => { setTempName(userName); setEditMode(true); }} className="text-[10px] bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-xl text-white font-extrabold transition-all">ویرایش</button>

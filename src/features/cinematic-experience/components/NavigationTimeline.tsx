@@ -28,7 +28,7 @@ export default function NavigationTimeline({ scenes, activeIndex, onSelect }: Pr
               }`}
             />
             {i === activeIndex && (
-              <span className="absolute -top-7 whitespace-nowrap text-[10px] font-black text-amber-100 bg-black/60 px-2 py-0.5 rounded-md">
+              <span className="hidden sm:block absolute -top-7 whitespace-nowrap text-[10px] font-black text-amber-100 bg-black/60 px-2 py-0.5 rounded-md">
                 {s.title}
               </span>
             )}

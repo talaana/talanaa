@@ -25,7 +25,7 @@ Call log:
   2  | 
   3  | test.describe('Talana Login Flow', () => {
   4  |   test.beforeEach(async ({ page }) => {
-  5  |     await page.goto('http://localhost:3001');
+  5  |     await page.goto('http://localhost:3000');
   6  |   });
   7  | 
   8  |   test('should redirect to login page when visiting admin without auth', async ({ page }) => {
@@ -80,7 +80,7 @@ Call log:
   57 | 
   58 | test.describe('Cinematic Landing Page', () => {
   59 |   test.beforeEach(async ({ page }) => {
-  60 |     await page.goto('http://localhost:3001');
+  60 |     await page.goto('http://localhost:3000');
   61 |   });
   62 | 
   63 |   test('should load cinematic landing page', async ({ page }) => {

@@ -24,66 +24,101 @@ const BREAKS = [
   1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178,
 ];
 
-function isJalaliLeap(jy: number): boolean {
-  let leap = -14;
+const div = (a: number, b: number) => Math.trunc(a / b);
+const mod = (a: number, b: number) => a - Math.trunc(a / b) * b;
+
+/** Leap offset + Gregorian anchor (March day of 1 Farvardin) for a Jalali year. */
+function jalCal(jy: number): { leap: number; gy: number; march: number } {
+  const bl = BREAKS.length;
+  const gy = jy + 621;
+  let leapJ = -14;
   let jp = BREAKS[0];
-  for (let i = 1; i < BREAKS.length; i += 1) {
+  let jump = 0;
+  for (let i = 1; i < bl; i += 1) {
     const jm = BREAKS[i];
-    const jump = jm - jp;
+    jump = jm - jp;
     if (jy < jm) break;
-    leap += Math.floor(jump / 33) * 8 + Math.floor((jump % 33) / 4);
+    leapJ += div(jump, 33) * 8 + div(mod(jump, 33), 4);
     jp = jm;
   }
-  const n = jy - jp;
-  leap += Math.floor(n / 33) * 8 + Math.floor(((n % 33) + 3) / 4);
-  return (leap + 1) % 33 < 9;
+  let n = jy - jp;
+  leapJ += div(n, 33) * 8 + div(mod(n, 33) + 3, 4);
+  if (mod(jump, 33) === 4 && jump - n === 4) leapJ += 1;
+  const leapG = div(gy, 4) - div((div(gy, 100) + 1) * 3, 4) - 150;
+  const march = 20 + leapJ - leapG;
+  if (jump - n < 6) n = n - jump + div(jump + 4, 33) * 33;
+  let leap = mod(mod(n + 1, 33) - 1, 4);
+  if (leap === -1) leap = 4;
+  return { leap, gy, march };
+}
+
+function isJalaliLeap(jy: number): boolean {
+  return jalCal(jy).leap === 0;
 }
 
 export { isJalaliLeap };
 
-function gregorianLeap(gy: number): boolean {
-  return (gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0;
+/** Julian Day Number from a Gregorian date. */
+function g2d(gy: number, gm: number, gd: number): number {
+  let d = div((gy + div(gm - 8, 6) + 100100) * 1461, 4)
+    + div(153 * mod(gm + 9, 12) + 2, 5)
+    + gd - 34840408;
+  d = d - div(div(gy + 100100 + div(gm - 8, 6), 100) * 3, 4) + 752;
+  return d;
 }
 
-function gDaysInMonth(gy: number, gm: number): number {
-  return [31, gregorianLeap(gy) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][gm - 1];
+/** Gregorian date from a Julian Day Number. */
+function d2g(jdn: number): { gy: number; gm: number; gd: number } {
+  let j = 4 * jdn + 139361631;
+  j = j + div(div(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
+  const i = div(mod(j, 1461), 4) * 5 + 308;
+  const gd = div(mod(i, 153), 5) + 1;
+  const gm = mod(div(i, 153), 12) + 1;
+  const gy = div(j, 1461) - 100100 + div(8 - gm, 6);
+  return { gy, gm, gd };
 }
 
-function jDaysInMonth(jy: number, jm: number): number {
-  if (jm <= 6) return 31;
-  if (jm <= 11) return 30;
-  return isJalaliLeap(jy) ? 30 : 29;
+/** Julian Day Number from a Jalali date. */
+function j2d(jy: number, jm: number, jd: number): number {
+  const r = jalCal(jy);
+  return g2d(r.gy, 3, r.march) + (jm - 1) * 31 - div(jm, 7) * (jm - 7) + jd - 1;
+}
+
+/** Jalali date from a Julian Day Number. */
+function d2j(jdn: number): JalaliDate {
+  const gy = d2g(jdn).gy;
+  let jy = gy - 621;
+  const r = jalCal(jy);
+  const jdn1f = g2d(r.gy, 3, r.march);
+  let k = jdn - jdn1f;
+  let jm: number;
+  let jd: number;
+  if (k >= 0) {
+    if (k <= 185) {
+      jm = 1 + div(k, 31);
+      jd = mod(k, 31) + 1;
+      return { year: jy, month: jm, day: jd };
+    }
+    k -= 186;
+  } else {
+    jy -= 1;
+    k += 179;
+    if (r.leap === 1) k += 1;
+  }
+  jm = 7 + div(k, 30);
+  jd = mod(k, 30) + 1;
+  return { year: jy, month: jm, day: jd };
 }
 
 /** Convert Gregorian (gy, gm, gd) to Jalali. */
 export function toJalali(gy: number, gm: number, gd: number): JalaliDate {
-  let gdm = gd;
-  for (let m = 1; m < gm; m += 1) gdm += gDaysInMonth(gy, m);
-
-  let jy = gy - 621;
-  while (true) {
-    const days = isJalaliLeap(jy) ? 366 : 365;
-    if (gdm <= days) break;
-    gdm -= days;
-    jy += 1;
-  }
-
-  let jm = 1;
-  while (gdm > jDaysInMonth(jy, jm)) {
-    gdm -= jDaysInMonth(jy, jm);
-    jm += 1;
-  }
-  return { year: jy, month: jm, day: gdm };
+  return d2j(g2d(gy, gm, gd));
 }
 
-/** Convert Jalali (jy, jm, jd) to a JS Date. */
+/** Convert Jalali (jy, jm, jd) to a JS Date (local midnight). */
 export function toGregorian(jy: number, jm: number, jd: number): Date {
-  const gy = jy + 621;
-  let gdm = jd;
-  for (let m = 1; m < jm; m += 1) gdm += jDaysInMonth(jy, m);
-  // Start of the Jalali year corresponds to ~March 21 of (jy + 621).
-  const start = new Date(gy, 2, 21);
-  return new Date(start.getTime() + (gdm - 1) * 86400000);
+  const { gy, gm, gd } = d2g(j2d(jy, jm, jd));
+  return new Date(gy, gm - 1, gd);
 }
 
 /** Days in a Jalali month. */

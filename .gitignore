@@ -8,3 +8,7 @@ coverage/
 !.env.example
 .vercel
 .hermes-tmp*
+e2e/live/.auth/
+e2e-output/
+playwright-report/
+test-results/

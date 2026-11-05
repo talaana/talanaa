@@ -12,9 +12,9 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/#/admin
 Call log:
-  - navigating to "http://localhost:3001/", waiting until "load"
+  - navigating to "http://localhost:3001/#/admin", waiting until "load"
 
 ```
 
@@ -25,12 +25,12 @@ Call log:
   2  | 
   3  | test.describe('Talana Login Flow', () => {
   4  |   test.beforeEach(async ({ page }) => {
-> 5  |     await page.goto('http://localhost:3001');
-     |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+  5  |     await page.goto('http://localhost:3000');
   6  |   });
   7  | 
   8  |   test('should redirect to login page when visiting admin without auth', async ({ page }) => {
-  9  |     await page.goto('http://localhost:3001/#/admin');
+> 9  |     await page.goto('http://localhost:3001/#/admin');
+     |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/#/admin
   10 |     await page.waitForURL(/.*#\/login/);
   11 |     await expect(page).toHaveURL(/.*#\/login/);
   12 |     await expect(page.getByRole('button', { name: 'رمز عبور' })).toBeVisible();
@@ -81,7 +81,7 @@ Call log:
   57 | 
   58 | test.describe('Cinematic Landing Page', () => {
   59 |   test.beforeEach(async ({ page }) => {
-  60 |     await page.goto('http://localhost:3001');
+  60 |     await page.goto('http://localhost:3000');
   61 |   });
   62 | 
   63 |   test('should load cinematic landing page', async ({ page }) => {

@@ -84,6 +84,7 @@ function SequenceInspector({ node, isEntry }: { node: GraphNode; isEntry: boolea
             <div className="flex items-center gap-2">
               <input
                 value={h.label}
+                aria-label="نام هات‌اسپات"
                 onChange={(e) => updateHotspot(i, { label: e.target.value })}
                 className="flex-1 bg-white border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-amber-500"
               />
@@ -182,10 +183,12 @@ function Field({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const id = React.useId();
   return (
     <div>
-      <label className="text-[10px] font-black text-slate-400 block mb-1">{label}</label>
+      <label htmlFor={id} className="text-[10px] font-black text-slate-400 block mb-1">{label}</label>
       <input
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500"

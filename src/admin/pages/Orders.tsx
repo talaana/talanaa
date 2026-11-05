@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { admin } from '../api';
-import { Search, ArrowRight, ChevronUp, ChevronDown, ShoppingBag } from 'lucide-react';
+import { Search, ArrowRight, ChevronUp, ChevronDown, ShoppingBag, FileText } from 'lucide-react';
 import { toPersianDigits, formatToman } from '../../utils';
 
 interface Order {
   id: number; type: string; title: string; date: string; status: string;
-  amount_toman: number; weight_grams: number | null;
+  amount_toman: number; weight_grams: number | null; invoice_id: number | null;
   user?: { id: number; name: string; phone: string };
 }
 
@@ -110,6 +110,7 @@ export default function AdminOrders({ onClose }: Props) {
                   <th className="text-right py-3 px-4 text-[10px] font-black text-slate-500 cursor-pointer select-none" onClick={() => toggleSort('title')}>عنوان <SortIcon field="title" /></th>
                   <th className="text-center py-3 px-4 text-[10px] font-black text-slate-500 cursor-pointer select-none" onClick={() => toggleSort('amount_toman')}>مبلغ <SortIcon field="amount_toman" /></th>
                   <th className="text-center py-3 px-4 text-[10px] font-black text-slate-500 cursor-pointer select-none" onClick={() => toggleSort('status')}>وضعیت <SortIcon field="status" /></th>
+                  <th className="text-center py-3 px-4 text-[10px] font-black text-slate-500">فاکتور</th>
                   <th className="text-center py-3 px-4 text-[10px] font-black text-slate-500 cursor-pointer select-none" onClick={() => toggleSort('date')}>تاریخ <SortIcon field="date" /></th>
                 </tr>
               </thead>
@@ -126,6 +127,16 @@ export default function AdminOrders({ onClose }: Props) {
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black ${statusColors[o.status] || 'bg-slate-100 text-slate-500'}`}>
                         {statusLabels[o.status] || o.status}
                       </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {o.invoice_id ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                          <FileText className="w-3 h-3" />
+                          دارد
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-center text-[10px] text-slate-400">
                       {new Date(o.date).toLocaleDateString('fa-IR')}

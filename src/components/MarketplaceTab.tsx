@@ -18,6 +18,8 @@ interface MarketplaceTabProps {
   selectedCategory: string | null;
   onSelectCategory: (category: string | null) => void;
   isStandaloneStore?: boolean;
+  platformName?: string;
+  platformLogo?: string;
 }
 
 const MarketplaceTab = memo(function MarketplaceTab({ 
@@ -30,6 +32,8 @@ const MarketplaceTab = memo(function MarketplaceTab({
   selectedCategory,
   onSelectCategory,
   isStandaloneStore = false,
+  platformName = 'طلانا',
+  platformLogo = '/talana_logo.png',
 }: MarketplaceTabProps) {
   const basePrice = activeMetal === 'silver' ? silverPrice999 : goldPrice18k;
   const [searchQuery, setSearchQuery] = useState('');
@@ -231,7 +235,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
           <div className={`bg-gradient-to-l ${activeMetal === 'gold' ? 'from-amber-600/10 to-amber-500/5 border-amber-100 text-amber-500' : 'from-slate-600/10 to-slate-500/5 border-slate-100 text-slate-500'} border rounded-3xl p-4 flex justify-between items-center relative overflow-hidden flex-row-reverse text-right`}>
             <div className="space-y-1 z-10 font-sans">
               <span className={`text-[9px] ${activeMetal === 'gold' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'} px-2.5 py-0.5 rounded-full font-bold`}>ویترین آنلاین {activeMetal === 'gold' ? 'طلا' : 'نقره'}</span>
-              <h3 className="text-xs font-black text-slate-800">مارکت‌پلیس زیورآلات {activeMetal === 'gold' ? 'طلایی' : 'نقره‌ای'} طلانا</h3>
+              <h3 className="text-xs font-black text-slate-800">{isStandaloneStore ? 'ویترین' : 'مارکت‌پلیس'} زیورآلات {activeMetal === 'gold' ? 'طلایی' : 'نقره‌ای'} {platformName}</h3>
               <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
                 {activeMetal === 'gold' 
                   ? 'طلاهای سرمایه‌گذاری آب‌شده خود را به زیباترین مصنوعات طلا و شمش فیزیکی تبدیل کنید.' 
@@ -239,7 +243,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
               </p>
             </div>
             <div>
-              <img src="/talana_logo.png" alt="طلانا" className="w-9 h-9 rounded-lg object-contain opacity-90" />
+              <img src={platformLogo} alt={platformName} className="w-9 h-9 rounded-lg object-contain opacity-90" />
             </div>
           </div>
 
@@ -250,7 +254,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="جستجو در بین محصولات، فروشگاه‌ها..."
+                placeholder={isStandaloneStore ? 'جستجو در بین محصولات...' : 'جستجو در بین محصولات، فروشگاه‌ها...'}
                 className={`w-full bg-white border border-slate-100 rounded-2xl py-3 pl-4 pr-11 text-xs text-slate-800 focus:outline-none ${activeMetal === 'gold' ? 'focus:border-amber-600 focus:ring-1 focus:ring-amber-600' : 'focus:border-slate-600 focus:ring-1 focus:ring-slate-600'} shadow-sm text-right font-black`}
               />
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -258,7 +262,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
 
             {/* Categories Horizontal Showcase using Custom CategoryIcon */}
             <div className="space-y-2">
-              <span className="text-xs font-black text-slate-600 block text-right">دسته‌بندی‌های اصلی بازارچه:</span>
+              <span className="text-xs font-black text-slate-600 block text-right">{isStandaloneStore ? 'دسته‌بندی‌های فروشگاه:' : 'دسته‌بندی‌های اصلی بازارچه:'}</span>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none snap-x justify-start" dir="rtl">
                 <button
                   onClick={() => onSelectCategory(null)}

@@ -168,7 +168,10 @@ export default function StudioCanvas() {
             onPointerDown={(e) => {
               const rect = (e.target as HTMLElement).getBoundingClientRect();
               const px = e.clientX - rect.left;
-              if (px > rect.width - 12) startConnect(node.id, e);
+              if (px > rect.width - 12) { startConnect(node.id, e); return; }
+              e.stopPropagation();
+              BuilderStore.select(node.id);
+              startDrag(node.id, e);
             }}
           />
         ))}

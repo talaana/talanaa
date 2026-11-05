@@ -113,30 +113,30 @@ export default function AdminBranches({ onClose }: Props) {
             <h3 className="text-base font-black text-slate-800 mb-4">{editId ? 'ویرایش شعبه' : 'شعبه جدید'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-black text-slate-600 block mb-1.5">نام شعبه</label>
-                <input value={name} onChange={e => { setName(e.target.value); if (!editId) setSlug(autoSlug(e.target.value)); }} required
+                <label htmlFor="branch-name" className="text-xs font-black text-slate-600 block mb-1.5">نام شعبه</label>
+                <input id="branch-name" value={name} onChange={e => { setName(e.target.value); if (!editId) setSlug(autoSlug(e.target.value)); }} required
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-right focus:outline-none focus:border-amber-500" />
               </div>
               <div>
-                <label className="text-xs font-black text-slate-600 block mb-1.5">اسلاگ</label>
-                <input value={slug} onChange={e => setSlug(e.target.value.replace(/[^a-z0-9_-]/g, ''))} required
+                <label htmlFor="branch-slug" className="text-xs font-black text-slate-600 block mb-1.5">اسلاگ</label>
+                <input id="branch-slug" value={slug} onChange={e => setSlug(e.target.value.replace(/[^a-z0-9_-]/g, ''))} required
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-left focus:outline-none focus:border-amber-500 font-mono" dir="ltr" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-black text-slate-600 block mb-1.5"><MapPin className="w-3 h-3 inline ml-1" />شهر</label>
-                  <input value={city} onChange={e => setCity(e.target.value)}
+                  <label htmlFor="branch-city" className="text-xs font-black text-slate-600 block mb-1.5"><MapPin className="w-3 h-3 inline ml-1" />شهر</label>
+                  <input id="branch-city" value={city} onChange={e => setCity(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-right focus:outline-none focus:border-amber-500" />
                 </div>
                 <div>
-                  <label className="text-xs font-black text-slate-600 block mb-1.5"><Phone className="w-3 h-3 inline ml-1" />تلفن</label>
-                  <input value={phone} onChange={e => setPhone(e.target.value)}
+                  <label htmlFor="branch-phone" className="text-xs font-black text-slate-600 block mb-1.5"><Phone className="w-3 h-3 inline ml-1" />تلفن</label>
+                  <input id="branch-phone" value={phone} onChange={e => setPhone(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-left focus:outline-none focus:border-amber-500" dir="ltr" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-black text-slate-600 block mb-1.5">آدرس</label>
-                <input value={address} onChange={e => setAddress(e.target.value)}
+                <label htmlFor="branch-address" className="text-xs font-black text-slate-600 block mb-1.5">آدرس</label>
+                <input id="branch-address" value={address} onChange={e => setAddress(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-right focus:outline-none focus:border-amber-500" />
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -189,9 +189,18 @@ export default function AdminBranches({ onClose }: Props) {
                     <td className="py-3 px-4 text-xs text-slate-600">{b.city || '-'}</td>
                     <td className="py-3 px-4 text-xs text-slate-500 max-w-[200px] truncate">{b.address || '-'}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black ${b.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await admin.branches.update(b.id, { ...b, is_active: !b.is_active });
+                            load();
+                          } catch (e: any) { alert(e.message); }
+                        }}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black transition-colors ${b.is_active ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                      >
+                        {b.is_active ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                         {b.is_active ? 'فعال' : 'غیرفعال'}
-                      </span>
+                      </button>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-center gap-1">

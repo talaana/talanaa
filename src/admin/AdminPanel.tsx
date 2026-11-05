@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, Menu, X, ChevronDown, FolderTree, Sparkles } from 'lucide-react';
-import { admin, setAdminToken } from './api';
+import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, Menu, X, ChevronDown, FolderTree, Sparkles, FileText, Receipt, CreditCard, TrendingUp, Palette, Wallet } from 'lucide-react';
+import { admin, setAdminToken, setAdminTenant } from './api';
 import AdminDashboard from './pages/Dashboard';
 import AdminRoles from './pages/Roles';
 import AdminUsers from './pages/Users';
@@ -8,6 +8,15 @@ import AdminTenants from './pages/Tenants';
 import AdminCategories from './pages/Categories';
 import AdminProducts from './pages/Products';
 import AdminOrders from './pages/Orders';
+import AdminInvoices from './pages/Invoices';
+import AdminBills from './pages/Bills';
+import AdminPaymentAccounts from './pages/PaymentAccounts';
+import AdminReports from './pages/Reports';
+import AdminInvoiceTemplates from './pages/InvoiceTemplates';
+import AdminAiSettings from './pages/AiSettings';
+import TenantAiSettings from './pages/TenantAiSettings';
+import AdminBranches from './pages/Branches';
+import AdminWallet from './pages/Wallet';
 import AdminExperienceBuilderPage from '../features/cinematic-experience/pages/AdminExperienceBuilderPage';
 
 interface Props { onBack: () => void; token: string; }
@@ -17,7 +26,7 @@ const sidebarWidth = 'w-64';
 export default function AdminPanel({ onBack, token }: Props) {
   // Redirect to login if no token
   if (!token) {
-    window.location.href = '/#/login';
+    window.location.hash = '#/login';
     return null;
   }
 
@@ -29,24 +38,20 @@ export default function AdminPanel({ onBack, token }: Props) {
   const [error, setError] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
+  const [financialOpen, setFinancialOpen] = useState(false);
 
   // Impersonation state
   const [impersonatedTenant, setImpersonatedTenant] = useState<any>(null);
   const [impersonatedToken, setImpersonatedToken] = useState<string>('');
   const [impersonating, setImpersonating] = useState(false);
 
-  // Detect if we're in a tenant context (from URL or impersonation)
-  const isTenantContext = !!tenant?.id || !!impersonatedTenant?.id;
-  const currentTenantId = impersonatedTenant?.id || tenant?.id;
-
+  // tenant_id is only sent from handleImpersonate: the backend treats it as an impersonation request.
   const loadPermissions = () => {
     setLoading(true); setError('');
-    // If in tenant context, pass tenant_id to get scoped permissions
-    const qs = currentTenantId ? `?tenant_id=${currentTenantId}` : '';
-    admin.permissions(qs).then(d => {
+    admin.permissions().then(d => {
       setPerms(d.permissions);
       setIsSuperadmin(d.is_superadmin);
-      if (d.tenant) setTenant(d.tenant);
+      setTenant(d.tenant || null);
       setLoading(false);
     }).catch((e) => {
       setError(e.message || 'خطا در دریافت دسترسی');
@@ -56,8 +61,13 @@ export default function AdminPanel({ onBack, token }: Props) {
 
   useEffect(() => {
       setAdminToken(token);
+      setAdminTenant(null);
       loadPermissions();
-    }, [token, currentTenantId]);
+    }, [token]);
+
+  useEffect(() => {
+    if (!loading) (window as any).__tlBootReady?.();
+  }, [loading]);
 
   const handleImpersonate = async (tenantId: number) => {
     setImpersonating(true);
@@ -66,6 +76,7 @@ export default function AdminPanel({ onBack, token }: Props) {
       setImpersonatedToken(result.token);
       setImpersonatedTenant(result.tenant);
       setAdminToken(result.token);
+      setAdminTenant(tenantId);
       setLoading(true); setError('');
       admin.permissions(`?tenant_id=${tenantId}`).then(d => {
         setPerms(d.permissions);
@@ -88,6 +99,7 @@ export default function AdminPanel({ onBack, token }: Props) {
 
   const exitImpersonation = () => {
     setAdminToken(token);
+    setAdminTenant(null);
     setImpersonatedTenant(null);
     setImpersonatedToken('');
     setPage('dashboard');
@@ -98,8 +110,8 @@ export default function AdminPanel({ onBack, token }: Props) {
   const navigateTo = (id: string) => {
     setPage(id);
     setMobileMenuOpen(false);
-    // Auto-expand products accordion when navigating to products/categories
     if (id === 'products' || id === 'categories') setProductsOpen(true);
+    if (id === 'invoices' || id === 'bills' || id === 'pos' || id === 'reports' || id === 'invoice-templates' || id === 'tenant-ai-settings' || id === 'wallet' || id === 'payment-accounts') setFinancialOpen(true);
   };
 
   const can = (slug: string) => isSuperadmin || perms.includes(slug);
@@ -109,6 +121,10 @@ export default function AdminPanel({ onBack, token }: Props) {
   const superNav: NavItem[] = [
       { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
       { id: 'tenants', label: 'فروشگاه‌ها', icon: Store },
+      { id: 'financial', label: 'مالی', icon: CreditCard, sub: [
+        { id: 'invoice-templates', label: 'قالب فاکتور', icon: Palette },
+        { id: 'ai-settings', label: 'تنظیمات AI', icon: Sparkles },
+      ]},
       { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
       { id: 'users', label: 'کاربران', icon: Users },
       { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
@@ -118,6 +134,15 @@ export default function AdminPanel({ onBack, token }: Props) {
   const tenantNav: NavItem[] = isMarketplaceAdmin ? [
     { id: 'dashboard', label: 'داشبورد بازارچه', icon: LayoutDashboard },
     { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
+    { id: 'financial', label: 'مالی', icon: CreditCard, sub: [
+      { id: 'invoices', label: 'فاکتورها', icon: FileText },
+      { id: 'invoice-templates', label: 'قالب فاکتور', icon: Palette },
+      { id: 'payment-accounts', label: 'حساب‌های پرداخت', icon: CreditCard },
+      { id: 'wallet', label: 'کیف پول', icon: Wallet },
+      { id: 'bills', label: 'اسناد مالی', icon: Receipt },
+      { id: 'reports', label: 'گزارشات', icon: TrendingUp },
+      { id: 'tenant-ai-settings', label: 'تنظیمات AI', icon: Sparkles },
+    ]},
     { id: 'products', label: 'محصولات', icon: Package, sub: [
       { id: 'products', label: 'همه محصولات', icon: Package },
       { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
@@ -125,14 +150,26 @@ export default function AdminPanel({ onBack, token }: Props) {
     { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
     { id: 'sellers', label: 'فروشندگان', icon: Users },
     { id: 'users', label: 'کاربران', icon: Shield },
+    { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
   ] : [
     { id: 'dashboard', label: 'داشبورد فروشگاه', icon: LayoutDashboard },
     { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
+    { id: 'financial', label: 'مالی', icon: CreditCard, sub: [
+      { id: 'invoices', label: 'فاکتورها', icon: FileText },
+      { id: 'invoice-templates', label: 'قالب فاکتور', icon: Palette },
+      { id: 'payment-accounts', label: 'حساب‌های پرداخت', icon: CreditCard },
+      { id: 'wallet', label: 'کیف پول', icon: Wallet },
+      { id: 'bills', label: 'اسناد مالی', icon: Receipt },
+      { id: 'reports', label: 'گزارشات', icon: TrendingUp },
+      { id: 'tenant-ai-settings', label: 'تنظیمات AI', icon: Sparkles },
+    ]},
     { id: 'products', label: 'محصولات', icon: Package, sub: [
       { id: 'products', label: 'همه محصولات', icon: Package },
       { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
     ]},
+    { id: 'branches', label: 'شعب', icon: Store },
     { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
+    { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
   ];
 
   const nav = isSuperadmin ? superNav : tenantNav;
@@ -215,20 +252,25 @@ export default function AdminPanel({ onBack, token }: Props) {
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {nav.map(item => (
+        {nav.map(item => {
+          const isOpen = item.id === 'financial' ? financialOpen : productsOpen;
+          const toggleAccordion = item.id === 'financial'
+            ? () => setFinancialOpen(!financialOpen)
+            : () => setProductsOpen(!productsOpen);
+          return (
           <React.Fragment key={item.id}>
             <button
               onClick={() => {
-                if (item.sub) setProductsOpen(!productsOpen);
+                if (item.sub) toggleAccordion();
                 else navigateTo(item.id);
               }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-right transition-all ${page === item.id ? navActive : navInactive}`}>
               <item.icon className="w-4.5 h-4.5" /><span className="flex-1">{item.label}</span>
               {item.sub && (
-                <ChevronDown className={`w-4 h-4 transition-transform ${productsOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               )}
             </button>
-            {item.sub && productsOpen && (
+            {item.sub && isOpen && (
               <div className="mr-4 space-y-1 border-r-2 border-slate-100 pr-2">
                 {item.sub.map(sub => (
                   <button key={sub.id} onClick={() => navigateTo(sub.id)}
@@ -239,7 +281,8 @@ export default function AdminPanel({ onBack, token }: Props) {
               </div>
             )}
           </React.Fragment>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Back button */}
@@ -320,13 +363,22 @@ export default function AdminPanel({ onBack, token }: Props) {
 
           {/* Page content */}
           {page === 'dashboard' && <AdminDashboard />}
-          {page === 'roles' && <AdminRoles />}
+          {page === 'roles' && <AdminRoles isSuperadmin={isSuperadmin} can={can} />}
           {page === 'users' && <AdminUsers can={can} isSuperadmin={isSuperadmin} />}
           {page === 'tenants' && <AdminTenants onImpersonate={handleImpersonate} />}
           {page === 'categories' && <AdminCategories />}
           {page === 'products' && <AdminProducts />}
           {page === 'orders' && <AdminOrders />}
+          {page === 'invoices' && <AdminInvoices />}
+          {page === 'bills' && <AdminBills />}
+          {page === 'payment-accounts' && <AdminPaymentAccounts />}
+          {page === 'wallet' && <AdminWallet />}
+          {page === 'reports' && <AdminReports />}
+          {page === 'invoice-templates' && <AdminInvoiceTemplates isSuperadmin={isSuperadmin} can={can} />}
+          {page === 'ai-settings' && <AdminAiSettings isSuperadmin={isSuperadmin} />}
+          {page === 'tenant-ai-settings' && <TenantAiSettings />}
           {page === 'sellers' && <AdminSellers />}
+          {page === 'branches' && <AdminBranches />}
           {page === 'experience-builder' && <AdminExperienceBuilderPage />}
         </div>
       </main>

@@ -3,6 +3,7 @@ import { Map as MapIcon, Volume2, VolumeX, Gem, ShoppingBag } from 'lucide-react
 import type { ExperienceGraph, GraphEdge, Hotspot, SequenceNode } from '../types/sequenceGraph';
 import type { GoldProduct } from '../types/goldProduct';
 import { compileGraph, indexOfSequence } from '../lib/runtime';
+import { toPersianDigits } from '../utils/jalali';
 import { getAudioEngine } from '../services/AudioAmbienceEngine';
 import { findDemoProduct } from '../data/demoCatalog';
 import { BagStore } from '../services/BagStore';
@@ -173,14 +174,14 @@ export default function ExperiencePlayer({
 
       {/* Hint */}
       {idle && view.sequences.length > 1 && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
           <p className="text-[10px] font-bold text-amber-100/50 tracking-wide">
             اسکرول یا سوایپ برای حرکت بین تالارها
           </p>
         </div>
       )}
 
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+      <div className="absolute top-16 left-4 z-20 flex items-center gap-2">
         <button
           onClick={() => setMapOpen(true)}
           aria-label="نقشه بوتیک"
@@ -191,13 +192,14 @@ export default function ExperiencePlayer({
         <button
           onClick={toggleMute}
           aria-label="صدا"
+          aria-pressed={muted}
           className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
         >
           {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
         </button>
       </div>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 lg:left-6 lg:translate-x-0 z-20 flex items-center gap-2">
+      <div className="absolute bottom-16 left-4 sm:bottom-4 z-20 flex items-center gap-2">
         <button
           onClick={() => { setVipProductTitle(undefined); setVipOpen(true); }}
           className="flex items-center gap-2 bg-amber-400/90 hover:bg-amber-400 text-black px-4 py-2.5 rounded-full font-black text-xs shadow-lg transition-colors"
@@ -212,7 +214,7 @@ export default function ExperiencePlayer({
           <ShoppingBag className="w-5 h-5" />
           {bagCount > 0 && (
             <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-400 text-black text-[10px] font-black flex items-center justify-center">
-              {bagCount}
+              {toPersianDigits(bagCount)}
             </span>
           )}
         </button>

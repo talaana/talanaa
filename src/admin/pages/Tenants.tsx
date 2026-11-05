@@ -66,7 +66,7 @@ export default function AdminTenants({ onImpersonate }: { onImpersonate?: (tenan
               <button onClick={() => handleToggle(t.id)}>{t.is_active ? <ToggleRight className="w-6 h-6 text-emerald-500" /> : <ToggleLeft className="w-6 h-6 text-slate-300" />}</button>
             </div>
             <div className="flex items-center gap-4 text-[10px] text-slate-500 font-bold">
-              <span>{t.users_count || 0} کاربر</span>
+              <span>{toPersianDigits(t.users_count || 0)} کاربر</span>
               <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${t.type === 'marketplace' ? 'bg-purple-50 text-purple-600' : 'bg-emerald-50 text-emerald-600'}`}>{typeLabel(t.type)}</span>
               {t.domain && <span className="font-mono" dir="ltr">{t.domain}</span>}
             </div>

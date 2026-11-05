@@ -8,7 +8,8 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 interface Product {
   id: number; title: string; category_id: number; seller_id: number | null;
   weight: number; wage_percentage: number; tax_percentage: number;
-  metal: 'gold' | 'silver'; is_active: boolean; calculated_price?: number;
+  metal: 'gold' | 'silver'; is_active: boolean; calculated_price?: { final_price: number } | null;
+  description: string | null;
   category?: { id: number; name: string };
   seller?: { id: number; name: string };
 }
@@ -88,6 +89,7 @@ export default function AdminProducts({ onClose }: Props) {
   const handleEdit = (p: Product) => {
     setEditId(p.id); setTitle(p.title); setCategoryId(p.category_id || '');
     setMetal(p.metal); setWeight(String(p.weight)); setWagePercent(String(p.wage_percentage));
+    setDescription(p.description ?? '');
     setTaxPercent(String(p.tax_percentage)); setIsActive(p.is_active); setShowForm(true);
   };
 
@@ -245,8 +247,8 @@ export default function AdminProducts({ onClose }: Props) {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center text-xs font-bold text-slate-600" dir="ltr">{formatGram(p.weight)}</td>
-                    <td className="py-3 px-4 text-center text-xs font-bold text-slate-600" dir="ltr">{p.wage_percentage}%</td>
-                    <td className="py-3 px-4 text-center text-xs font-black text-amber-600">{p.calculated_price ? formatToman(p.calculated_price) : '-'}</td>
+                    <td className="py-3 px-4 text-center text-xs font-bold text-slate-600" dir="ltr">{toPersianDigits(p.wage_percentage)}٪</td>
+                    <td className="py-3 px-4 text-center text-xs font-black text-amber-600">{p.calculated_price?.final_price != null ? formatToman(p.calculated_price.final_price) : '-'}</td>
                     <td className="py-3 px-4 text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black ${p.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
                         {p.is_active ? 'فعال' : 'غیرفعال'}

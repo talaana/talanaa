@@ -13,7 +13,9 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'کل کاربران', value: stats.total_users, color: 'bg-blue-500' },
-            { label: 'فروشگاه‌ها', value: stats.total_tenants, color: 'bg-purple-500' },
+            stats.total_tenants == null
+              ? { label: 'محصولات', value: stats.total_products, color: 'bg-purple-500' }
+              : { label: 'فروشگاه‌ها', value: stats.total_tenants, color: 'bg-purple-500' },
             { label: 'تراکنش‌ها', value: stats.total_transactions, color: 'bg-emerald-500' },
             { label: 'درآمد کل (تومان)', value: `${toPersianDigits(Math.round(stats.total_revenue/1000000))}M`, color: 'bg-amber-500' },
           ].map((s, i) => (
