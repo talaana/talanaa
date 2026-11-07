@@ -1,0 +1,35 @@
+{
+  "cookies": [
+    {
+      "name": "talana_token_pars-gold",
+      "value": "11%7CkOroMdeHiHZL5MEecI1xWMWzr5ykTwQ45kupJI2p05e31654",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "expires": 1796654718,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "talana_auth_pars-gold",
+      "value": "%7B%22type%22%3A%22user%22%2C%22role%22%3Anull%2C%22permissions%22%3A%5B%5D%2C%22is_superadmin%22%3Afalse%2C%22roles%22%3A%5B%5D%7D",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "expires": 1796654718,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:3021",
+      "localStorage": [
+        {
+          "name": "talana_tenant_cache",
+          "value": "{\"pars-gold\":{\"name\":\"طلافروشی پارس\",\"logo\":null,\"brand_color\":null}}"
+        }
+      ]
+    }
+  ]
+}
