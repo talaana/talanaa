@@ -3,6 +3,7 @@ import { UserWallet, Transaction } from './types';
 import Header from './components/Header';
 import InstallerPage from './components/InstallerPage';
 import LoginPage from './components/LoginPage';
+import SerialVerifyPage from './components/SerialVerifyPage';
 import MainJewelryExperienceLanding from './features/cinematic-experience/pages/MainJewelryExperienceLanding';
 import DynamicCampaignExperiencePage from './features/cinematic-experience/pages/DynamicCampaignExperiencePage';
 import { detectExperienceRoute } from './features/cinematic-experience/lib/routes';
@@ -94,6 +95,10 @@ export default function App() {
     const [isSuperadmin, setIsSuperadmin] = useState(false);
     const [showLoginPage, setShowLoginPage] = useState(() => window.location.hash === '#/login');
     const [loginRedirect, setLoginRedirect] = useState<'admin' | 'landing'>(() => window.location.hash === '#/admin' ? 'admin' : 'landing');
+    const [verifyHash, setVerifyHash] = useState<string | null>(() => {
+      const match = window.location.hash.match(/^#\/verify\/(.+)$/);
+      return match ? match[1] : null;
+    });
 
     const can = (perm: string) => isSuperadmin || userPerms.includes(perm);
 
@@ -172,6 +177,8 @@ export default function App() {
       const onHashChange = () => {
         setShowAdmin(window.location.hash === '#/admin');
         setShowLoginPage(window.location.hash === '#/login');
+        const verifyMatch = window.location.hash.match(/^#\/verify\/(.+)$/);
+        setVerifyHash(verifyMatch ? verifyMatch[1] : null);
         if (window.location.hash !== '#/login') setLoginRedirect(window.location.hash === '#/admin' ? 'admin' : 'landing');
       };
       window.addEventListener('hashchange', onHashChange);
@@ -408,6 +415,11 @@ export default function App() {
       return null;
     }
     if (showAdmin && !tenantSyncPending) return <AdminPanel onBack={() => { window.location.hash = '#/'; }} token={getToken() || ''} />;
+
+    // ===== SERIAL VERIFICATION PAGE (public, no auth required) =====
+    if (verifyHash) {
+      return <SerialVerifyPage hash={verifyHash} onBack={() => { window.location.hash = '#/'; }} />;
+    }
 
     // ===== STORE / MARKETPLACE LOADING (URL has tenant, or tenant resolved but auth loading) =====
   if ((tenantLoading && urlTenant) || (isLoading && tenant) || tenantSyncPending) {
