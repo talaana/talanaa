@@ -44,7 +44,12 @@ async function apiFetch(path: string, opts: RequestInit = {}) {
   const tid = _tenantOverride ?? getTenantId();
   if (tid) headers['X-Tenant'] = String(tid);
   const res = await fetch(`${API}${path}`, { ...opts, headers });
-  if (!res.ok) { const e = await res.json().catch(()=>({message:'خطا'})); throw new Error(e.message); }
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({message:'خطا'}));
+    const err = new Error(e.message);
+    (err as any).code = e.code;
+    throw err;
+  }
   return res.json();
 }
 
