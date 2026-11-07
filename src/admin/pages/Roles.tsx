@@ -115,14 +115,16 @@ export default function AdminRoles({ isSuperadmin = false, can }: { isSuperadmin
   );
 }
 
-function RoleCard({ role, isSuperadmin, onEdit, onClone, onDelete, onAssign }: {
+interface RoleCardProps {
   role: Role;
   isSuperadmin: boolean;
   onEdit?: () => void;
   onClone?: () => void;
   onDelete?: () => void;
   onAssign: (userId: number) => void;
-}) {
+}
+
+const RoleCard: React.FC<RoleCardProps> = ({ role, isSuperadmin, onEdit, onClone, onDelete, onAssign }) => {
   const isSystem = role.tenant_id === null;
 
   return (
@@ -170,7 +172,7 @@ function RoleCard({ role, isSuperadmin, onEdit, onClone, onDelete, onAssign }: {
       </div>
     </div>
   );
-}
+};
 
 function CreateModal({ onClose, onCreated, permissions }: { onClose: () => void; onCreated: () => void; permissions: Record<string, Permission[]> }) {
   const [name, setName] = useState('');
