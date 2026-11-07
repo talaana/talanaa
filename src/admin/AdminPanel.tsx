@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, Menu, X, ChevronDown, FolderTree, Sparkles, FileText, Receipt, CreditCard, TrendingUp, Palette, Wallet } from 'lucide-react';
+import { LayoutDashboard, Shield, Users, Store, ArrowRight, ShoppingBag, Package, Menu, X, ChevronDown, FolderTree, Sparkles, FileText, Receipt, CreditCard, TrendingUp, Palette, Wallet, ShieldCheck } from 'lucide-react';
 import { admin, setAdminToken, setAdminTenant } from './api';
 import AdminDashboard from './pages/Dashboard';
 import AdminRoles from './pages/Roles';
@@ -18,6 +18,8 @@ import TenantAiSettings from './pages/TenantAiSettings';
 import AdminBranches from './pages/Branches';
 import AdminWallet from './pages/Wallet';
 import AdminExperienceBuilderPage from '../features/cinematic-experience/pages/AdminExperienceBuilderPage';
+import AdminTaxDashboard from './pages/TaxDashboard';
+import AdminCompliance from './pages/Compliance';
 
 interface Props { onBack: () => void; token: string; }
 
@@ -111,7 +113,7 @@ export default function AdminPanel({ onBack, token }: Props) {
     setPage(id);
     setMobileMenuOpen(false);
     if (id === 'products' || id === 'categories') setProductsOpen(true);
-    if (id === 'invoices' || id === 'bills' || id === 'pos' || id === 'reports' || id === 'invoice-templates' || id === 'tenant-ai-settings' || id === 'wallet' || id === 'payment-accounts') setFinancialOpen(true);
+    if (id === 'invoices' || id === 'bills' || id === 'pos' || id === 'reports' || id === 'invoice-templates' || id === 'tenant-ai-settings' || id === 'wallet' || id === 'payment-accounts' || id === 'tax-dashboard') setFinancialOpen(true);
   };
 
   const can = (slug: string) => isSuperadmin || perms.includes(slug);
@@ -126,6 +128,7 @@ export default function AdminPanel({ onBack, token }: Props) {
         { id: 'ai-settings', label: 'تنظیمات AI', icon: Sparkles },
       ]},
       { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
+      { id: 'compliance', label: 'انطباق و احراز هویت', icon: ShieldCheck },
       { id: 'users', label: 'کاربران', icon: Users },
       { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
     ];
@@ -140,6 +143,7 @@ export default function AdminPanel({ onBack, token }: Props) {
       { id: 'payment-accounts', label: 'حساب‌های پرداخت', icon: CreditCard },
       { id: 'wallet', label: 'کیف پول', icon: Wallet },
       { id: 'bills', label: 'اسناد مالی', icon: Receipt },
+      { id: 'tax-dashboard', label: 'مالیات و مؤدیان', icon: TrendingUp },
       { id: 'reports', label: 'گزارشات', icon: TrendingUp },
       { id: 'tenant-ai-settings', label: 'تنظیمات AI', icon: Sparkles },
     ]},
@@ -148,6 +152,7 @@ export default function AdminPanel({ onBack, token }: Props) {
       { id: 'categories', label: 'دسته‌بندی‌ها', icon: FolderTree },
     ]},
     { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
+    { id: 'compliance', label: 'انطباق و احراز هویت', icon: ShieldCheck },
     { id: 'sellers', label: 'فروشندگان', icon: Users },
     { id: 'users', label: 'کاربران', icon: Shield },
     { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
@@ -160,6 +165,7 @@ export default function AdminPanel({ onBack, token }: Props) {
       { id: 'payment-accounts', label: 'حساب‌های پرداخت', icon: CreditCard },
       { id: 'wallet', label: 'کیف پول', icon: Wallet },
       { id: 'bills', label: 'اسناد مالی', icon: Receipt },
+      { id: 'tax-dashboard', label: 'مالیات و مؤدیان', icon: TrendingUp },
       { id: 'reports', label: 'گزارشات', icon: TrendingUp },
       { id: 'tenant-ai-settings', label: 'تنظیمات AI', icon: Sparkles },
     ]},
@@ -169,6 +175,7 @@ export default function AdminPanel({ onBack, token }: Props) {
     ]},
     { id: 'branches', label: 'شعب', icon: Store },
     { id: 'experience-builder', label: 'سازنده تجربه', icon: Sparkles },
+    { id: 'compliance', label: 'انطباق و احراز هویت', icon: ShieldCheck },
     { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
   ];
 
@@ -380,6 +387,8 @@ export default function AdminPanel({ onBack, token }: Props) {
           {page === 'sellers' && <AdminSellers />}
           {page === 'branches' && <AdminBranches />}
           {page === 'experience-builder' && <AdminExperienceBuilderPage />}
+          {page === 'tax-dashboard' && <AdminTaxDashboard />}
+          {page === 'compliance' && <AdminCompliance can={can} />}
         </div>
       </main>
     </div>
