@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Store, Users, ArrowRight, ArrowLeft, Check, Sparkles, Package, Upload, Palette } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { setToken } from '../api';
+import { getTenantUrl } from '../tenant';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -117,11 +118,8 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
   const goToStore = () => {
     if (result?.tenant?.slug) {
       // Suppliers have no public storefront — go directly to their admin panel
-      if (result.tenant.type === 'supplier') {
-        window.location.href = `/?tenant=${result.tenant.slug}#/admin`;
-      } else {
-        window.location.href = `/?tenant=${result.tenant.slug}`;
-      }
+      const hash = result.tenant.type === 'supplier' ? '#/admin' : '';
+      window.location.href = getTenantUrl(result.tenant.slug, hash);
     }
   };
 
@@ -190,7 +188,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                   <h3 className="text-xs font-black text-slate-500 mb-3">اطلاعات ورود</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between"><span className="text-slate-400">شماره:</span><span className="font-mono font-bold" dir="ltr">{adminPhone}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">آدرس:</span><span className="font-mono font-bold text-[11px]" dir="ltr">localhost:5175/?tenant={tenantSlug}</span></div>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-400">آدرس:</span><a href={getTenantUrl(result.tenant.slug)} className="font-mono font-bold text-[11px] break-all underline decoration-amber-300 underline-offset-4 hover:text-amber-700" dir="ltr">{new URL(getTenantUrl(result.tenant.slug)).host}</a></div>
                   </div>
                 </div>
               )}

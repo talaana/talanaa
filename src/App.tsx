@@ -11,7 +11,7 @@ import { Home, Store, ArrowLeftRight, LayoutGrid, LogOut, Bell, User, Shield, Sh
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
 import { formatToman, formatGram, toPersianDigits, apiAssetUrl } from './utils';
-import { useTenant, detectTenantFromURL } from './tenant';
+import { useTenant, detectTenantFromURL, getTenantUrl } from './tenant';
 import AdminPanel from './admin/AdminPanel';
 import { admin as adminApi } from './admin/api';
 
@@ -319,7 +319,7 @@ export default function App() {
     // ===== CINEMATIC EXPERIENCE ROUTES (/experience and /experience/:slug) =====
     const experienceRoute = typeof window !== 'undefined' ? detectExperienceRoute() : null;
     const handleExperienceDirectPurchase = useCallback((_product: { id: string }) => {
-      window.location.href = '/?tenant=talana';
+      window.location.href = getTenantUrl('talana');
     }, []);
 
     if (experienceRoute?.kind === 'campaign') {
@@ -332,8 +332,8 @@ export default function App() {
       );
     }
     if (experienceRoute?.kind === 'landing') {
-      const enterMarketplace = () => { window.location.href = '/?tenant=talana'; };
-      const enterStore = (slug: string) => { window.location.href = `/?tenant=${slug}`; };
+      const enterMarketplace = () => { window.location.href = getTenantUrl('talana'); };
+      const enterStore = (slug: string) => { window.location.href = getTenantUrl(slug); };
       const startBuilding = (type?: 'marketplace' | 'store' | 'supplier') => {
         setInstallerPreselectedType(type);
         setShowInstaller(true);
@@ -450,7 +450,8 @@ export default function App() {
       setShowAdmin(false);
       setShowLoginPage(true);
       setLoginRedirect('admin');
-      window.location.hash = '#/login';
+      // Replace the guarded admin entry so Back returns to the previous site, not the guard again.
+      window.history.replaceState(null, '', '#/login');
       return null;
     }
     if (showAdmin && !tenantSyncPending) return <AdminPanel onBack={() => { window.location.hash = '#/'; }} token={getToken() || ''} />;
@@ -511,8 +512,8 @@ export default function App() {
 
     // ===== LANDING PAGE (no tenant) — cinematic showcase experience =====
     if (!tenant && !tenantLoading) {
-      const enterMarketplace = () => { window.location.href = '/?tenant=talana'; };
-      const enterStore = (slug: string) => { window.location.href = `/?tenant=${slug}`; };
+      const enterMarketplace = () => { window.location.href = getTenantUrl('talana'); };
+      const enterStore = (slug: string) => { window.location.href = getTenantUrl(slug); };
       const startBuilding = (type?: 'marketplace' | 'store' | 'supplier') => {
         setInstallerPreselectedType(type);
         setShowInstaller(true);
@@ -538,7 +539,7 @@ export default function App() {
             </div>
             <h1 className="text-lg font-black text-slate-800 mb-2">پنل تأمین‌کننده</h1>
             <p className="text-sm text-slate-400 mb-6">این یک پنل مدیریت خصوصی است و فروشگاه عمومی ندارد.</p>
-            <a href={`/?tenant=${tenant.slug}#/login`}
+            <a href={getTenantUrl(tenant.slug, '#/login')}
               className="inline-block text-white px-6 py-3 rounded-2xl font-black text-sm"
               style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>
               ورود به پنل مدیریت
@@ -551,7 +552,8 @@ export default function App() {
     // ===== LOGIN SCREEN (fallback for logged out users without tenant) =====
     if (!isLoggedIn) {
       setShowLoginPage(true);
-      window.location.hash = '#/login';
+      // Keep tenant entry as a single history entry so Back can leave the storefront.
+      window.history.replaceState(null, '', '#/login');
       return <div dir="rtl" className="min-h-screen bg-slate-50 flex items-center justify-center font-sans"><div className="text-center"><div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto" /></div></div>;
     }
 

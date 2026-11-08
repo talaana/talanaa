@@ -29,6 +29,9 @@ export default defineConfig({
     trace: 'on',
     actionTimeout: 10000,
     navigationTimeout: 30000,
+    launchOptions: {
+      args: ['--host-resolver-rules=MAP *.localhost 127.0.0.1'],
+    },
   },
   projects: [
     { name: 'setup', testMatch: /auth\.setup\.ts/ },
@@ -52,6 +55,7 @@ export default defineConfig({
     timeout: 30000,
     env: {
       VITE_API_URL: `${apiURL}/api`,
+      DISABLE_HMR: 'true',
     },
   },
 });

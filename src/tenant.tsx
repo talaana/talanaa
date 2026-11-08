@@ -2,6 +2,44 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { TenantConfig } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const TENANT_BASE_DOMAIN = normalizeDomain(import.meta.env.VITE_BASE_DOMAIN || 'talaana.ir');
+const LEGACY_BASE_DOMAINS = ['localhost', 'talana.app', 'talana-sage.vercel.app'];
+const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'api', 'admin', 'mail']);
+
+type TenantIdentifier = { slug?: string; domain?: string };
+
+function normalizeDomain(domain: string): string {
+  return domain.trim().toLowerCase().replace(/\.+$/, '');
+}
+
+function isTenantSlug(slug: string): boolean {
+  // Keep legacy underscore slugs readable, but never let a slug inject a host, path, or query.
+  return /^[a-z0-9_-]{1,63}$/.test(slug) && !RESERVED_SUBDOMAINS.has(slug);
+}
+
+function isLocalDevelopmentHost(hostname: string): boolean {
+  return hostname === 'localhost'
+    || hostname.endsWith('.localhost')
+    || hostname === '127.0.0.1'
+    || hostname === '[::1]'
+    || hostname === '::1';
+}
+
+/** Build a tenant-owned origin; production links never carry a tenant query parameter. */
+export function getTenantUrl(slug: string, hash = '', currentUrl?: string): string {
+  if (!isTenantSlug(slug)) {
+    throw new Error('شناسه فروشگاه برای آدرس ساب‌دامنه معتبر نیست');
+  }
+
+  const current = new URL(currentUrl ?? (typeof window !== 'undefined'
+    ? window.location.href
+    : `https://${TENANT_BASE_DOMAIN}`));
+  const isLocal = isLocalDevelopmentHost(current.hostname);
+  const baseDomain = isLocal ? `localhost${current.port ? `:${current.port}` : ''}` : TENANT_BASE_DOMAIN;
+  const url = new URL(`${isLocal ? current.protocol : 'https:'}//${slug}.${baseDomain}`);
+  url.hash = hash ? (hash.startsWith('#') ? hash : `#${hash}`) : '';
+  return url.href;
+}
 
 interface TenantContextValue {
   tenant: TenantConfig | null;
@@ -27,37 +65,35 @@ export function useTenant() {
 
 /**
  * Detect tenant from the current URL.
- * Priority:
- * 1. Query param: ?tenant=slug (dev mode)
- * 2. Subdomain: slug.talaana.ir, slug.localhost, slug.talana.app
- * 3. Path prefix: /s/store-slug (legacy)
- * Returns { slug?, domain? } or null if no tenant detected.
+ * Subdomains own the tenant context in production. Query/path identifiers remain
+ * readable only for local development and legacy links.
  */
-export function detectTenantFromURL(): { slug?: string; domain?: string } | null {
-  if (typeof window === 'undefined') return null;
+export function detectTenantFromURL(currentUrl?: string): TenantIdentifier | null {
+  if (typeof window === 'undefined' && !currentUrl) return null;
 
-  const url = new URL(window.location.href);
+  const url = new URL(currentUrl ?? window.location.href);
+  const hostname = normalizeDomain(url.hostname);
 
-  // 1. Query param (dev mode — localhost or arbitrary)
+  // app.talaana.ir is the marketplace tenant, not a reserved platform subdomain.
+  if (hostname === `app.${TENANT_BASE_DOMAIN}`) {
+    return { slug: 'talana' };
+  }
+
+  for (const baseDomain of [TENANT_BASE_DOMAIN, ...LEGACY_BASE_DOMAINS]) {
+    const suffix = `.${baseDomain}`;
+    if (!hostname.endsWith(suffix)) continue;
+
+    const slug = hostname.slice(0, -suffix.length);
+    if (isTenantSlug(slug)) return { slug };
+  }
+
   const tenantParam = url.searchParams.get('tenant');
-  if (tenantParam) {
+  if (isLocalDevelopmentHost(hostname) && tenantParam && isTenantSlug(tenantParam)) {
     return { slug: tenantParam };
   }
 
-  // 2. Subdomain detection
-  const hostname = url.hostname;
-  const prodDomain = 'talaana.ir';
-  const devDomains = 'localhost|talana\\.app|talana-sage\\.vercel\\.app';
-  const subdomainPattern = new RegExp(`^([^.]+)\\.(${devDomains}|${prodDomain.replace('.', '\\.')})$`);
-
-  const subdomainMatch = hostname.match(subdomainPattern);
-  if (subdomainMatch && subdomainMatch[1] !== 'www' && subdomainMatch[1] !== 'app') {
-    return { domain: hostname };
-  }
-
-  // 3. Path prefix (e.g., /s/zarrin)
   const pathMatch = url.pathname.match(/^\/s\/([^/]+)/);
-  if (pathMatch) {
+  if (pathMatch && isTenantSlug(pathMatch[1])) {
     return { slug: pathMatch[1] };
   }
 

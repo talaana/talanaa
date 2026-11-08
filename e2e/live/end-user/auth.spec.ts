@@ -50,19 +50,19 @@ test.describe('End-user authentication', () => {
     await page.getByPlaceholder('111111').fill('111111');
     await shot(page, info, SECTION, '05-otp-code-entered');
     await page.getByRole('button', { name: 'تأیید و ورود' }).click();
-    await expect(page).toHaveURL(/tenant=talana#\/$/);
+    await expect(page).toHaveURL(/talana\.localhost:3017\/#\/$/);
     await expect(page.getByText(USERS.marketplaceCustomer.name).first()).toBeVisible();
   });
 
   test('password login, session survives reload, then logout', async ({ page }, info) => {
     await page.goto(tenantUrl('talana', '#/login'), { waitUntil: 'domcontentloaded' });
     await fillLogin(page, USERS.marketplaceCustomer.phone, PASSWORD);
-    await expect(page).toHaveURL(/tenant=talana#\/$/);
+    await expect(page).toHaveURL(/talana\.localhost:3017\/#\/$/);
     await expect(appNav(page).getByRole('button', { name: 'خانه', exact: true })).toBeVisible();
     await expect(page.getByText('موجودی کیف پول').first()).toBeVisible();
 
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/tenant=talana#\/$/);
+    await expect(page).toHaveURL(/talana\.localhost:3017\/#\/$/);
     await expect(appNav(page).getByRole('button', { name: 'خانه', exact: true })).toBeVisible();
     await expect(page.getByText('موجودی کیف پول').first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'ورود به طلانا' })).toHaveCount(0);
@@ -81,11 +81,11 @@ test.describe('End-user authentication', () => {
 
   test('visiting the admin panel without a session redirects to that tenant\'s login', async ({ page }, info) => {
     await page.goto(tenantUrl('pars-gold', '#/admin'), { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/tenant=pars-gold#\/login$/);
+    await expect(page).toHaveURL(/pars-gold\.localhost:3017\/#\/login$/);
     await expect(page.getByRole('button', { name: 'ورود به طلافروشی پارس' })).toBeVisible();
     await shot(page, info, SECTION, '07-admin-redirects-to-login');
     await fillLogin(page, USERS.storeAdmin.phone, PASSWORD);
-    await expect(page).toHaveURL(/tenant=pars-gold#\/admin$/);
+    await expect(page).toHaveURL(/pars-gold\.localhost:3017\/#\/admin$/);
     await expect(page.getByRole('heading', { name: 'داشبورد مدیریت' })).toBeVisible();
   });
 });

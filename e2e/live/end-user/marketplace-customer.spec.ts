@@ -106,7 +106,7 @@ test.describe('Marketplace customer (سارا کریمی @ طلانا)', () => {
     await expect(page.getByText('دسترسی غیرمجاز')).toBeVisible();
     await shot(page, info, SECTION, '10-admin-denied');
     await page.getByRole('button', { name: 'بازگشت به سایت' }).click();
-    await expect(page).toHaveURL(/tenant=talana#\/$/);
+    await expect(page).toHaveURL(/talana\.localhost:3017\/#\/$/);
     await expect(appNav(page).getByRole('button', { name: 'خانه', exact: true })).toBeVisible();
     await expect(page.getByText('موجودی کیف پول').first()).toBeVisible();
   });

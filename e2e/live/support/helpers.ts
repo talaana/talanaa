@@ -19,7 +19,7 @@ export type Role = keyof typeof USERS;
 
 export const authFile = (role: Role) => path.join(__dirname, '..', '.auth', `${role}.json`);
 
-export const tenantUrl = (tenant: string | null, hash = '') => `${tenant ? `/?tenant=${tenant}` : '/'}${hash}`;
+export const tenantUrl = (tenant: string | null, hash = '') => tenant ? `http://${tenant}.localhost:3017/${hash}` : '/';
 
 const SCREENSHOT_ROOT = path.join(__dirname, '..', '..', '..', 'e2e-screenshots');
 

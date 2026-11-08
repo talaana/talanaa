@@ -17,7 +17,7 @@ export default defineConfig({
     serviceWorkers: 'block',
     // Request routing cannot intercept speculative DNS/preconnects in index.html.
     launchOptions: {
-      args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1', '--no-proxy-server'],
+      args: ['--host-resolver-rules=MAP *.localhost 127.0.0.1, MAP * ~NOTFOUND, EXCLUDE 127.0.0.1, EXCLUDE localhost', '--no-proxy-server'],
     },
     trace: 'on-first-retry',
     screenshot: 'on',
@@ -32,7 +32,7 @@ export default defineConfig({
   webServer: {
     // The Vite API disables .env loading; strictPort is the CLI --strictPort equivalent.
     command: `node --input-type=module -e "import { createServer } from 'vite'; await (await createServer({ envFile: false, server: { host: '127.0.0.1', port: 3017, strictPort: true } })).listen();"`,
-    env: { VITE_API_URL: `${baseURL}/api`, DISABLE_HMR: 'false' },
+    env: { VITE_API_URL: `${baseURL}/api`, DISABLE_HMR: 'true' },
     url: baseURL,
     reuseExistingServer: true,
     timeout: 120000,

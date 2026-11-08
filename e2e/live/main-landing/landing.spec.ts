@@ -90,7 +90,7 @@ test.describe('Main cinematic landing (no tenant)', () => {
   test('ورود به بازارچه leads to the marketplace login', async ({ page }, info) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'ورود به بازارچه' }).click();
-    await expect(page).toHaveURL(/tenant=talana#\/login/, { timeout: 15000 });
+    await expect(page).toHaveURL(/talana\.localhost:3017\/#\/login/, { timeout: 15000 });
     await expect(page.getByRole('button', { name: 'ورود به طلانا' })).toBeVisible();
     await shot(page, info, SECTION, '07-enter-marketplace');
   });
