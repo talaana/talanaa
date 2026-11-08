@@ -58,25 +58,46 @@ export default function AdminInvoiceTemplates({ isSuperadmin = false, can }: { i
   useEffect(() => { load(); }, []);
 
   const handleClone = async (id: number) => {
+    console.log('🔵 Clone clicked for template ID:', id);
     try {
+      console.log('📡 Calling API: clone template', id);
       await admin.invoiceTemplates.clone(id);
+      console.log('✅ Clone successful, reloading templates');
       load();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { 
+      console.error('❌ Clone failed:', e);
+      alert(e.message); 
+    }
   };
 
   const handleSetDefault = async (id: number) => {
+    console.log('⭐ Set Default clicked for template ID:', id);
     try {
+      console.log('📡 Calling API: set default template', id);
       await admin.invoiceTemplates.setDefault(id);
+      console.log('✅ Set default successful, reloading templates');
       load();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { 
+      console.error('❌ Set default failed:', e);
+      alert(e.message); 
+    }
   };
 
   const handleArchive = async (id: number) => {
-    if (!confirm('آیا از آرشیو این قالب مطمئنید؟')) return;
+    console.log('🗑️ Archive clicked for template ID:', id);
+    if (!confirm('آیا از آرشیو این قالب مطمئنید؟')) {
+      console.log('❌ Archive cancelled by user');
+      return;
+    }
     try {
+      console.log('📡 Calling API: archive template', id);
       await admin.invoiceTemplates.remove(id);
+      console.log('✅ Archive successful, reloading templates');
       load();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { 
+      console.error('❌ Archive failed:', e);
+      alert(e.message); 
+    }
   };
 
   const handleEdit = (template: Template) => {
@@ -124,7 +145,9 @@ export default function AdminInvoiceTemplates({ isSuperadmin = false, can }: { i
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {systemTemplates.map(tpl => (
                   <React.Fragment key={tpl.id}>
-                    <TemplateCard template={tpl}
+                    <TemplateCard 
+                      template={tpl}
+                      isSystemTemplate={true}
                       onPreview={() => setShowPreview(tpl)}
                       onClone={() => handleClone(tpl.id)}
                       onEdit={isSuperadmin ? () => handleEdit(tpl) : undefined}
@@ -143,7 +166,9 @@ export default function AdminInvoiceTemplates({ isSuperadmin = false, can }: { i
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {customTemplates.map(tpl => (
                   <React.Fragment key={tpl.id}>
-                    <TemplateCard template={tpl}
+                    <TemplateCard 
+                      template={tpl}
+                      isSystemTemplate={false}
                       onPreview={() => setShowPreview(tpl)}
                       onClone={() => handleClone(tpl.id)}
                       onSetDefault={can?.('invoice_templates.manage_default') && !tpl.is_default ? () => handleSetDefault(tpl.id) : undefined}
@@ -210,16 +235,40 @@ export default function AdminInvoiceTemplates({ isSuperadmin = false, can }: { i
   );
 }
 
-function TemplateCard({ template, onPreview, onClone, onSetDefault, onArchive, onEdit }: {
+function TemplateCard({ template, onPreview, onClone, onSetDefault, onArchive, onEdit, isSystemTemplate }: {
   template: Template;
   onPreview: () => void;
   onClone: () => void;
   onSetDefault?: () => void;
   onArchive?: () => void;
-  onEdit: () => void;
+  onEdit?: () => void;
+  isSystemTemplate?: boolean;
 }) {
+  console.log('🎴 TemplateCard rendered:', { 
+    name: template.name, 
+    id: template.id,
+    hasOnClone: !!onClone,
+    hasOnSetDefault: !!onSetDefault,
+    hasOnArchive: !!onArchive,
+    is_default: template.is_default,
+    isSystemTemplate
+  });
+  
+  const handleCardClick = () => {
+    // For system templates without edit permission, clone instead
+    if (isSystemTemplate && !onEdit) {
+      console.log('📋 System template clicked by tenant - cloning');
+      onClone();
+    } else if (onEdit) {
+      onEdit();
+    }
+  };
+  
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all hover:shadow-md ${template.is_default ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-100'}`}>
+    <div 
+      onClick={handleCardClick}
+      className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all hover:shadow-md cursor-pointer ${template.is_default ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-100'}`}
+    >
       <div className="h-32 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center relative overflow-hidden">
         <div style={{ transform: 'scale(0.25)', transformOrigin: 'center' }}>
           <InvoiceRenderer blocks={template.blocks} styles={template.styles || undefined} invoice={{} as any} preview />
@@ -245,7 +294,7 @@ function TemplateCard({ template, onPreview, onClone, onSetDefault, onArchive, o
         {template.preview_metadata?.description && (
           <p className="text-[10px] text-slate-400 mb-3 line-clamp-2">{template.preview_metadata.description}</p>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           <button onClick={onPreview} className="flex-1 flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-lg text-xs font-bold transition-colors">
             <Eye className="w-3.5 h-3.5" /> پیش‌نمایش
           </button>
@@ -254,16 +303,16 @@ function TemplateCard({ template, onPreview, onClone, onSetDefault, onArchive, o
               <Edit2 className="w-3.5 h-3.5" />
             </button>
           )}
-          <button onClick={onClone} className="flex items-center justify-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-2 rounded-lg text-xs font-bold transition-colors" title="کپی">
+          <button onClick={() => { console.log('📋 Clone button clicked for:', template.id); onClone(); }} className="flex items-center justify-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-2 rounded-lg text-xs font-bold transition-colors" title="کپی">
             <Copy className="w-3.5 h-3.5" />
           </button>
           {onSetDefault && (
-            <button onClick={onSetDefault} className="flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-2 rounded-lg text-xs font-bold transition-colors" title="پیش‌فرض">
+            <button onClick={() => { console.log('⭐ Set Default button clicked for:', template.id); onSetDefault(); }} className="flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-2 rounded-lg text-xs font-bold transition-colors" title="پیش‌فرض">
               <Star className="w-3.5 h-3.5" />
             </button>
           )}
           {onArchive && (
-            <button onClick={onArchive} className="flex items-center justify-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-2 rounded-lg text-xs font-bold transition-colors" title="آرشیو">
+            <button onClick={() => { console.log('🗑️ Archive button clicked for:', template.id); onArchive(); }} className="flex items-center justify-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-2 rounded-lg text-xs font-bold transition-colors" title="آرشیو">
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}

@@ -13,6 +13,7 @@ import { auth, wallet, prices, transactions, setToken, getToken, setTenantContex
 import { formatToman, formatGram, toPersianDigits, apiAssetUrl } from './utils';
 import { useTenant, detectTenantFromURL } from './tenant';
 import AdminPanel from './admin/AdminPanel';
+import { admin as adminApi } from './admin/api';
 
 const HomeDashboard = lazy(() => import('./components/HomeDashboard'));
 const MarketplaceTab = lazy(() => import('./components/MarketplaceTab'));
@@ -88,13 +89,20 @@ export default function App() {
   const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
   const [isServicePageOpen, setIsServicePageOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showAdmin, setShowAdmin] = useState(() => window.location.hash === '#/admin');
+  const [showAdmin, setShowAdmin] = useState(() => 
+    window.location.hash.startsWith('#/admin') || 
+    window.location.hash.startsWith('#/superadmin') || 
+    window.location.hash.startsWith('#/tenant')
+  );
     const [showInstaller, setShowInstaller] = useState(false);
     const [installerPreselectedType, setInstallerPreselectedType] = useState<'marketplace' | 'store' | 'supplier' | undefined>();
     const [userPerms, setUserPerms] = useState<string[]>([]);
     const [isSuperadmin, setIsSuperadmin] = useState(false);
     const [showLoginPage, setShowLoginPage] = useState(() => window.location.hash === '#/login');
-    const [loginRedirect, setLoginRedirect] = useState<'admin' | 'landing'>(() => window.location.hash === '#/admin' ? 'admin' : 'landing');
+    const [loginRedirect, setLoginRedirect] = useState<'admin' | 'landing'>(() => {
+      const hash = window.location.hash;
+      return (hash.startsWith('#/admin') || hash.startsWith('#/superadmin') || hash.startsWith('#/tenant')) ? 'admin' : 'landing';
+    });
     const [verifyHash, setVerifyHash] = useState<string | null>(() => {
       const match = window.location.hash.match(/^#\/verify\/(.+)$/);
       return match ? match[1] : null;
@@ -175,17 +183,24 @@ export default function App() {
 
   useEffect(() => {
       const onHashChange = () => {
-        setShowAdmin(window.location.hash === '#/admin');
+        // Check if hash starts with #/admin, #/superadmin, or #/tenant
+        const isAdminRoute = window.location.hash.startsWith('#/admin') || 
+                           window.location.hash.startsWith('#/superadmin') || 
+                           window.location.hash.startsWith('#/tenant');
+        setShowAdmin(isAdminRoute);
         setShowLoginPage(window.location.hash === '#/login');
         const verifyMatch = window.location.hash.match(/^#\/verify\/(.+)$/);
         setVerifyHash(verifyMatch ? verifyMatch[1] : null);
-        if (window.location.hash !== '#/login') setLoginRedirect(window.location.hash === '#/admin' ? 'admin' : 'landing');
+        if (window.location.hash !== '#/login') setLoginRedirect(isAdminRoute ? 'admin' : 'landing');
       };
       window.addEventListener('hashchange', onHashChange);
       return () => window.removeEventListener('hashchange', onHashChange);
     }, []);
 
-    const goToAdmin = () => { window.location.hash = '#/admin'; };
+    const goToAdmin = () => { 
+      // Route to appropriate admin panel based on user role
+      window.location.hash = isSuperadmin ? '#/superadmin/dashboard' : '#/tenant/dashboard';
+    };
     const goToApp = () => { window.location.hash = '#/'; };
     const goToLogin = () => { window.location.hash = '#/login'; };
 
@@ -346,7 +361,19 @@ export default function App() {
               const ctx = getAuthContext();
               if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
               setShowLoginPage(false);
-              window.location.hash = loginRedirect === 'admin' ? '#/admin' : '#/';
+              // Route to appropriate admin panel based on user role
+              if (loginRedirect === 'admin') {
+                // Fetch permissions to determine if user is superadmin
+                try {
+                  const perms = await adminApi.permissions();
+                  window.location.hash = perms.is_superadmin ? '#/superadmin/dashboard' : '#/tenant/dashboard';
+                } catch {
+                  // Fallback to tenant dashboard if permissions fetch fails
+                  window.location.hash = '#/tenant/dashboard';
+                }
+              } else {
+                window.location.hash = '#/';
+              }
               loadTransactions();
             } catch (err: any) { setLoginError(err.message || 'خطا در ورود'); }
           };
@@ -371,7 +398,19 @@ export default function App() {
               const ctx = getAuthContext();
               if (ctx) { setUserPerms(ctx.permissions); setIsSuperadmin(ctx.is_superadmin); }
               setShowLoginPage(false);
-              window.location.hash = loginRedirect === 'admin' ? '#/admin' : '#/';
+              // Route to appropriate admin panel based on user role
+              if (loginRedirect === 'admin') {
+                // Fetch permissions to determine if user is superadmin
+                try {
+                  const perms = await adminApi.permissions();
+                  window.location.hash = perms.is_superadmin ? '#/superadmin/dashboard' : '#/tenant/dashboard';
+                } catch {
+                  // Fallback to tenant dashboard if permissions fetch fails
+                  window.location.hash = '#/tenant/dashboard';
+                }
+              } else {
+                window.location.hash = '#/';
+              }
               loadTransactions();
             } catch (err: any) { setLoginError(err.message || 'خطا در تأیید کد'); }
           };

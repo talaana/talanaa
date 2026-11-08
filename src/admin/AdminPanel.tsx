@@ -54,6 +54,13 @@ export default function AdminPanel({ onBack, token }: Props) {
       setPerms(d.permissions);
       setIsSuperadmin(d.is_superadmin);
       setTenant(d.tenant || null);
+      // Set admin tenant context based on user type:
+      // - If superadmin (no tenant), set to null
+      // - If tenant user, set to their tenant ID
+      // - If impersonating, keep the impersonated tenant ID (already set by handleImpersonate)
+      if (!impersonating) {
+        setAdminTenant(d.tenant?.id || null);
+      }
       setLoading(false);
     }).catch((e) => {
       setError(e.message || 'خطا در دریافت دسترسی');
@@ -63,9 +70,32 @@ export default function AdminPanel({ onBack, token }: Props) {
 
   useEffect(() => {
       setAdminToken(token);
-      setAdminTenant(null);
+      // Don't set tenant to null here - let loadPermissions determine it based on user type
+      // This ensures tenant users get their tenant_id set correctly
       loadPermissions();
     }, [token]);
+
+  // Handle browser back/forward buttons and direct URL access
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      // Support both #/superadmin/... and #/tenant/... routes
+      const match = hash.match(/^#\/(?:superadmin|tenant|admin)\/([^/]+)/);
+      if (match && match[1]) {
+        const pageId = match[1];
+        // Only update if different from current page
+        setPage(prev => prev !== pageId ? pageId : prev);
+      }
+    };
+
+    // Listen to hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    // Handle initial load
+    handleHashChange();
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     if (!loading) (window as any).__tlBootReady?.();
@@ -85,6 +115,7 @@ export default function AdminPanel({ onBack, token }: Props) {
         setIsSuperadmin(d.is_superadmin);
         if (d.tenant) setTenant(d.tenant);
         setPage('dashboard');
+        window.location.hash = '#/tenant/dashboard';
         setLoading(false);
         setImpersonating(false);
         setMobileMenuOpen(false);
@@ -105,12 +136,17 @@ export default function AdminPanel({ onBack, token }: Props) {
     setImpersonatedTenant(null);
     setImpersonatedToken('');
     setPage('dashboard');
+    window.location.hash = '#/superadmin/dashboard';
     loadPermissions();
     setMobileMenuOpen(false);
   };
 
   const navigateTo = (id: string) => {
     setPage(id);
+    // Use #/superadmin for superadmins, #/tenant for tenant users (including impersonation)
+    const prefix = isSuperadmin && !impersonatedTenant ? 'superadmin' : 'tenant';
+    // Update URL hash for proper navigation (bookmarking, back/forward, sharing)
+    window.location.hash = `#/${prefix}/${id}`;
     setMobileMenuOpen(false);
     if (id === 'products' || id === 'categories') setProductsOpen(true);
     if (id === 'invoices' || id === 'bills' || id === 'pos' || id === 'reports' || id === 'invoice-templates' || id === 'tenant-ai-settings' || id === 'wallet' || id === 'payment-accounts' || id === 'tax-dashboard') setFinancialOpen(true);
