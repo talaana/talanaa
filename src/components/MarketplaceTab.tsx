@@ -69,6 +69,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
           weight: parseFloat(p.weight),
           wagePercentage: p.wage_percentage,
           taxPercentage: p.tax_percentage,
+          effectiveTaxPercentage: p.effective_tax_percentage,
           sellerName: p.seller?.name || '',
           sellerRating: parseFloat(p.seller?.rating || '0'),
           city: p.seller?.city || '',
@@ -182,7 +183,8 @@ const MarketplaceTab = memo(function MarketplaceTab({
       category: 'custom',
       weight: customWeightNum,
       wagePercentage: 25,
-      taxPercentage: 9,
+      taxPercentage: null,
+      effectiveTaxPercentage: 10,
       sellerName: 'گالری زرین',
       sellerRating: 4.9,
       city: 'تهران',
@@ -190,7 +192,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
       description: customDescription || 'پلاک سفارشی طراحی شده توسط بخش سفارش‌سازی طلانا.'
     };
 
-    const priceDetails = calculateGoldProductPrice(customWeightNum, basePrice, 25, 9);
+    const priceDetails = calculateGoldProductPrice(customWeightNum, basePrice, 25, 10);
     handleBuyWithToman(mockProduct, priceDetails);
     setShowCustomModal(false);
     setCustomName('');
@@ -310,7 +312,7 @@ const MarketplaceTab = memo(function MarketplaceTab({
           {/* Products Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" id="products-grid">
             {filteredProducts.map((product) => {
-              const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.taxPercentage);
+              const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.effectiveTaxPercentage);
               return (
                 <div
                   key={product.id}

@@ -140,7 +140,7 @@ Financial summaries with period filtering.
 Raw Gold = وزن × قیمت تابلو
 Wage    = Raw × (%اجرت)
 Profit  = (Raw + Wage) × 7%
-Tax     = (Wage + Profit) × 9%
+Tax     = (Wage + Profit) × نرخ مالیات سال جاری (۱۰٪ برای سال ۱۴۰۵)
 Final   = Raw + Wage + Profit + Tax
 ```
 

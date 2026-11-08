@@ -7,7 +7,9 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 
 interface Product {
   id: number; title: string; category_id: number; seller_id: number | null;
-  weight: number; wage_percentage: number; tax_percentage: number;
+  weight: number; wage_percentage: number; tax_percentage: number | null;
+  /** Rate the server will actually charge: the override, or the statutory rate of the tax year. */
+  effective_tax_percentage: number;
   metal: 'gold' | 'silver'; is_active: boolean; calculated_price?: { final_price: number } | null;
   description: string | null;
   category?: { id: number; name: string };
@@ -39,7 +41,9 @@ export default function AdminProducts({ onClose }: Props) {
   const [metal, setMetal] = useState<'gold' | 'silver'>('gold');
   const [weight, setWeight] = useState('');
   const [wagePercent, setWagePercent] = useState('8');
-  const [taxPercent, setTaxPercent] = useState('9');
+  // Empty means "no merchant override"; the server resolves the statutory rate of the tax year.
+  // Pre-filling a number here would freeze today's rate into every product created from this form.
+  const [taxPercent, setTaxPercent] = useState('');
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
 
@@ -63,7 +67,7 @@ export default function AdminProducts({ onClose }: Props) {
 
   const resetForm = () => {
     setTitle(''); setCategoryId(''); setMetal('gold'); setWeight('');
-    setWagePercent('8'); setTaxPercent('9'); setDescription(''); setIsActive(true);
+    setWagePercent('8'); setTaxPercent(''); setDescription(''); setIsActive(true);
     setEditId(null); setError('');
   };
 
@@ -73,7 +77,10 @@ export default function AdminProducts({ onClose }: Props) {
       const payload = {
         title, category_id: categoryId || null, metal,
         weight: parseFloat(weight), wage_percentage: parseInt(wagePercent) || 0,
-        tax_percentage: parseInt(taxPercent) || 0, description: description || null,
+        // An empty field is the absence of an override, not a rate of zero. `|| 0` used to turn
+        // it into a product that charged no VAT at all.
+        tax_percentage: taxPercent.trim() === '' ? null : parseInt(taxPercent, 10),
+        description: description || null,
         is_active: isActive,
       };
       if (editId) {
@@ -90,7 +97,7 @@ export default function AdminProducts({ onClose }: Props) {
     setEditId(p.id); setTitle(p.title); setCategoryId(p.category_id || '');
     setMetal(p.metal); setWeight(String(p.weight)); setWagePercent(String(p.wage_percentage));
     setDescription(p.description ?? '');
-    setTaxPercent(String(p.tax_percentage)); setIsActive(p.is_active); setShowForm(true);
+    setTaxPercent(p.tax_percentage == null ? '' : String(p.tax_percentage)); setIsActive(p.is_active); setShowForm(true);
   };
 
   const handleDelete = (id: number) => setDeleteId(id);
@@ -182,7 +189,9 @@ export default function AdminProducts({ onClose }: Props) {
                 <div>
                   <label className="text-xs font-black text-slate-600 block mb-1.5">مالیات (%)</label>
                   <input type="number" min="0" max="100" value={taxPercent} onChange={e => setTaxPercent(e.target.value)}
+                    placeholder="نرخ قانونی"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-left focus:outline-none focus:border-amber-500" dir="ltr" />
+                  <p className="text-[10px] text-slate-400 mt-1">خالی = نرخ قانونی سال جاری</p>
                 </div>
               </div>
               <div>

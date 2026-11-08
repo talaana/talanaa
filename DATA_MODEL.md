@@ -122,7 +122,7 @@ Vendors inside a marketplace. Only exist in `type=marketplace` tenants.
 | description | text nullable | |
 | weight | decimal(8,2) | In grams |
 | wage_percentage | integer | e.g. 12 for 12% |
-| tax_percentage | integer | e.g. 9 for 9% |
+| tax_percentage | integer nullable | null = follow statutory schedule; explicit value = merchant override |
 | metal | enum | `gold` or `silver` |
 | image | string nullable | |
 | is_featured | boolean | |

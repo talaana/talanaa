@@ -22,12 +22,37 @@ const NONCE = Date.now();
 
 /** Gold scenario: 3 g at 4,500,000 with 12% wage, 7% profit, 150,000 commission. */
 const GOLD = { weight: '3', tablo: '4500000', wage: '12', profit: '7', commission: '150000' };
-const GOLD_VAT = '۲۵۴,۵۵۶';
-const GOLD_TOTAL = '۱۶,۵۸۲,۹۵۶';
 
-/** Non-gold scenario: a plain 5,000,000 service line. */
-const PLAIN_VAT = '۴۵۰,۰۰۰';
-const PLAIN_TOTAL = '۵,۴۵۰,۰۰۰';
+/**
+ * The statutory rate is versioned per tax year on the server, so the expected figures are derived
+ * from the rate the server reports rather than pinned to one year. What these scenarios prove is
+ * the arithmetic and the base — raw gold exempt, wage + profit + commission taxable — not the
+ * number of the current year; the statutory schedule itself is pinned by the backend unit tests.
+ */
+let VAT_RATE = 0;
+let GOLD_VAT = '';
+let GOLD_TOTAL = '';
+let PLAIN_VAT = '';
+let PLAIN_TOTAL = '';
+let EDIT_VAT = '';
+let EDIT_TOTAL = '';
+let RATE_LABEL = '';
+
+const GOLD_RAW = 13_500_000;
+const GOLD_WAGE = 1_620_000;
+const GOLD_PROFIT = 1_058_400;
+const GOLD_COMMISSION = 150_000;
+const GOLD_TAXABLE = GOLD_WAGE + GOLD_PROFIT + GOLD_COMMISSION;
+const PLAIN_AMOUNT = 5_000_000;
+
+/** The same gold line after the edit scenario moves the weight from 3 g to 5 g. */
+const EDIT_RAW = 22_500_000;
+const EDIT_TAXABLE = 2_700_000 + 1_764_000 + GOLD_COMMISSION;
+
+/** Renders an integer exactly as the app's formatToman does: en-US separators, Persian digits. */
+function fa(n: number): string {
+  return Math.round(n).toLocaleString('en-US').replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+}
 
 async function frame(page: Page, name: string) {
   // The webfont comes from a CDN, and Playwright blocks on document.fonts.ready. A slow font CDN
@@ -39,9 +64,7 @@ async function frame(page: Page, name: string) {
 
 const API = 'http://talana-backend.test/api';
 
-async function registerTaxProfile(page: Page) {
-  // The submission gate requires a registered profile. There is no profile UI yet, so the e2e
-  // suite registers the demo tenant via the API before submitting invoices.
+async function adminHeaders(page: Page): Promise<Record<string, string>> {
   const resolved = await page.request.get(`${API}/tenants/resolve?slug=${TENANT}`, {
     headers: { Accept: 'application/json' },
   });
@@ -56,12 +79,44 @@ async function registerTaxProfile(page: Page) {
     throw new Error('No auth token cookie found in storage state');
   }
 
+  return {
+    Accept: 'application/json',
+    Authorization: `Bearer ${decodeURIComponent(cookie.value)}`,
+    'X-Tenant': String(tenantId),
+  };
+}
+
+/** Reads the rate the server will actually apply, so the scenarios survive a tax-year rollover. */
+async function resolveExpectations(page: Page) {
+  const res = await page.request.get(`${API}/admin/tax/profile`, { headers: await adminHeaders(page) });
+  if (res.status() !== 200) {
+    throw new Error(`Tax profile read failed: ${res.status()} ${await res.text()}`);
+  }
+  VAT_RATE = Number((await res.json()).data?.effective_vat_rate);
+  if (!Number.isFinite(VAT_RATE) || VAT_RATE <= 0) {
+    throw new Error(`Server reported an unusable VAT rate: ${VAT_RATE}`);
+  }
+
+  const goldVat = Math.round(GOLD_TAXABLE * VAT_RATE / 100);
+  GOLD_VAT = fa(goldVat);
+  GOLD_TOTAL = fa(GOLD_RAW + GOLD_TAXABLE + goldVat);
+
+  const plainVat = Math.round(PLAIN_AMOUNT * VAT_RATE / 100);
+  PLAIN_VAT = fa(plainVat);
+  PLAIN_TOTAL = fa(PLAIN_AMOUNT + plainVat);
+
+  const editVat = Math.round(EDIT_TAXABLE * VAT_RATE / 100);
+  EDIT_VAT = fa(editVat);
+  EDIT_TOTAL = fa(EDIT_RAW + EDIT_TAXABLE + editVat);
+
+  RATE_LABEL = `نرخ VAT: ${fa(VAT_RATE)}٪`;
+}
+
+async function registerTaxProfile(page: Page) {
+  // The submission gate requires a registered profile. There is no profile UI yet, so the e2e
+  // suite registers the demo tenant via the API before submitting invoices.
   const res = await page.request.put(`${API}/admin/tax/profile`, {
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${decodeURIComponent(cookie.value)}`,
-      'X-Tenant': String(tenantId),
-    },
+    headers: await adminHeaders(page),
     data: { tax_authority_id: 'DEMO-TAX-ID', api_key: 'demo-api-key', is_registered: true },
   });
 
@@ -185,6 +240,7 @@ async function submitInvoiceForm(page: Page) {
 test.describe('سامانه مؤدیان و مالیات — سناریوهای اثباتی', () => {
   test.beforeEach(async ({ page }) => {
     page.on('dialog', dialog => dialog.accept());
+    await resolveExpectations(page);
   });
 
   test('01 — ثبت فاکتور طلایی با مالیات بر ارزش افزوده', async ({ page }) => {
@@ -213,7 +269,7 @@ test.describe('سامانه مؤدیان و مالیات — سناریوهای 
     console.log(`gold invoice ${invoiceNumber}: vat=${GOLD_VAT} total=${GOLD_TOTAL}`);
   });
 
-  test('02 — ثبت فاکتور غیرطلایی با مالیات ۹ درصد', async ({ page }) => {
+  test('02 — ثبت فاکتور غیرطلایی با مالیات نرخ جاری', async ({ page }) => {
     await openInvoices(page);
     await openCreateModal(page);
     await pickContact(page);
@@ -260,8 +316,8 @@ test.describe('سامانه مؤدیان و مالیات — سناریوهای 
     await page.getByLabel('یادداشت').fill(`وزن از ۳ گرم به ۵ گرم تغییر کرد — ${NONCE}`);
     await page.waitForTimeout(1500);
 
-    await expectSummaryValue(page, 'مالیات بر ارزش افزوده:', '۴۱۵,۲۶۰');
-    await expectSummaryValue(page, 'مبلغ نهایی:', '۲۷,۵۲۹,۲۶۰');
+    await expectSummaryValue(page, 'مالیات بر ارزش افزوده:', EDIT_VAT);
+    await expectSummaryValue(page, 'مبلغ نهایی:', EDIT_TOTAL);
     await frame(page, '03-invoice-edit-modal');
 
     const save = page.getByRole('button', { name: 'ذخیره تغییرات' });
@@ -269,11 +325,11 @@ test.describe('سامانه مؤدیان و مالیات — سناریوهای 
     await save.click();
     await expect(page.getByRole('heading', { name: 'ویرایش فاکتور' })).toHaveCount(0, { timeout: 25000 });
 
-    await expect(rowOf(page, invoiceNumber).locator('td').nth(3)).toHaveText('۲۷,۵۲۹,۲۶۰');
-    await expect(rowOf(page, invoiceNumber).locator('td').nth(4)).toContainText('۴۱۵,۲۶۰');
+    await expect(rowOf(page, invoiceNumber).locator('td').nth(3)).toHaveText(EDIT_TOTAL);
+    await expect(rowOf(page, invoiceNumber).locator('td').nth(4)).toContainText(EDIT_VAT);
     await frame(page, '03-invoice-edited');
 
-    console.log(`edited invoice ${invoiceNumber}: vat=۴۱۵,۲۶۰ total=۲۷,۵۲۹,۲۶۰`);
+    console.log(`edited invoice ${invoiceNumber}: vat=${EDIT_VAT} total=${EDIT_TOTAL}`);
   });
 
   test('04 — پرداخت فاکتور', async ({ page }) => {
@@ -374,7 +430,7 @@ test.describe('سامانه مؤدیان و مالیات — سناریوهای 
     await page.getByRole('button', { name: 'محاسبه VAT' }).last().click();
 
     await expect(page.getByText('نتیجه محاسبه')).toBeVisible({ timeout: 20000 });
-    await expect(page.getByText('نرخ VAT: ۹٪')).toBeVisible();
+    await expect(page.getByText(RATE_LABEL)).toBeVisible();
 
     const item = page.locator('div.bg-slate-50.rounded-xl').filter({ hasText: 'ارزش طلا (معاف)' }).first();
     await expect(item.getByText('ارزش طلا (معاف)').locator('..')).toContainText('۱۳,۵۰۰,۰۰۰');
@@ -642,5 +698,69 @@ test.describe('سامانه مؤدیان و مالیات — سناریوهای 
     await expect(key).toHaveValue('');
     await expect(form).not.toContainText('new-test-secret');
     await expect(form.getByText('کلید ذخیره شده است؛ برای تغییر، کلید جدید وارد کنید.')).toBeVisible();
+  });
+
+  // The rate is versioned per tax year on the server and the taxable base excludes raw gold.
+  // A client-side `subtotal × 9%` guess is wrong on both counts, so when the server figure is
+  // unavailable the form must say so instead of showing a number nobody computed.
+  test('15 — پیش‌نمایش فاکتور هنگام خطای محاسبه سرور مبلغ ساختگی نشان نمی‌دهد', async ({ page }) => {
+    await openInvoices(page);
+
+    await page.route(`${API}/admin/tax/calculate-vat`, route =>
+      route.fulfill({ status: 503, json: { message: 'سرویس محاسبه مالیات در دسترس نیست.' } }),
+    );
+
+    await openCreateModal(page);
+    await pickContact(page);
+    await fillPlainItem(page, `خط بدون پاسخ مالیاتی — ${NONCE}`, '5000000');
+    await page.waitForTimeout(1500);
+
+    const vatRow = page.getByText('مالیات بر ارزش افزوده:', { exact: true }).locator('..');
+    const totalRow = page.getByText('مبلغ نهایی:', { exact: true }).locator('..');
+
+    await expect(vatRow).toContainText('محاسبه نشد', { timeout: 25000 });
+    await expect(totalRow).toContainText('محاسبه نشد');
+    // ۴۵۰,۰۰۰ is exactly the fabricated 9% of the 5,000,000 line.
+    await expect(vatRow).not.toContainText('۴۵۰,۰۰۰');
+    await expect(totalRow).not.toContainText('۵,۴۵۰,۰۰۰');
+    await frame(page, '15-vat-unavailable');
+  });
+
+  // A catalogue row must not freeze a statutory rate. An empty field means "no merchant override",
+  // which the server resolves against the tax year; it must never be sent as 0 (= no VAT at all),
+  // and the form must not pre-fill the rate of whichever year the component was written in.
+  test('16 — فرم محصول نرخ مالیات را از پیش پر نمی‌کند و فیلد خالی را صفر نمی‌فرستد', async ({ page }) => {
+    await openAdmin(page);
+    const nav = page.locator('aside');
+    const productsNav = nav.getByRole('button', { name: 'همه محصولات', exact: true });
+    if (!(await productsNav.isVisible())) {
+      await nav.getByRole('button', { name: 'محصولات', exact: true }).click();
+      await expect(productsNav).toBeVisible({ timeout: 10000 });
+    }
+    await productsNav.click();
+    await expect(page.getByRole('heading', { name: 'محصولات', exact: true })).toBeVisible({ timeout: 15000 });
+
+    await page.getByRole('button', { name: 'محصول جدید', exact: true }).click();
+    const form = page.locator('form').filter({ hasText: 'مالیات (%)' });
+    await expect(form).toBeVisible({ timeout: 10000 });
+
+    const taxField = form.getByText('مالیات (%)', { exact: true }).locator('..').locator('input');
+    await expect(taxField).toHaveValue('');
+
+    await form.getByText('نام محصول', { exact: true }).locator('..').locator('input').fill(`بدون نرخ ثابت — ${NONCE}`);
+    await form.getByText('وزن (گرم)', { exact: true }).locator('..').locator('input').fill('2');
+    const categoryTrigger = form.getByText('دسته‌بندی', { exact: true }).locator('..').getByRole('button');
+    await categoryTrigger.click();
+    // The dropdown renders its options in a portal, outside the form.
+    const menu = page.locator('div.fixed.z-\\[200\\]').first();
+    await expect(menu.getByRole('button').nth(1)).toBeVisible({ timeout: 15000 });
+    await menu.getByRole('button').nth(1).click();
+
+    const sent = page.waitForRequest(r => r.url() === `${API}/admin/products` && r.method() === 'POST');
+    await form.getByRole('button', { name: 'ایجاد', exact: true }).click();
+    const payload = (await sent).postDataJSON();
+
+    expect(payload.tax_percentage, 'an empty rate is absence of an override, not a zero rate').toBeNull();
+    await frame(page, '16-product-rate-empty');
   });
 });

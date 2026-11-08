@@ -9,7 +9,8 @@ export interface Product {
   category: string;
   weight: number; // in grams
   wagePercentage: number; // e.g., 18% or 20%
-  taxPercentage: number; // e.g., 9%
+  taxPercentage: number | null; // Merchant override; null means follow the statutory schedule.
+  effectiveTaxPercentage: number; // Rate the server will actually charge: override or statutory.
   sellerName: string;
   sellerRating: number;
   city: string;

@@ -15,7 +15,7 @@ Final Price   = Raw Gold + Wage + Profit + Tax
 **Defaults:**
 - Tablo price: daily 18k rate (updated every 2 hours in seeder)
 - Profit: 7% (standard retail margin per union rules)
-- Tax: 9% VAT (only on wage + profit — raw gold is tax-exempt)
+- Tax: 10% VAT for tax year 1405 (only on wage + profit — raw gold is tax-exempt; rate is versioned per tax year)
 - Wage: varies by product (4-25%)
 
 ### Contact-Type Margins
@@ -195,5 +195,5 @@ The gold pricing formula is unit-tested with known values:
 - Raw gold: 1g × 10M = 10,000,000
 - Wage: 10M × 12% = 1,200,000
 - Profit: (10M + 1.2M) × 7% = 784,000
-- Tax: (1.2M + 0.784M) × 9% = 178,560
-- Final: 12,162,560 Toman ✓
+- Tax: (1.2M + 0.784M) × 10% = 198,400
+- Final: 12,182,400 Toman ✓

@@ -13,7 +13,7 @@ export const DEMO_CATALOG: GoldProduct[] = [
     weightGrams: 5.42,
     makingWagePerGramToman: 1850000,
     galleryProfitPercent: 7,
-    taxPercent: 9,
+    taxPercent: 10,
     gemstone: {
       carat: 1.5,
       color: 'D',
@@ -29,7 +29,7 @@ export const DEMO_CATALOG: GoldProduct[] = [
     weightGrams: 62.8,
     makingWagePerGramToman: 960000,
     galleryProfitPercent: 7,
-    taxPercent: 9,
+    taxPercent: 10,
   },
   {
     id: 'prod-sapphire-ring',
@@ -38,7 +38,7 @@ export const DEMO_CATALOG: GoldProduct[] = [
     weightGrams: 8.15,
     makingWagePerGramToman: 1400000,
     galleryProfitPercent: 7,
-    taxPercent: 9,
+    taxPercent: 10,
     gemstone: {
       carat: 3.2,
       color: 'Royal Blue',
@@ -54,7 +54,7 @@ export const DEMO_CATALOG: GoldProduct[] = [
     weightGrams: 100,
     makingWagePerGramToman: 0,
     galleryProfitPercent: 2,
-    taxPercent: 9,
+    taxPercent: 10,
   },
   {
     id: 'prod-gold-coin',
@@ -63,7 +63,7 @@ export const DEMO_CATALOG: GoldProduct[] = [
     weightGrams: 8.133,
     makingWagePerGramToman: 220000,
     galleryProfitPercent: 3,
-    taxPercent: 9,
+    taxPercent: 10,
   },
   {
     id: 'prod-necklace',
@@ -72,7 +72,7 @@ export const DEMO_CATALOG: GoldProduct[] = [
     weightGrams: 21.6,
     makingWagePerGramToman: 1250000,
     galleryProfitPercent: 7,
-    taxPercent: 9,
+    taxPercent: 10,
     gemstone: {
       carat: 4.0,
       color: 'F',

@@ -537,6 +537,7 @@ function CreateModal({ contacts, onClose, onCreated }: { contacts: Contact[]; on
   const [vatBreakdown, setVatBreakdown] = useState<VatBreakdown[] | null>(null);
   const [vatSummary, setVatSummary] = useState<{ total_vat: number; total_vat_taxable: number; total_vat_exempt: number; grand_total: number } | null>(null);
   const [calculating, setCalculating] = useState(false);
+  const [vatError, setVatError] = useState(false);
   const [kycCheck, setKycCheck] = useState<any>(null);
 
   const addItem = () => setItems([...items, { description: '', amount: 0, is_gold: false }]);
@@ -567,8 +568,13 @@ function CreateModal({ contacts, onClose, onCreated }: { contacts: Contact[]; on
       const result = await admin.tax.calculateVat({ items: apiItems });
       setVatBreakdown(result.data.items);
       setVatSummary(result.data.summary);
+      setVatError(false);
     } catch {
-      // Silently fail - server will calculate on submit
+      // The server owns both the rate and the taxable base. Report that the figure is
+      // unavailable instead of inventing one; the invoice is still priced by the server on submit.
+      setVatBreakdown(null);
+      setVatSummary(null);
+      setVatError(true);
     } finally {
       setCalculating(false);
     }
@@ -588,12 +594,16 @@ function CreateModal({ contacts, onClose, onCreated }: { contacts: Contact[]; on
   }, [items]);
 
   const subtotal = vatSummary ? vatSummary.total_vat_exempt + vatSummary.total_vat_taxable : items.reduce((s, i) => s + (i.amount || 0), 0);
-  const tax = vatSummary ? vatSummary.total_vat : Math.round(subtotal * 0.09);
-  const total = vatSummary ? vatSummary.grand_total - (discount || 0) : subtotal + tax - (discount || 0);
+  // No client-side VAT formula. The rate is versioned per tax year on the server and the taxable
+  // base excludes raw gold (ماده ۲۶). The old `subtotal * 0.09` guess used a stale rate, taxed
+  // exempt gold, and fed that wrong figure into the KYC pre-check below.
+  const tax = vatSummary ? vatSummary.total_vat : null;
+  const total = vatSummary ? vatSummary.grand_total - (discount || 0) : null;
 
-  // KYC pre-check when contact and amount are set
+  // KYC pre-check when contact and amount are set. Only the server-priced total is checked;
+  // an estimate would either block a permitted invoice or clear one that needs identification.
   useEffect(() => {
-    if (contactId && total > 0) {
+    if (contactId && total !== null && total > 0) {
       amlApi.check(parseInt(contactId), total).then((r) => setKycCheck(r)).catch(() => setKycCheck(null));
     } else {
       setKycCheck(null);
@@ -629,7 +639,9 @@ function CreateModal({ contacts, onClose, onCreated }: { contacts: Contact[]; on
       onCreated();
     } catch (e: any) {
       if (e.code === 'aml_kyc_required') {
-        amlApi.check(parseInt(contactId), total).then((r) => setKycCheck(r)).catch(() => {});
+        if (total !== null) {
+          amlApi.check(parseInt(contactId), total).then((r) => setKycCheck(r)).catch(() => {});
+        }
       } else {
         alert(e.message);
       }
@@ -748,7 +760,7 @@ function CreateModal({ contacts, onClose, onCreated }: { contacts: Contact[]; on
             )}
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">مالیات بر ارزش افزوده:</span>
-              <span className="font-bold text-amber-600">{calculating ? '...' : formatToman(tax)}</span>
+              <span className="font-bold text-amber-600">{calculating ? '...' : tax === null ? (vatError ? 'محاسبه نشد' : '—') : formatToman(tax)}</span>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-sm">
@@ -758,7 +770,7 @@ function CreateModal({ contacts, onClose, onCreated }: { contacts: Contact[]; on
             )}
             <div className="flex justify-between text-sm border-t pt-2">
               <span className="font-black text-slate-700">مبلغ نهایی:</span>
-              <span className="font-black text-amber-600">{formatToman(total)}</span>
+              <span className="font-black text-amber-600">{calculating ? '...' : total === null ? (vatError ? 'محاسبه نشد' : '—') : formatToman(total)}</span>
             </div>
           </div>
 
@@ -793,6 +805,7 @@ function EditModal({ invoice, contacts, onClose, onSaved }: { invoice: Invoice; 
   const [vatBreakdown, setVatBreakdown] = useState<VatBreakdown[] | null>(null);
   const [vatSummary, setVatSummary] = useState<{ total_vat: number; total_vat_taxable: number; total_vat_exempt: number; grand_total: number } | null>(null);
   const [calculating, setCalculating] = useState(false);
+  const [vatError, setVatError] = useState(false);
   const [kycCheck, setKycCheck] = useState<any>(null);
 
   const addItem = () => setItems([...items, { description: '', amount: 0, is_gold: false }]);
@@ -823,8 +836,13 @@ function EditModal({ invoice, contacts, onClose, onSaved }: { invoice: Invoice; 
       const result = await admin.tax.calculateVat({ items: apiItems });
       setVatBreakdown(result.data.items);
       setVatSummary(result.data.summary);
+      setVatError(false);
     } catch {
-      // Silently fail - server will calculate on submit
+      // The server owns both the rate and the taxable base. Report that the figure is
+      // unavailable instead of inventing one; the invoice is still priced by the server on submit.
+      setVatBreakdown(null);
+      setVatSummary(null);
+      setVatError(true);
     } finally {
       setCalculating(false);
     }
@@ -843,12 +861,16 @@ function EditModal({ invoice, contacts, onClose, onSaved }: { invoice: Invoice; 
   }, [items]);
 
   const subtotal = vatSummary ? vatSummary.total_vat_exempt + vatSummary.total_vat_taxable : items.reduce((s, i) => s + (i.amount || 0), 0);
-  const tax = vatSummary ? vatSummary.total_vat : Math.round(subtotal * 0.09);
-  const total = vatSummary ? vatSummary.grand_total - (discount || 0) : subtotal + tax - (discount || 0);
+  // No client-side VAT formula. The rate is versioned per tax year on the server and the taxable
+  // base excludes raw gold (ماده ۲۶). The old `subtotal * 0.09` guess used a stale rate, taxed
+  // exempt gold, and fed that wrong figure into the KYC pre-check below.
+  const tax = vatSummary ? vatSummary.total_vat : null;
+  const total = vatSummary ? vatSummary.grand_total - (discount || 0) : null;
 
-  // KYC pre-check when contact and amount are set
+  // KYC pre-check when contact and amount are set. Only the server-priced total is checked;
+  // an estimate would either block a permitted invoice or clear one that needs identification.
   useEffect(() => {
-    if (contactId && total > 0) {
+    if (contactId && total !== null && total > 0) {
       amlApi.check(parseInt(contactId), total).then((r) => setKycCheck(r)).catch(() => setKycCheck(null));
     } else {
       setKycCheck(null);
@@ -996,7 +1018,7 @@ function EditModal({ invoice, contacts, onClose, onSaved }: { invoice: Invoice; 
             )}
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">مالیات بر ارزش افزوده:</span>
-              <span className="font-bold text-amber-600">{calculating ? '...' : formatToman(tax)}</span>
+              <span className="font-bold text-amber-600">{calculating ? '...' : tax === null ? (vatError ? 'محاسبه نشد' : '—') : formatToman(tax)}</span>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-sm">
@@ -1006,7 +1028,7 @@ function EditModal({ invoice, contacts, onClose, onSaved }: { invoice: Invoice; 
             )}
             <div className="flex justify-between text-sm border-t pt-2">
               <span className="font-black text-slate-700">مبلغ نهایی:</span>
-              <span className="font-black text-amber-600">{formatToman(total)}</span>
+              <span className="font-black text-amber-600">{calculating ? '...' : total === null ? (vatError ? 'محاسبه نشد' : '—') : formatToman(total)}</span>
             </div>
           </div>
 

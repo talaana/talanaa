@@ -1,13 +1,16 @@
 /**
  * Helper to calculate the final price of a gold product based on Iranian standards.
- * Formula from 1400: Tax (9%) is only calculated on the Wage and Goldsmith Profit.
+ * Formula from 1400: Tax is only calculated on the Wage and Goldsmith Profit.
  * Raw gold is exempt from tax. Profit is a standard 7%.
+ *
+ * The tax rate is passed explicitly — never defaulted — because it is versioned per tax year
+ * on the server, and a client-side constant would freeze today's rate forever.
  */
 export function calculateGoldProductPrice(
   weight: number,
   baseGoldPrice18k: number,
   wagePercentage: number,
-  taxPercentage: number = 9
+  taxPercentage: number
 ) {
   const rawGoldVal = weight * baseGoldPrice18k;
   const wageVal = rawGoldVal * (wagePercentage / 100);

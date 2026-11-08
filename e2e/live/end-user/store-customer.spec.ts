@@ -41,4 +41,40 @@ test.describe('Store customer (علی رضایی @ طلافروشی پارس)', 
     await expect(page.getByText(/^غرفه:/)).toHaveCount(0);
     await shot(page, info, SECTION, '03-product-detail');
   });
+
+  // The statutory rate is versioned per tax year on the server; the storefront must render that
+  // rate, not a number hard-coded into the UI. The test forces the first product's tax override
+  // to null and rewrites the API response so the UI has to fall back on the server-resolved
+  // `effective_tax_percentage`. Before the fix the label read "مالیات ... (۹٪ ...)" verbatim and
+  // the tax amount was computed with a client-side 9%, both of which are wrong in 1405+.
+  test('product detail shows the statutory rate, not a hard-coded 9%', async ({ page }) => {
+    // The statutory rate for tax year 1405 is 10%. The backend schedule is tested in PHPUnit;
+    // here we just verify the UI doesn't hard-code 9%.
+    const statutory = 10;
+
+    // Rewrite the product listing so the first item has no override and its effective rate
+    // is the statutory rate. The UI must use that value, not a baked-in 9.
+    await page.route(`**/api/products*`, async route => {
+      if (route.request().method() !== 'GET') return route.continue();
+      const response = await route.fetch();
+      const body = await response.json();
+      const data = Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : [];
+      if (data[0]) {
+        data[0] = { ...data[0], tax_percentage: null, effective_tax_percentage: statutory };
+      }
+      await route.fulfill({ response, json: Array.isArray(body?.data) ? { ...body, data } : data });
+    });
+
+    await appTab(page, 'محصولات');
+    await page.locator('#products-grid h4').first().click();
+    await expect(page.getByText('جزئیات و ساخت فاکتور رسمی')).toBeVisible();
+
+    // The label must not hard-code ۹٪.
+    const vatLabel = page.locator('#product-detail-page').getByText(/مالیات بر ارزش افزوده/);
+    await expect(vatLabel).toBeVisible({ timeout: 15000 });
+    await expect(vatLabel).not.toContainText('۹٪');
+    // The UI renders the rate in Persian digits via toPersianDigits().
+    const persianRate = String(statutory).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[+d]);
+    await expect(vatLabel).toContainText(`${persianRate}٪`);
+  });
 });

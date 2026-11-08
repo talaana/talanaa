@@ -46,7 +46,11 @@ export default function ServiceZargar({ wallet, activeMetal, goldPrice18k, silve
   const rawValue = Math.round(weight * activePrice);
   const wageValue = Math.round(rawValue * 0.25);
   const profitValue = Math.round((rawValue + wageValue) * 0.07);
-  const taxValue = Math.round((wageValue + profitValue) * 0.09);
+  // TODO: This entire estimate is client-side with hardcoded rates. The backend
+  // /prices/calculate endpoint is authoritative. Refactor to fetch the estimate
+  // from the server so wage, profit, and VAT rate are not duplicated here.
+  // The statutory VAT rate for tax year 1405 is 10% (was 9% for 1400-1404).
+  const taxValue = Math.round((wageValue + profitValue) * 0.10);
   const estimatedTotal = rawValue + wageValue + profitValue + taxValue;
 
   const handleSubmit = async () => {

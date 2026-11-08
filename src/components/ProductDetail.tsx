@@ -18,7 +18,7 @@ interface ProductDetailProps {
 export default function ProductDetail({ product, wallet, goldPrice18k, silverPrice999, activeMetal, basePrice, onBack, onTransaction }: ProductDetailProps) {
 
   const handleBuyWithToman = () => {
-    const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.taxPercentage);
+    const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.effectiveTaxPercentage);
     if (wallet.cashToman < priceDetails.finalPrice) {
       alert(`موجودی کیف پول ریالی شما کافی نیست.`);
       return;
@@ -34,7 +34,7 @@ export default function ProductDetail({ product, wallet, goldPrice18k, silverPri
   };
 
   const handleExchangeWithGold = () => {
-    const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.taxPercentage);
+    const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.effectiveTaxPercentage);
     const wagesAndTaxes = priceDetails.wageVal + priceDetails.profitVal + priceDetails.taxVal;
     if (wallet.goldGrams < product.weight) {
       alert(`موجودی طلای آب‌شده شما کافی نیست.`);
@@ -54,8 +54,8 @@ export default function ProductDetail({ product, wallet, goldPrice18k, silverPri
     onBack();
   };
 
-  const breakdown = calculateGoldProductPrice(product.weight, goldPrice18k, product.wagePercentage, product.taxPercentage);
-  const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.taxPercentage);
+  const breakdown = calculateGoldProductPrice(product.weight, goldPrice18k, product.wagePercentage, product.effectiveTaxPercentage);
+  const priceDetails = calculateGoldProductPrice(product.weight, basePrice, product.wagePercentage, product.effectiveTaxPercentage);
   const wagesAndTaxes = priceDetails.wageVal + priceDetails.profitVal + priceDetails.taxVal;
 
   return (
@@ -103,7 +103,7 @@ export default function ProductDetail({ product, wallet, goldPrice18k, silverPri
             <span className="font-extrabold text-slate-700">{formatToman(breakdown.profitVal)} تومان</span>
           </div>
           <div className="flex justify-between items-center flex-row-reverse text-[11px]">
-            <span className="text-slate-400">مالیات بر ارزش افزوده (۹٪ از سود و اجرت):</span>
+            <span className="text-slate-400">مالیات بر ارزش افزوده ({toPersianDigits(product.effectiveTaxPercentage)}٪ از سود و اجرت):</span>
             <span className="font-extrabold text-slate-700">{formatToman(breakdown.taxVal)} تومان</span>
           </div>
           <div className="bg-emerald-50 text-emerald-800 p-3 rounded-2xl text-[9.5px] leading-relaxed flex gap-2 items-start font-bold">
