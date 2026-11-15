@@ -5,6 +5,8 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const TENANT_BASE_DOMAIN = normalizeDomain(import.meta.env.VITE_BASE_DOMAIN || 'talaana.ir');
 const LEGACY_BASE_DOMAINS = ['localhost', 'talana.app', 'talana-sage.vercel.app'];
 const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'api', 'admin', 'mail']);
+/** The marketplace is a tenant of its own; its app is reached through the platform's app. host. */
+const MARKETPLACE_SLUG = 'talana';
 
 type TenantIdentifier = { slug?: string; domain?: string };
 
@@ -25,8 +27,22 @@ function isLocalDevelopmentHost(hostname: string): boolean {
     || hostname === '::1';
 }
 
-/** Build a tenant-owned origin; production links never carry a tenant query parameter. */
-export function getTenantUrl(slug: string, hash = '', currentUrl?: string): string {
+function isReservedHost(hostname: string): boolean {
+  const labels = hostname.split('.');
+  return labels.length > 1 && RESERVED_SUBDOMAINS.has(labels[0]);
+}
+
+/**
+ * Build a tenant's public origin.
+ * Production priority: the tenant's own domain, then app.<base> for the marketplace,
+ * then <slug>.<base>. Local development always stays on *.localhost.
+ */
+export function getTenantUrl(
+  slug: string,
+  hash = '',
+  currentUrl?: string,
+  domain?: string | null,
+): string {
   if (!isTenantSlug(slug)) {
     throw new Error('شناسه فروشگاه برای آدرس ساب‌دامنه معتبر نیست');
   }
@@ -35,8 +51,25 @@ export function getTenantUrl(slug: string, hash = '', currentUrl?: string): stri
     ? window.location.href
     : `https://${TENANT_BASE_DOMAIN}`));
   const isLocal = isLocalDevelopmentHost(current.hostname);
-  const baseDomain = isLocal ? `localhost${current.port ? `:${current.port}` : ''}` : TENANT_BASE_DOMAIN;
-  const url = new URL(`${isLocal ? current.protocol : 'https:'}//${slug}.${baseDomain}`);
+
+  const custom = domain ? normalizeDomain(domain) : '';
+  const ownsOwnDomain = !!custom
+    && custom !== TENANT_BASE_DOMAIN
+    && custom !== `www.${TENANT_BASE_DOMAIN}`
+    && !isReservedHost(custom);
+
+  let host: string;
+  if (isLocal) {
+    host = `${slug}.localhost${current.port ? `:${current.port}` : ''}`;
+  } else if (ownsOwnDomain) {
+    host = custom;
+  } else if (slug === MARKETPLACE_SLUG) {
+    host = `app.${TENANT_BASE_DOMAIN}`;
+  } else {
+    host = `${slug}.${TENANT_BASE_DOMAIN}`;
+  }
+
+  const url = new URL(`${isLocal ? current.protocol : 'https:'}//${host}`);
   url.hash = hash ? (hash.startsWith('#') ? hash : `#${hash}`) : '';
   return url.href;
 }
@@ -64,9 +97,10 @@ export function useTenant() {
 }
 
 /**
- * Detect tenant from the current URL.
- * Subdomains own the tenant context in production. Query/path identifiers remain
- * readable only for local development and legacy links.
+ * Detect the tenant that owns the current URL.
+ * The platform apex is the marketing landing and deliberately owns no tenant, so it
+ * never resolves; app.<base> is the marketplace app and <slug>.<base> is a store app.
+ * Any other host is a tenant's own domain, resolved by the backend.
  */
 export function detectTenantFromURL(currentUrl?: string): TenantIdentifier | null {
   if (typeof window === 'undefined' && !currentUrl) return null;
@@ -74,9 +108,11 @@ export function detectTenantFromURL(currentUrl?: string): TenantIdentifier | nul
   const url = new URL(currentUrl ?? window.location.href);
   const hostname = normalizeDomain(url.hostname);
 
-  // app.talaana.ir is the marketplace tenant, not a reserved platform subdomain.
   if (hostname === `app.${TENANT_BASE_DOMAIN}`) {
-    return { slug: 'talana' };
+    return { slug: MARKETPLACE_SLUG };
+  }
+  if (hostname === TENANT_BASE_DOMAIN || hostname === `www.${TENANT_BASE_DOMAIN}`) {
+    return null;
   }
 
   for (const baseDomain of [TENANT_BASE_DOMAIN, ...LEGACY_BASE_DOMAINS]) {
@@ -84,7 +120,7 @@ export function detectTenantFromURL(currentUrl?: string): TenantIdentifier | nul
     if (!hostname.endsWith(suffix)) continue;
 
     const slug = hostname.slice(0, -suffix.length);
-    if (isTenantSlug(slug)) return { slug };
+    return isTenantSlug(slug) ? { slug } : null;
   }
 
   const tenantParam = url.searchParams.get('tenant');
@@ -96,6 +132,11 @@ export function detectTenantFromURL(currentUrl?: string): TenantIdentifier | nul
   if (pathMatch && isTenantSlug(pathMatch[1])) {
     return { slug: pathMatch[1] };
   }
+
+  const customHost = hostname.replace(/^app\./, '');
+  if (isLocalDevelopmentHost(customHost) || isReservedHost(customHost)) return null;
+  if (customHost === TENANT_BASE_DOMAIN || customHost === `www.${TENANT_BASE_DOMAIN}`) return null;
+  if (customHost.includes('.')) return { domain: customHost };
 
   return null;
 }

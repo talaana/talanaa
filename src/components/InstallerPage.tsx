@@ -119,7 +119,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
     if (result?.tenant?.slug) {
       // Suppliers have no public storefront — go directly to their admin panel
       const hash = result.tenant.type === 'supplier' ? '#/admin' : '';
-      window.location.href = getTenantUrl(result.tenant.slug, hash);
+      window.location.href = getTenantUrl(result.tenant.slug, hash, undefined, result.tenant.domain);
     }
   };
 
@@ -188,7 +188,7 @@ export default function InstallerPage({ onBack, preselectedType }: InstallerPage
                   <h3 className="text-xs font-black text-slate-500 mb-3">اطلاعات ورود</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between"><span className="text-slate-400">شماره:</span><span className="font-mono font-bold" dir="ltr">{adminPhone}</span></div>
-                    <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-400">آدرس:</span><a href={getTenantUrl(result.tenant.slug)} className="font-mono font-bold text-[11px] break-all underline decoration-amber-300 underline-offset-4 hover:text-amber-700" dir="ltr">{new URL(getTenantUrl(result.tenant.slug)).host}</a></div>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-400">آدرس:</span><a href={getTenantUrl(result.tenant.slug, '', undefined, result.tenant.domain)} className="font-mono font-bold text-[11px] break-all underline decoration-amber-300 underline-offset-4 hover:text-amber-700" dir="ltr">{new URL(getTenantUrl(result.tenant.slug, '', undefined, result.tenant.domain)).host}</a></div>
                   </div>
                 </div>
               )}

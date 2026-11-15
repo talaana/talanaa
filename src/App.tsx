@@ -539,7 +539,7 @@ export default function App() {
             </div>
             <h1 className="text-lg font-black text-slate-800 mb-2">پنل تأمین‌کننده</h1>
             <p className="text-sm text-slate-400 mb-6">این یک پنل مدیریت خصوصی است و فروشگاه عمومی ندارد.</p>
-            <a href={getTenantUrl(tenant.slug, '#/login')}
+            <a href={getTenantUrl(tenant.slug, '#/login', undefined, tenant.domain)}
               className="inline-block text-white px-6 py-3 rounded-2xl font-black text-sm"
               style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)` }}>
               ورود به پنل مدیریت

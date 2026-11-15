@@ -105,7 +105,7 @@ const test = base.extend<{ routingFixture: RoutingFixture }>({
   }, { auto: true }],
 });
 
-test('tenant URL contracts use subdomains and reject unsafe identifiers', async ({ page, baseURL }) => {
+test('tenant URL contracts keep the landing host tenant-free and the app hosts resolved', async ({ page, baseURL }) => {
   await page.goto(baseURL!);
   const result = await page.evaluate(async () => {
     const modulePath = '/src/tenant.tsx';
@@ -117,13 +117,20 @@ test('tenant URL contracts use subdomains and reject unsafe identifiers', async 
       invalidSlug = 'rejected';
     }
     return {
-      production: tenant.getTenantUrl('pars-gold', '#/login', 'https://talaana.ir/?tenant=old&campaign=gold'),
-      marketplace: tenant.getTenantUrl('talana', '', 'https://app.talaana.ir/experience'),
+      store: tenant.getTenantUrl('pars-gold', '#/login', 'https://talaana.ir/'),
+      marketplace: tenant.getTenantUrl('talana', '', 'https://talaana.ir/'),
+      customDomain: tenant.getTenantUrl('mina-gallery', '', 'https://talaana.ir/', 'mina.gold'),
+      storedPlatformDomain: tenant.getTenantUrl('mina-gallery', '', 'https://talaana.ir/', 'talaana.ir'),
       local: tenant.getTenantUrl('pars-gold', '/admin', 'http://127.0.0.1:3017/'),
-      productionTenant: tenant.detectTenantFromURL('https://pars-gold.talaana.ir/?tenant=other'),
+      localMarketplace: tenant.getTenantUrl('talana', '', 'http://127.0.0.1:3017/'),
+      landingHost: tenant.detectTenantFromURL('https://talaana.ir/'),
+      wwwLandingHost: tenant.detectTenantFromURL('https://www.talaana.ir/'),
       marketplaceHost: tenant.detectTenantFromURL('https://app.talaana.ir/'),
+      storeHost: tenant.detectTenantFromURL('https://pars-gold.talaana.ir/?tenant=other'),
       reservedHost: tenant.detectTenantFromURL('https://api.talaana.ir/'),
       nestedHost: tenant.detectTenantFromURL('https://nested.pars-gold.talaana.ir/'),
+      customDomainHost: tenant.detectTenantFromURL('https://mina.gold/'),
+      customDomainAppHost: tenant.detectTenantFromURL('https://app.mina.gold/'),
       productionQuery: tenant.detectTenantFromURL('https://talaana.ir/?tenant=pars-gold'),
       localQuery: tenant.detectTenantFromURL('http://127.0.0.1:3017/?tenant=pars-gold'),
       invalidSlug,
@@ -131,13 +138,20 @@ test('tenant URL contracts use subdomains and reject unsafe identifiers', async 
   });
 
   expect(result).toEqual({
-    production: 'https://pars-gold.talaana.ir/#/login',
-    marketplace: 'https://talana.talaana.ir/',
+    store: 'https://pars-gold.talaana.ir/#/login',
+    marketplace: 'https://app.talaana.ir/',
+    customDomain: 'https://mina.gold/',
+    storedPlatformDomain: 'https://mina-gallery.talaana.ir/',
     local: 'http://pars-gold.localhost:3017/#/admin',
-    productionTenant: { slug: 'pars-gold' },
+    localMarketplace: 'http://talana.localhost:3017/',
+    landingHost: null,
+    wwwLandingHost: null,
     marketplaceHost: { slug: 'talana' },
+    storeHost: { slug: 'pars-gold' },
     reservedHost: null,
     nestedHost: null,
+    customDomainHost: { domain: 'mina.gold' },
+    customDomainAppHost: { domain: 'mina.gold' },
     productionQuery: null,
     localQuery: { slug: 'pars-gold' },
     invalidSlug: 'rejected',
