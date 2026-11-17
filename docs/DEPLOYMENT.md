@@ -27,6 +27,19 @@ Frontend is deployed to Vercel (no server-side hosting needed).
 
 ---
 
+## Build inputs
+
+`dist/` is built on a laptop, never on the VPS (the build OOMs 3.8 GiB with no
+swap). The four values in `.env.production.example` are the whole contract:
+`VITE_BASE_DOMAIN` decides where tenant hosts live (`{slug}.talaana.ir`, and
+`app.talaana.ir` for the marketplace tenant) and `VITE_PLATFORM_DOMAIN` decides
+the platform hosts (`app.zaraasan.ir`, `sa.zaraasan.ir`). The server's untracked
+`.env.production` is not a template and must not be used to rebuild the split —
+it currently equals the example for a reason.
+Host interpretation lives in `src/host.ts`; see `docs/host-surface-model.md`.
+
+---
+
 ## 1. Frontend (Vercel)
 
 ### Automatic Deployment
