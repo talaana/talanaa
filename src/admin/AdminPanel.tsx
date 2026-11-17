@@ -20,6 +20,10 @@ import AdminWallet from './pages/Wallet';
 import AdminExperienceBuilderPage from '../features/cinematic-experience/pages/AdminExperienceBuilderPage';
 import AdminTaxDashboard from './pages/TaxDashboard';
 import AdminCompliance from './pages/Compliance';
+import {
+  currentHost, superadminChromeAllowed, showsPlatformAccessDenied,
+  SUPERADMIN_ORIGIN, PLATFORM_APP_ORIGIN,
+} from '../host';
 
 interface Props { onBack: () => void; token: string; }
 
@@ -46,6 +50,14 @@ export default function AdminPanel({ onBack, token }: Props) {
   const [impersonatedTenant, setImpersonatedTenant] = useState<any>(null);
   const [impersonatedToken, setImpersonatedToken] = useState<string>('');
   const [impersonating, setImpersonating] = useState(false);
+
+  const host = currentHost();
+  /**
+   * Chrome, not permission. On a host that does not show the platform panel a
+   * platform role behaves as a tenant admin; `can()` below still reads the role
+   * because the API is the real boundary for data access.
+   */
+  const superadminView = superadminChromeAllowed(host, isSuperadmin) && !impersonatedTenant;
 
   // tenant_id is only sent from handleImpersonate: the backend treats it as an impersonation request.
   const loadPermissions = () => {
@@ -144,7 +156,7 @@ export default function AdminPanel({ onBack, token }: Props) {
   const navigateTo = (id: string) => {
     setPage(id);
     // Use #/superadmin for superadmins, #/tenant for tenant users (including impersonation)
-    const prefix = isSuperadmin && !impersonatedTenant ? 'superadmin' : 'tenant';
+    const prefix = superadminView ? 'superadmin' : 'tenant';
     // Update URL hash for proper navigation (bookmarking, back/forward, sharing)
     window.location.hash = `#/${prefix}/${id}`;
     setMobileMenuOpen(false);
@@ -169,7 +181,7 @@ export default function AdminPanel({ onBack, token }: Props) {
       { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
     ];
 
-  const isMarketplaceAdmin = !isSuperadmin && tenant?.type === 'marketplace';
+  const isMarketplaceAdmin = !superadminView && tenant?.type === 'marketplace';
   const tenantNav: NavItem[] = isMarketplaceAdmin ? [
     { id: 'dashboard', label: 'داشبورد بازارچه', icon: LayoutDashboard },
     { id: 'orders', label: 'سفارشات', icon: ShoppingBag },
@@ -215,7 +227,7 @@ export default function AdminPanel({ onBack, token }: Props) {
     { id: 'roles', label: 'نقش‌ها و دسترسی‌ها', icon: Shield },
   ];
 
-  const nav = isSuperadmin ? superNav : tenantNav;
+  const nav = superadminView ? superNav : tenantNav;
 
   // ============ LOADING / ERROR ============
   if (loading) return (
@@ -238,18 +250,46 @@ export default function AdminPanel({ onBack, token }: Props) {
     </div>
   );
 
-  const sidebarBg = isSuperadmin ? 'bg-slate-900 text-white' : 'bg-white border-l border-amber-100 shadow-sm';
-  const sidebarBorder = isSuperadmin ? 'border-slate-700' : 'border-amber-100';
-  const navActive = isSuperadmin ? 'bg-slate-700 text-white' : 'bg-amber-100 text-amber-800';
-  const navInactive = isSuperadmin ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-500 hover:bg-amber-50 hover:text-amber-700';
-  const backBtnHover = isSuperadmin ? 'hover:bg-slate-800 hover:text-white' : 'hover:bg-amber-50 hover:text-amber-600';
+  if (host.surface === 'platform-app' && !tenant) return (
+    <div dir="rtl" className="min-h-screen bg-slate-100 flex items-center justify-center font-sans p-4">
+      <div className="text-center bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-w-sm w-full">
+        <div className="w-14 h-14 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 text-2xl">؟</div>
+        <p className="text-sm font-black text-slate-800 mb-2">فروشگاهی برای این حساب پیدا نشد</p>
+        <p className="text-xs text-slate-500 mb-5 leading-6">
+          این حساب به فروشگاه متصل نیست. برای ادامه به مدیر پلتفرم اطلاع دهید تا حساب شما را به یک فروشگاه وصل کند.
+        </p>
+        <button onClick={onBack} className="bg-amber-600 text-white px-6 py-2.5 rounded-xl text-sm font-black">بازگشت به سایت</button>
+      </div>
+    </div>
+  );
+
+  if (showsPlatformAccessDenied(host, isSuperadmin)) return (
+    <div dir="rtl" className="min-h-screen bg-slate-100 flex items-center justify-center font-sans p-4">
+      <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-sm border border-slate-100 text-center">
+        <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 text-2xl">!</div>
+        <p className="text-sm font-black text-slate-800 mb-2">این نشانی فقط برای مدیران پلتفرم زرآسان است</p>
+        <p className="text-xs text-slate-500 mb-6 leading-6">
+          حساب شما به این پنل دسترسی ندارد. برای مدیریت فروشگاه خود وارد نشانی اپلیکیشن پلتفرم شوید.
+        </p>
+        <a href={`${PLATFORM_APP_ORIGIN}/#/login`} className="bg-amber-600 text-white px-6 py-2.5 rounded-xl text-sm font-black">
+          ورود به فروشگاه من
+        </a>
+      </div>
+    </div>
+  );
+
+  const sidebarBg = superadminView ? 'bg-slate-900 text-white' : 'bg-white border-l border-amber-100 shadow-sm';
+  const sidebarBorder = superadminView ? 'border-slate-700' : 'border-amber-100';
+  const navActive = superadminView ? 'bg-slate-700 text-white' : 'bg-amber-100 text-amber-800';
+  const navInactive = superadminView ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-500 hover:bg-amber-50 hover:text-amber-700';
+  const backBtnHover = superadminView ? 'hover:bg-slate-800 hover:text-white' : 'hover:bg-amber-50 hover:text-amber-600';
 
   // ============ SIDEBAR CONTENT (shared between desktop + mobile) ============
   const sidebarContent = (
     <>
       {/* Header */}
       <div className={`p-5 border-b ${sidebarBorder}`}>
-        {isSuperadmin ? (
+        {superadminView ? (
           <>
             <h1 className="text-lg font-black">طلانا سوپر ادمین</h1>
             <p className="text-[10px] text-slate-400 mt-1">مدیریت کل پلتفرم</p>
@@ -280,7 +320,7 @@ export default function AdminPanel({ onBack, token }: Props) {
       )}
 
       {/* Quick stats (tenant only) */}
-      {!isSuperadmin && (
+      {!superadminView && (
         <div className={`${impersonatedTenant ? 'pt-2' : 'pt-0'} p-4 grid grid-cols-2 gap-2 border-b ${sidebarBorder}`}>
           <div className="bg-amber-50 rounded-xl p-2.5 text-center">
             <div className="text-lg font-black text-amber-600">۰</div>
@@ -332,15 +372,21 @@ export default function AdminPanel({ onBack, token }: Props) {
       <div className={`p-3 border-t ${sidebarBorder}`}>
         <button onClick={onBack}
           className={`w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 transition-all ${backBtnHover}`}>
-          <ArrowRight className="w-4 h-4" /><span>{isSuperadmin ? 'بازگشت به سایت' : 'بازگشت به ویترین'}</span>
+          <ArrowRight className="w-4 h-4" /><span>{superadminView ? 'بازگشت به سایت' : 'بازگشت به ویترین'}</span>
         </button>
+        {isSuperadmin && !superadminView && (
+          <a href={`${SUPERADMIN_ORIGIN}/#/superadmin/dashboard`}
+             className="block w-full px-4 py-2.5 rounded-xl text-sm font-bold text-amber-300 hover:bg-slate-800">
+            پنل پلتفرم زرآسان
+          </a>
+        )}
       </div>
     </>
   );
 
   // ============ RENDER ============
   return (
-    <div dir="rtl" className={`flex min-h-screen font-sans ${isSuperadmin ? 'bg-slate-100' : 'bg-amber-50/30'}`}>
+    <div dir="rtl" className={`flex min-h-screen font-sans ${superadminView ? 'bg-slate-100' : 'bg-amber-50/30'}`}>
 
       {/* DESKTOP SIDEBAR */}
       <aside className={`hidden lg:flex lg:flex-col ${sidebarWidth} lg:min-h-screen lg:flex-shrink-0 lg:sticky lg:top-0 ${sidebarBg}`}>
@@ -357,7 +403,7 @@ export default function AdminPanel({ onBack, token }: Props) {
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-black text-[10px]">
               {tenant?.name?.[0] || 'ط'}
             </div>
-            <span className="text-sm font-black text-slate-800 truncate max-w-[140px]">{isSuperadmin ? 'سوپر ادمین' : tenant?.name || 'فروشگاه'}</span>
+            <span className="text-sm font-black text-slate-800 truncate max-w-[140px]">{superadminView ? 'سوپر ادمین' : tenant?.name || 'فروشگاه'}</span>
           </div>
           <button onClick={onBack} className="text-slate-400 hover:text-slate-600 p-1">
             <ArrowRight className="w-5 h-5" />
@@ -372,7 +418,7 @@ export default function AdminPanel({ onBack, token }: Props) {
           <div className={`absolute top-0 right-0 bottom-0 ${sidebarWidth} max-w-[85vw] ${sidebarBg} flex flex-col shadow-2xl`}>
             {/* Close button */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200/20">
-              <span className="text-sm font-black">{isSuperadmin ? 'منو مدیریت' : 'پنل مدیریت'}</span>
+              <span className="text-sm font-black">{superadminView ? 'منو مدیریت' : 'پنل مدیریت'}</span>
               <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X className="w-5 h-5" />
               </button>
@@ -406,8 +452,8 @@ export default function AdminPanel({ onBack, token }: Props) {
 
           {/* Page content */}
           {page === 'dashboard' && <AdminDashboard />}
-          {page === 'roles' && <AdminRoles isSuperadmin={isSuperadmin} can={can} />}
-          {page === 'users' && <AdminUsers can={can} isSuperadmin={isSuperadmin} />}
+          {page === 'roles' && <AdminRoles isSuperadmin={superadminView} can={can} />}
+          {page === 'users' && <AdminUsers can={can} isSuperadmin={superadminView} />}
           {page === 'tenants' && <AdminTenants onImpersonate={handleImpersonate} />}
           {page === 'categories' && <AdminCategories />}
           {page === 'products' && <AdminProducts />}
@@ -417,8 +463,8 @@ export default function AdminPanel({ onBack, token }: Props) {
           {page === 'payment-accounts' && <AdminPaymentAccounts />}
           {page === 'wallet' && <AdminWallet />}
           {page === 'reports' && <AdminReports />}
-          {page === 'invoice-templates' && <AdminInvoiceTemplates isSuperadmin={isSuperadmin} can={can} />}
-          {page === 'ai-settings' && <AdminAiSettings isSuperadmin={isSuperadmin} />}
+          {page === 'invoice-templates' && <AdminInvoiceTemplates isSuperadmin={superadminView} can={can} />}
+          {page === 'ai-settings' && <AdminAiSettings isSuperadmin={superadminView} />}
           {page === 'tenant-ai-settings' && <TenantAiSettings />}
           {page === 'sellers' && <AdminSellers />}
           {page === 'branches' && <AdminBranches />}
