@@ -50,22 +50,19 @@ Host interpretation lives in `src/host.ts`; see `docs/host-surface-model.md`.
 
 ## 1. Frontend (Vercel)
 
+This section covers the Vercel deployment of the same bundle. The tenant and
+platform hostnames are served by nginx on the VPS; `## Build inputs` above is
+where `dist/` comes from and which four values a build must carry.
+
 ### Automatic Deployment
 
-Push to the main branch and Vercel will auto-build from `vercel.json`:
+Push to the main branch and Vercel will auto-build from `vercel.json`.
 
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "env": {
-    "VITE_API_URL": "https://api.talaana.ir/api",
-    "VITE_APP_NAME": "Talana",
-    "VITE_BASE_DOMAIN": "talaana.ir"
-  }
-}
-```
+`vercel.json` in this repo is that build input. Read the file rather than a copy of
+it here: a duplicated config is how a value goes missing from the docs while
+staying present in the build, which is exactly what happened to
+`VITE_PLATFORM_DOMAIN`. Its `env` block carries the same four values as
+`.env.production.example`, listed in `## Build inputs` above.
 
 ### Manual Build (for reference)
 
@@ -74,6 +71,7 @@ cd /path/to/talana
 VITE_API_URL=https://api.talaana.ir/api \
 VITE_APP_NAME=Talana \
 VITE_BASE_DOMAIN=talaana.ir \
+VITE_PLATFORM_DOMAIN=zaraasan.ir \
 npm run build
 ```
 
@@ -125,8 +123,7 @@ chown -R www-data:www-data .
 
 ## 3. Nginx Configuration (Backend Only)
 
-The block below serves only the Laravel API. The SPA is served from its own vhost
-(`talana-frontend`), rooted at `/home/talana/www/talana-frontend/dist`:
+The block below serves only the Laravel API; the SPA has its own vhost (`talana-frontend`):
 
 ```nginx
 # /etc/nginx/sites-available/api.talaana.ir
@@ -178,8 +175,10 @@ server {
 
 A Vercel deployment of the same bundle lives at `https://talana-sage.vercel.app`
 (the linked project in §1). It is not the origin for the tenant or platform
-hostnames: `talaana.ir`, `*.talaana.ir`, `zaraasan.ir` and `*.zaraasan.ir` reach
-this server through WCDN, and the vhosts in `D:/talana/deploy` are what answer.
+hostnames: the vhosts in `D:/talana/deploy` are what answer them on this server.
+Today the landing vhost owns `zaraasan.ir` and 301s every other `*.zaraasan.ir`
+subname; `app.zaraasan.ir` and `sa.zaraasan.ir` serve the SPA only once the
+`zaraasan-platform` vhost is installed.
 
 ---
 
@@ -200,7 +199,7 @@ this server through WCDN, and the vhosts in `D:/talana/deploy` are what answer.
 | `LOG_CHANNEL` | `daily` | |
 | `LOG_LEVEL` | `warning` | |
 
-### Frontend (Vercel env vars — set in Vercel dashboard or via CLI)
+### Frontend (build inputs for a Vercel build — `vercel.json`'s `env` block, or the same four values set in the Vercel dashboard)
 
 | Variable | Value |
 |----------|-------|
