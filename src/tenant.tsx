@@ -1,36 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { TenantConfig } from './types';
+import {
+  normalizeDomain, isTenantSlug, isLocalDevelopmentHost, isReservedHost,
+  MARKETPLACE_DOMAIN as TENANT_BASE_DOMAIN, MARKETPLACE_SLUG, LEGACY_BASE_DOMAINS,
+} from './host';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-const TENANT_BASE_DOMAIN = normalizeDomain(import.meta.env.VITE_BASE_DOMAIN || 'talaana.ir');
-const LEGACY_BASE_DOMAINS = ['localhost', 'talana.app', 'talana-sage.vercel.app'];
-const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'api', 'admin', 'mail']);
-/** The marketplace is a tenant of its own; its app is reached through the platform's app. host. */
-const MARKETPLACE_SLUG = 'talana';
 
 type TenantIdentifier = { slug?: string; domain?: string };
-
-function normalizeDomain(domain: string): string {
-  return domain.trim().toLowerCase().replace(/\.+$/, '');
-}
-
-function isTenantSlug(slug: string): boolean {
-  // Keep legacy underscore slugs readable, but never let a slug inject a host, path, or query.
-  return /^[a-z0-9_-]{1,63}$/.test(slug) && !RESERVED_SUBDOMAINS.has(slug);
-}
-
-function isLocalDevelopmentHost(hostname: string): boolean {
-  return hostname === 'localhost'
-    || hostname.endsWith('.localhost')
-    || hostname === '127.0.0.1'
-    || hostname === '[::1]'
-    || hostname === '::1';
-}
-
-function isReservedHost(hostname: string): boolean {
-  const labels = hostname.split('.');
-  return labels.length > 1 && RESERVED_SUBDOMAINS.has(labels[0]);
-}
 
 /**
  * Build a tenant's public origin.
