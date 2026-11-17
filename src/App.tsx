@@ -12,6 +12,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { auth, wallet, prices, transactions, setToken, getToken, setTenantContext, getAuthContext, setAuthContext } from './api';
 import { formatToman, formatGram, toPersianDigits, apiAssetUrl } from './utils';
 import { useTenant, detectTenantFromURL, getTenantUrl } from './tenant';
+import {
+  currentHost, superadminRedirectTarget, platformEntryHash, adminHomeHash, type HostInfo,
+} from './host';
 import AdminPanel from './admin/AdminPanel';
 import { admin as adminApi } from './admin/api';
 
@@ -62,8 +65,19 @@ function getCachedTenant(slug: string): { name: string; logo: string | null; bra
   } catch { return null; }
 }
 
+/**
+ * `#/superadmin/*` renders the panel only where this host is allowed to show it.
+ * Elsewhere the hash is not an admin route: it is a redirect, and mounting the
+ * panel for one tick would fetch platform data before the browser leaves.
+ */
+function isAdminHash(host: HostInfo, hash = window.location.hash): boolean {
+  if (superadminRedirectTarget(host, hash)) return false;
+  return hash.startsWith('#/admin') || hash.startsWith('#/superadmin') || hash.startsWith('#/tenant');
+}
+
 export default function App() {
   const { tenant, loading: tenantLoading } = useTenant();
+  const host = currentHost();
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!getToken());
   const [isLoading, setIsLoading] = useState<boolean>(!!getToken());
@@ -89,20 +103,13 @@ export default function App() {
   const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
   const [isServicePageOpen, setIsServicePageOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showAdmin, setShowAdmin] = useState(() => 
-    window.location.hash.startsWith('#/admin') || 
-    window.location.hash.startsWith('#/superadmin') || 
-    window.location.hash.startsWith('#/tenant')
-  );
+  const [showAdmin, setShowAdmin] = useState(() => isAdminHash(host));
     const [showInstaller, setShowInstaller] = useState(false);
     const [installerPreselectedType, setInstallerPreselectedType] = useState<'marketplace' | 'store' | 'supplier' | undefined>();
     const [userPerms, setUserPerms] = useState<string[]>([]);
     const [isSuperadmin, setIsSuperadmin] = useState(false);
     const [showLoginPage, setShowLoginPage] = useState(() => window.location.hash === '#/login');
-    const [loginRedirect, setLoginRedirect] = useState<'admin' | 'landing'>(() => {
-      const hash = window.location.hash;
-      return (hash.startsWith('#/admin') || hash.startsWith('#/superadmin') || hash.startsWith('#/tenant')) ? 'admin' : 'landing';
-    });
+    const [loginRedirect, setLoginRedirect] = useState<'admin' | 'landing'>(() => isAdminHash(host) ? 'admin' : 'landing');
     const [verifyHash, setVerifyHash] = useState<string | null>(() => {
       const match = window.location.hash.match(/^#\/verify\/(.+)$/);
       return match ? match[1] : null;
@@ -184,9 +191,7 @@ export default function App() {
   useEffect(() => {
       const onHashChange = () => {
         // Check if hash starts with #/admin, #/superadmin, or #/tenant
-        const isAdminRoute = window.location.hash.startsWith('#/admin') || 
-                           window.location.hash.startsWith('#/superadmin') || 
-                           window.location.hash.startsWith('#/tenant');
+        const isAdminRoute = isAdminHash(host);
         setShowAdmin(isAdminRoute);
         setShowLoginPage(window.location.hash === '#/login');
         const verifyMatch = window.location.hash.match(/^#\/verify\/(.+)$/);
@@ -197,9 +202,21 @@ export default function App() {
       return () => window.removeEventListener('hashchange', onHashChange);
     }, []);
 
-    const goToAdmin = () => { 
-      // Route to appropriate admin panel based on user role
-      window.location.hash = isSuperadmin ? '#/superadmin/dashboard' : '#/tenant/dashboard';
+  useEffect(() => {
+    const applyHostRouting = () => {
+      const hash = window.location.hash;
+      const target = superadminRedirectTarget(host, hash);
+      if (target) { window.location.href = target; return; }
+      const entry = platformEntryHash(host, hash);
+      if (entry) window.location.hash = entry;
+    };
+    applyHostRouting();
+    window.addEventListener('hashchange', applyHostRouting);
+    return () => window.removeEventListener('hashchange', applyHostRouting);
+  }, [host.hostname]);
+
+    const goToAdmin = () => {
+      window.location.hash = adminHomeHash(host, isSuperadmin);
     };
     const goToApp = () => { window.location.hash = '#/'; };
     const goToLogin = () => { window.location.hash = '#/login'; };
@@ -366,7 +383,7 @@ export default function App() {
                 // Fetch permissions to determine if user is superadmin
                 try {
                   const perms = await adminApi.permissions();
-                  window.location.hash = perms.is_superadmin ? '#/superadmin/dashboard' : '#/tenant/dashboard';
+                  window.location.hash = adminHomeHash(host, perms.is_superadmin);
                 } catch {
                   // Fallback to tenant dashboard if permissions fetch fails
                   window.location.hash = '#/tenant/dashboard';
@@ -403,7 +420,7 @@ export default function App() {
                 // Fetch permissions to determine if user is superadmin
                 try {
                   const perms = await adminApi.permissions();
-                  window.location.hash = perms.is_superadmin ? '#/superadmin/dashboard' : '#/tenant/dashboard';
+                  window.location.hash = adminHomeHash(host, perms.is_superadmin);
                 } catch {
                   // Fallback to tenant dashboard if permissions fetch fails
                   window.location.hash = '#/tenant/dashboard';
