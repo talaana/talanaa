@@ -125,7 +125,8 @@ chown -R www-data:www-data .
 
 ## 3. Nginx Configuration (Backend Only)
 
-Since the frontend is now on Vercel, Nginx only serves the Laravel API:
+The block below serves only the Laravel API. The SPA is served from its own vhost
+(`talana-frontend`), rooted at `/home/talana/www/talana-frontend/dist`:
 
 ```nginx
 # /etc/nginx/sites-available/api.talaana.ir
@@ -175,7 +176,10 @@ server {
 | A | `api.talaana.ir` | Server IP |
 | A | `*.talaana.ir` | Server IP |
 
-Frontend is hosted on Vercel at `https://talana-sage.vercel.app` — no DNS entry needed on your domain.
+A Vercel deployment of the same bundle lives at `https://talana-sage.vercel.app`
+(the linked project in §1). It is not the origin for the tenant or platform
+hostnames: `talaana.ir`, `*.talaana.ir`, `zaraasan.ir` and `*.zaraasan.ir` reach
+this server through WCDN, and the vhosts in `D:/talana/deploy` are what answer.
 
 ---
 
@@ -203,6 +207,12 @@ Frontend is hosted on Vercel at `https://talana-sage.vercel.app` — no DNS entr
 | `VITE_API_URL` | `https://api.talaana.ir/api` |
 | `VITE_APP_NAME` | `Talana` |
 | `VITE_BASE_DOMAIN` | `talaana.ir` |
+| `VITE_PLATFORM_DOMAIN` | `zaraasan.ir` |
+
+These are the same four values as `.env.production.example` and `vercel.json`'s `env`
+block. The Vercel dashboard is not in this repo, so confirm it carries
+`VITE_PLATFORM_DOMAIN` before trusting a Vercel-built bundle: a missing value falls
+back to `src/host.ts`'s default, which is correct today and silent the day it is not.
 
 ---
 
@@ -219,9 +229,15 @@ curl https://api.talaana.ir/api/tenants/resolve?slug=talana
 curl https://talana.talaana.ir/
 # Should redirect via CNAME/DNS or the wildcard still resolves
 
-# Vercel frontend
+# Production SPA (nginx on the VPS, behind WCDN)
+curl -sI https://app.talaana.ir/
+
+# Legacy Vercel deployment of the same bundle, not the production origin
 curl https://talana-sage.vercel.app/
-# Should load the SPA landing page
+# Both load the SPA, and neither response proves which vhost answered: behind WCDN
+# the only evidence is the log line. Read host= and sni= in
+# /var/log/nginx/*-access.log; nginx/zaraasan-platform.conf in D:/talana/deploy
+# defines the log_format that records them.
 
 # Production tests
 php artisan test
