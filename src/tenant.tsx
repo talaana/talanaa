@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { TenantConfig } from './types';
 import {
-  normalizeDomain, isTenantSlug, isLocalDevelopmentHost, isReservedHost,
+  normalizeDomain, isTenantSlug, isLocalDevelopmentHost, isReservedHost, resolveHost,
   MARKETPLACE_DOMAIN as TENANT_BASE_DOMAIN, MARKETPLACE_SLUG, LEGACY_BASE_DOMAINS,
 } from './host';
 
@@ -84,6 +84,11 @@ export function detectTenantFromURL(currentUrl?: string): TenantIdentifier | nul
 
   const url = new URL(currentUrl ?? window.location.href);
   const hostname = normalizeDomain(url.hostname);
+
+  // A platform host owns no tenant by name. Without this, `sa.` and `app.zaraasan.ir`
+  // reach the custom-domain branch below and ask the backend to resolve a hostname
+  // that is not any tenant's domain.
+  if (resolveHost(hostname, url.port).platformHost) return null;
 
   if (hostname === `app.${TENANT_BASE_DOMAIN}`) {
     return { slug: MARKETPLACE_SLUG };
