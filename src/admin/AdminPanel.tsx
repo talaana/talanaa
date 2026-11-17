@@ -155,7 +155,7 @@ export default function AdminPanel({ onBack, token }: Props) {
 
   const navigateTo = (id: string) => {
     setPage(id);
-    // Use #/superadmin for superadmins, #/tenant for tenant users (including impersonation)
+    // Use #/superadmin in the platform view (host-aware flag, not the raw role), #/tenant otherwise (including impersonation)
     const prefix = superadminView ? 'superadmin' : 'tenant';
     // Update URL hash for proper navigation (bookmarking, back/forward, sharing)
     window.location.hash = `#/${prefix}/${id}`;
