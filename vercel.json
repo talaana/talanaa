@@ -10,6 +10,7 @@
   "env": {
     "VITE_API_URL": "https://api.talaana.ir/api",
     "VITE_APP_NAME": "Talana",
-    "VITE_BASE_DOMAIN": "talaana.ir"
+    "VITE_BASE_DOMAIN": "talaana.ir",
+    "VITE_PLATFORM_DOMAIN": "zaraasan.ir"
   }
 }

@@ -3,13 +3,13 @@
 ## Architecture
 
 ```
-talana-sage.vercel.app (SPA on Vercel)  →  api.talaana.ir (Laravel Backend)
+app.talaana.ir / *.talaana.ir (SPA dist on the VPS)  →  api.talaana.ir (Laravel Backend)
      │                                              │
      └── API calls (CORS) ──────────────────────────┘
      
 *.talaana.ir → resolves tenant by subdomain (wildcard SSL)
 Backend + wildcard subdomains remain on talaana.ir
-Frontend is now deployed on Vercel (talana-sage.vercel.app)
+Frontend is served from the VPS; vercel.json is a build input, not the origin
 ```
 
 ## Directory Structure on Server
@@ -23,7 +23,12 @@ Frontend is now deployed on Vercel (talana-sage.vercel.app)
     └── ...
 ```
 
-Frontend is deployed to Vercel (no server-side hosting needed).
+The SPA is served by nginx on the VPS from `/home/talana/www/talana-frontend/dist`
+for `talaana.ir`, `app.talaana.ir` and `*.talaana.ir`. `vercel.json` stays in the
+repo as a second build input for the same bundle — a Vercel build reads its `env`
+block, not `.env.production.example`. Nothing in `/etc/nginx/sites-available/`
+points at a Vercel host, and `src/host.ts:21` lists `talana-sage.vercel.app` among
+`LEGACY_BASE_DOMAINS`, so the VPS is the production origin for this SPA.
 
 ---
 
@@ -33,9 +38,12 @@ Frontend is deployed to Vercel (no server-side hosting needed).
 swap). The four values in `.env.production.example` are the whole contract:
 `VITE_BASE_DOMAIN` decides where tenant hosts live (`{slug}.talaana.ir`, and
 `app.talaana.ir` for the marketplace tenant) and `VITE_PLATFORM_DOMAIN` decides
-the platform hosts (`app.zaraasan.ir`, `sa.zaraasan.ir`). The server's untracked
+the platform hosts (`app.zaraasan.ir`, `sa.zaraasan.ir`, and the `zaraasan.ir`
+landing). A Vercel build reads `vercel.json`'s `env` block instead, so those four
+values are mirrored there; the two must stay equal. The server's untracked
 `.env.production` is not a template and must not be used to rebuild the split —
-it currently equals the example for a reason.
+check it against `.env.production.example` before every release; it equals the
+example today, and a build from a drifted copy is how the split reverts.
 Host interpretation lives in `src/host.ts`; see `docs/host-surface-model.md`.
 
 ---
