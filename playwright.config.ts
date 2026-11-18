@@ -31,7 +31,7 @@ export default defineConfig({
   ],
   webServer: {
     // The Vite API disables .env loading; strictPort is the CLI --strictPort equivalent.
-    command: `node --input-type=module -e "import { createServer } from 'vite'; await (await createServer({ envFile: false, server: { host: '127.0.0.1', port: 3017, strictPort: true } })).listen();"`,
+    command: `node --input-type=module -e "import { createServer } from 'vite'; await (await createServer({ envFile: false, server: { host: '127.0.0.1', port: 3017, strictPort: true, allowedHosts: ['talaana.ir'] } })).listen();"`,
     env: { VITE_API_URL: `${baseURL}/api`, DISABLE_HMR: 'true' },
     url: baseURL,
     reuseExistingServer: true,
