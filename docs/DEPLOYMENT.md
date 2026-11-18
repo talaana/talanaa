@@ -219,6 +219,8 @@ back to `src/host.ts`'s default, which is correct today and silent the day it is
 
 **Release check — superadmin gate:** the host matrix probe (`D:/talana/.qa-hosts-probe.cjs`, results in `D:/talana/.qa-hosts.json`) is the designated guard for the superadmin gate and must be re-run against production after each frontend cutover. The four gate rows to check: `sa surface` (stays on `sa.zaraasan.ir`), `gate from landing`, `gate from store`, and `gate from marketplace app` (all three must land on `https://sa.zaraasan.ir/#/login` with `platformPanel: false`). No local test mounts `AdminPanel`, so this probe is the only evidence for the platform-denied screens.
 
+Locally, `e2e/superadmin-gate.spec.ts` guards the two halves of the gate that the probe cannot separate: the redirect call site in `applyHostRouting` (`src/App.tsx`) and the host allow-list branch in `superadminRedirectTarget` (`src/host.ts`). It runs against the dev server on port 3017, which Playwright may reuse from an earlier session; because the spec asserts the app document answers `200`, a stale server started from a different config or worktree fails as `app document status for … expected 200` rather than silently changing the verdict — kill the listener on 3017 and re-run if you see that message.
+
 ```bash
 # Check backend health
 curl https://api.talaana.ir/api/up
