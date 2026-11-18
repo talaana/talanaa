@@ -21,7 +21,7 @@ import AdminExperienceBuilderPage from '../features/cinematic-experience/pages/A
 import AdminTaxDashboard from './pages/TaxDashboard';
 import AdminCompliance from './pages/Compliance';
 import {
-  currentHost, superadminChromeAllowed, showsPlatformAccessDenied,
+  currentHost, superadminChromeAllowed, showsPlatformAccessDenied, adminHomeHash,
   SUPERADMIN_ORIGIN, PLATFORM_APP_ORIGIN,
 } from '../host';
 
@@ -148,7 +148,9 @@ export default function AdminPanel({ onBack, token }: Props) {
     setImpersonatedTenant(null);
     setImpersonatedToken('');
     setPage('dashboard');
-    window.location.hash = '#/superadmin/dashboard';
+    // Host-aware home, same helper goToAdmin uses; on sa.zaraasan.ir this is
+    // still '#/superadmin/dashboard', so the behaviour is unchanged today.
+    window.location.hash = adminHomeHash(host, true);
     loadPermissions();
     setMobileMenuOpen(false);
   };
