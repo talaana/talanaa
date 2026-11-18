@@ -217,6 +217,8 @@ back to `src/host.ts`'s default, which is correct today and silent the day it is
 
 ## 6. Post-Deploy Verification
 
+**Release check — superadmin gate:** the host matrix probe (`D:/talana/.qa-hosts-probe.cjs`, results in `D:/talana/.qa-hosts.json`) is the designated guard for the superadmin gate and must be re-run against production after each frontend cutover. The four gate rows to check: `sa surface` (stays on `sa.zaraasan.ir`), `gate from landing`, `gate from store`, and `gate from marketplace app` (all three must land on `https://sa.zaraasan.ir/#/login` with `platformPanel: false`). No local test mounts `AdminPanel`, so this probe is the only evidence for the platform-denied screens.
+
 ```bash
 # Check backend health
 curl https://api.talaana.ir/api/up
