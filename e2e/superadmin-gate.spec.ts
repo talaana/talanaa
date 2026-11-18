@@ -10,15 +10,13 @@ import { expect, test, type Page } from '@playwright/test';
 
 const ALIAS = 'talaana.ir'; // marketplace landing base per src/host.ts §۵ — alias host only
 
-async function gotoWithNavigationRace(page: Page, url: string): Promise<void> {
-  // The gate navigates as soon as the effect runs, which can abort the original
-  // document load. A failed navigation whose request already left the origin is
-  // evidence of the gate, not a test failure — anything else must still throw.
-  try {
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-  } catch (error) {
-    if (!page.url().startsWith(`http://${ALIAS}:3017`)) throw error;
-  }
+async function gotoAppDocument(page: Page, url: string): Promise<void> {
+  // 'commit' resolves once the app document has started loading, which is before the gate
+  // effect can abort this navigation — so the race needs no try/catch, and a refused,
+  // 403-from-a-stale-server or otherwise non-200 load fails here instead of being read as
+  // "the gate did something".
+  const response = await page.goto(url, { waitUntil: 'commit' });
+  expect(response?.status(), `app document status for ${url}`).toBe(200);
 }
 
 test('the App gate redirects #/superadmin off a marketplace host, and not off localhost', async ({ playwright }) => {
@@ -34,32 +32,29 @@ test('the App gate redirects #/superadmin off a marketplace host, and not off lo
   try {
     const context = await browser.newContext({ ignoreHTTPSErrors: true });
 
-    // No egress: the destination is served from the test itself.
-    let gateServed = 0;
-    await context.route('https://sa.zaraasan.ir/**', route => {
-      gateServed += 1;
-      return route.fulfill({
+    // No egress: the platform origin is served from the test itself, so landing on it can
+    // only mean the SPA navigated there.
+    await context.route('https://sa.zaraasan.ir/**', route =>
+      route.fulfill({
         status: 200,
         contentType: 'text/html',
         body: '<html><body>GATE-LANDED</body></html>',
-      });
-    });
+      }),
+    );
 
     const page = await context.newPage();
 
     // Positive half: on the aliased marketplace host the SPA must leave for the platform.
-    await gotoWithNavigationRace(page, `http://${ALIAS}:3017/#/superadmin/tenants`);
-    await expect(page).toHaveURL('https://sa.zaraasan.ir/#/superadmin/tenants');
+    await gotoAppDocument(page, `http://${ALIAS}:3017/#/superadmin/tenants`);
+    await expect(page).toHaveURL('https://sa.zaraasan.ir/#/superadmin/tenants', { timeout: 15_000 });
     await expect(page.locator('body')).toContainText('GATE-LANDED');
-    expect(gateServed).toBeGreaterThan(0);
 
-    // Negative half kills the "always redirect" mutant: the same hash opened on
-    // talana.localhost (dev escape hatch) must stay on the dev server untouched.
-    const localGateServed = gateServed;
-    await page.goto('http://talana.localhost:3017/#/superadmin/tenants');
-    expect(page.url()).toContain(':3017');
-    expect(page.url()).not.toContain('sa.zaraasan.ir');
-    expect(gateServed).toBe(localGateServed);
+    // Negative half kills the "always redirect" mutant. Waiting for the token-less landing
+    // at #/login witnesses that the SPA really booted on the dev host, so "stayed put"
+    // cannot be satisfied by a page that never ran; an unconditional gate would have
+    // navigated this page to the intercepted platform origin instead.
+    await gotoAppDocument(page, 'http://talana.localhost:3017/#/superadmin/tenants');
+    await expect(page).toHaveURL('http://talana.localhost:3017/#/login', { timeout: 15_000 });
   } finally {
     await browser.close();
   }
